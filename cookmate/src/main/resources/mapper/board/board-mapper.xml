@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="boardmapper">
+	<!-- 공식 레시피 수 조회 -->
+	<select id="countApiRecipes" resultType="int">
+	    SELECT COUNT(*) FROM BOARD WHERE IS_API_DATA = 'Y'
+	</select>
+	
+	<!--  BOARD  -->
+
+    <!-- 레시피 등록 -->
+    <insert id="insertBoard" parameterType="Board"
+            useGeneratedKeys="true" keyProperty="boardNo">
+        INSERT INTO BOARD (
+            USER_NO, TYPE_NO, BOARD_TITLE, NICKNAME,
+            INTRODUCE, IMAGE_URL, URL, OPEN,
+            IS_API_DATA, LIKES_COUNT, BOARD_DELETE,
+            BOARD_POSTDATE
+        ) VALUES (
+            #{userNo}, #{typeNo}, #{boardTitle}, #{nickname},
+            #{introduce}, #{imageUrl}, #{url}, #{open},
+            #{isApiData}, 0, 'N',
+            NOW()
+        )
+    </insert>
+    
+    <!-- TAG  -->
+
+    <!-- 태그 등록 -->
+    <insert id="insertTag" parameterType="Tag"
+            useGeneratedKeys="true" keyProperty="typeNo">
+        INSERT INTO TAG (TYPE_NAME, DIFFICULT, COOK_TIME, CALORY, AI)
+        VALUES (#{typeName}, #{difficult}, #{cookTime}, #{calory}, #{ai})
+    </insert>
+    
+    <!-- INGREDIENT_SET -->
+
+    <!-- 재료 묶음 등록 -->
+    <insert id="insertIngredientSet" parameterType="IngredientSet"
+            useGeneratedKeys="true" keyProperty="setNo">
+        INSERT INTO INGREDIENT_SET (BOARD_NO)
+        VALUES (#{boardNo})
+    </insert>
+
+
+    <!-- INGREDIENT -->
+
+    <!-- 재료 등록 -->
+    <insert id="insertIngredient" parameterType="Ingredient">
+        INSERT INTO INGREDIENT (SET_NO, INGREDIENT_NAME, QUANTITY, UNIT)
+        VALUES (#{setNo}, #{ingredientName}, #{quantity}, #{unit})
+    </insert>
+
+
+    <!-- COOK_STEP -->
+
+    <!-- 조리 단계 등록 -->
+    <insert id="insertCookStep" parameterType="CookStep">
+        INSERT INTO COOK_STEP (BOARD_NO, COOK_CONTENT, COOK_IMAGE, STEP)
+        VALUES (#{boardNo}, #{cookContent}, #{cookImage}, #{step})
+    </insert>
+</mapper>
