@@ -12,4 +12,6 @@ public interface BoardService{
 
 	int updateRecipe(int boardNo, BoardPut dto);
 
+	int deleteRecipe(int boardNo);
+
 }

@@ -86,7 +86,11 @@
         WHERE BOARD_NO = #{boardNo}
     </update>
 
-
+	<!-- 레시피 삭제 (논리삭제)-->
+    <update id="deleteBoard" parameterType="int">
+        UPDATE BOARD SET BOARD_DELETE = 'Y' WHERE BOARD_NO = #{boardNo}
+    </update>
+    
     <!-- TAG -->
 
     <!-- 태그 등록 -->

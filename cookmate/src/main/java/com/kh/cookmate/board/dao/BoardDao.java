@@ -46,4 +46,6 @@ public interface BoardDao {
 
 	int deleteIngredientsBySetNo(int setNo);
 
+	int deleteBoard(int boardNo);
+
 }

@@ -4,6 +4,7 @@ import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +52,14 @@ public class BoardController {
             @PathVariable int boardNo,
             @RequestBody BoardPut dto) {
         int result = service.updateRecipe(boardNo, dto);
+        if (result > 0) return ResponseEntity.ok().build();
+        return ResponseEntity.badRequest().build();
+    }
+    
+    // 레시피 삭제
+    @DeleteMapping("/boards/{boardNo}")
+    public ResponseEntity<?> deleteRecipe(@PathVariable int boardNo) {
+        int result = service.deleteRecipe(boardNo);
         if (result > 0) return ResponseEntity.ok().build();
         return ResponseEntity.badRequest().build();
     }

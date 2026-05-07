@@ -101,5 +101,10 @@ public class BoardDaoImpl implements BoardDao{
 	public int deleteIngredientsBySetNo(int setNo) {
 		return session.delete("boardmapper.deleteIngredientsBySetNo", setNo);
 	}
+
+	@Override
+	public int deleteBoard(int boardNo) {
+		return session.delete("boardmapper.deleteBoard", boardNo);
+	}
 	
 }
