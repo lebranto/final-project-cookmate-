@@ -14,4 +14,6 @@ public interface BoardService{
 
 	int deleteRecipe(int boardNo);
 
+	int toggleLikes(int boardNo, int userNo);
+
 }

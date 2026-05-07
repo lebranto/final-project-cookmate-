@@ -218,7 +218,42 @@
             (#{step.boardNo}, #{step.step})
         </foreach>
     </delete>
-
     
-
+	<!-- 좋아요 -->
+    <!-- 좋아요 여부 확인 -->
+	<select id="selectLikesCount" resultType="int">
+	    SELECT COUNT(*) FROM LIKES
+	    WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+	</select>
+	
+	<!-- 작성자 확인 -->
+	<select id="selectBoardUserNo" parameterType="int" resultType="int">
+	    SELECT USER_NO FROM BOARD WHERE BOARD_NO = #{boardNo}
+	</select>
+	
+	<!-- 좋아요 추가 -->
+	<insert id="insertLikes">
+	    INSERT INTO LIKES (BOARD_NO, USER_NO)
+	    VALUES (#{boardNo}, #{userNo})
+	</insert>
+	
+	<!-- 좋아요 취소 -->
+	<delete id="deleteLikes">
+	    DELETE FROM LIKES
+	    WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+	</delete>
+	
+	<!-- 좋아요 수 증가 -->
+	<update id="increaseLikes">
+	    UPDATE BOARD SET LIKES_COUNT = LIKES_COUNT + 1
+	    WHERE BOARD_NO = #{boardNo}
+	</update>
+	
+	<!-- 좋아요 수 감소 -->
+	<update id="decreaseLikes">
+	    UPDATE BOARD SET LIKES_COUNT = LIKES_COUNT - 1
+	    WHERE BOARD_NO = #{boardNo}
+	</update>
+	<!-- 좋아요 끝 -->
+	
 </mapper>
