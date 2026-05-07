@@ -1,5 +1,8 @@
 package com.kh.cookmate.board.dao;
 
+import java.util.List;
+
+import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
@@ -19,5 +22,11 @@ public interface BoardDao {
 	int insertCookStep(CookStep step);
 
 	int countApiRecipes();
+
+	BoardDetail getBoardDetail(int boardNo);
+
+	int insertIngredients(List<Ingredient> ings);
+
+	int insertCookSteps(List<CookStep> steps);
 
 }

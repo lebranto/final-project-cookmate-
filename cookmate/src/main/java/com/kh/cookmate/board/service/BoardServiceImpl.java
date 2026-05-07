@@ -1,12 +1,15 @@
 package com.kh.cookmate.board.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.cookmate.board.dao.BoardDao;
-import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
-import com.kh.cookmate.board.dto.CookStepDto;
-import com.kh.cookmate.board.dto.IngredientDto;
-import com.kh.cookmate.board.dto.IngredientSetDto;
+import com.kh.cookmate.board.dto.BoardDto;
+import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.IngredientSetDto.SetWrite;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
@@ -22,9 +25,10 @@ public class BoardServiceImpl implements BoardService {
 	private final BoardDao boardDao;
 	
 	@Override
-	public int insertRecipe(BoardWrite dto) {
-		
-		// 1. TAG 저장 → typeNo 자동 생성
+	@Transactional
+	public int insertRecipe(BoardDto.BoardWrite dto) {
+
+        // 1. TAG 저장
         Tag tag = new Tag();
         tag.setTypeName(dto.getTypeName());
         tag.setDifficult(dto.getDifficult());
@@ -33,7 +37,7 @@ public class BoardServiceImpl implements BoardService {
         tag.setAi(dto.getAi());
         boardDao.insertTag(tag);
 
-        // 2. BOARD 저장 → boardNo 자동 생성
+        // 2. BOARD 저장
         Board board = new Board();
         board.setTypeNo(tag.getTypeNo());
         board.setBoardTitle(dto.getBoardTitle());
@@ -41,52 +45,58 @@ public class BoardServiceImpl implements BoardService {
         board.setImageUrl(dto.getImageUrl());
         board.setUrl(dto.getUrl());
         board.setOpen(dto.getOpen());
-        board.setIsApiData('N');    // 사용자 작성은 항상 N
+        board.setIsApiData('N');
         board.setLikesCount(0);
         board.setBoardDelete('N');
-        // TODO: JWT에서 userNo, nickname 추출 (인증 기능 완성 후 추가)
-        // board.setUserNo(userNo);
-        // board.setNickname(nickname);
         board.setUserNo(dto.getUserNo());
         board.setNickname(dto.getNickname());
         int result = boardDao.insertBoard(board);
-
-        // 3. DTO에 생성된 boardNo 세팅 (Controller에서 Location 헤더 생성용)
         dto.setBoardNo(board.getBoardNo());
 
-        // 4. 재료 묶음 + 재료 저장
+        // 3. 재료 묶음 + 재료 저장
         if (dto.getIngredientSets() != null) {
-            for (IngredientSetDto.SetWrite setDto : dto.getIngredientSets()) {
+            for (SetWrite setDto : dto.getIngredientSets()) {
+                // SET_NO 필요하므로 묶음은 단건 INSERT
                 IngredientSet set = new IngredientSet();
                 set.setBoardNo(board.getBoardNo());
                 boardDao.insertIngredientSet(set);
 
-                if (setDto.getIngredients() != null) {
-                    for (IngredientDto.IngWrite ingDto : setDto.getIngredients()) {
-                        Ingredient ing = new Ingredient();
-                        ing.setSetNo(set.getSetNo());
-                        ing.setIngredientName(ingDto.getIngredientName());
-                        ing.setQuantity(ingDto.getQuantity());
-                        ing.setUnit(ingDto.getUnit());
-                        boardDao.insertIngredient(ing);
-                    }
+                // 재료는 한번에 INSERT
+                if (setDto.getIngredients() != null && !setDto.getIngredients().isEmpty()) {
+                    List<Ingredient> ings = setDto.getIngredients().stream()
+                        .map(ingDto -> {
+                            Ingredient ing = new Ingredient();
+                            ing.setSetNo(set.getSetNo());
+                            ing.setIngredientName(ingDto.getIngredientName());
+                            ing.setQuantity(ingDto.getQuantity());
+                            ing.setUnit(ingDto.getUnit());
+                            return ing;
+                        }).collect(Collectors.toList());
+                    boardDao.insertIngredients(ings);
                 }
             }
         }
 
-        // 5. 조리 단계 저장
-        if (dto.getCookSteps() != null) {
-            for (CookStepDto.StepWrite stepDto : dto.getCookSteps()) {
-                CookStep step = new CookStep();
-                step.setBoardNo(board.getBoardNo());
-                step.setStep(stepDto.getStep());
-                step.setCookContent(stepDto.getCookContent());
-                step.setCookImage(stepDto.getCookImage() != null ? stepDto.getCookImage() : "");
-                boardDao.insertCookStep(step);
-            }
+        // 4. 조리 단계 한번에 저장
+        if (dto.getCookSteps() != null && !dto.getCookSteps().isEmpty()) {
+            List<CookStep> steps = dto.getCookSteps().stream()
+                .map(stepDto -> {
+                    CookStep step = new CookStep();
+                    step.setBoardNo(board.getBoardNo());
+                    step.setStep(stepDto.getStep());
+                    step.setCookContent(stepDto.getCookContent());
+                    step.setCookImage(stepDto.getCookImage() != null ? stepDto.getCookImage() : "");
+                    return step;
+                }).collect(Collectors.toList());
+            boardDao.insertCookSteps(steps);
         }
 
         return result;
+    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+
+	@Override
+    public BoardDetail getBoardDetail(int boardNo) {
+        return boardDao.getBoardDetail(boardNo);
     }
 	
 	

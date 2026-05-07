@@ -11,9 +11,9 @@ public class BoardDto {
     @NoArgsConstructor
     public static class BoardWrite {
         // BOARD
-    	private int boardNo;
-    	private int userNo;       
-        private String nickname;  
+    	private int boardNo;        // 응답용
+        private int userNo;         // TODO: JWT 완성 후 토큰에서 추출
+        private String nickname;    // TODO: JWT 완성 후 DB에서 조회 
         private String boardTitle;
         private String introduce;
         private String imageUrl;
@@ -35,5 +35,27 @@ public class BoardDto {
         private List<CookStepDto.StepWrite> cookSteps;
 
 		
+    }
+    
+ // 레시피 상세
+    @Data @NoArgsConstructor
+    public static class BoardDetail {
+        private int boardNo;
+        private int userNo;
+        private int typeNo;         // TAG 수정용
+        private String boardTitle;
+        private String introduce;
+        private String imageUrl;
+        private String url;
+        private char open;
+        private int likesCount;
+        private String nickname;
+        private String typeName;
+        private String difficult;
+        private String cookTime;
+        private String calory;
+        private char ai;
+        private List<IngredientSetDto.SetDetail> ingredientSets;
+        private List<CookStepDto.StepDetail> cookSteps;
     }
 }
