@@ -9,6 +9,7 @@ import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
 import com.kh.cookmate.board.model.vo.IngredientSet;
 import com.kh.cookmate.board.model.vo.Likes;
+import com.kh.cookmate.board.model.vo.Scrap;
 import com.kh.cookmate.board.model.vo.Tag;
 
 public interface BoardDao {
@@ -56,5 +57,10 @@ public interface BoardDao {
 	int deleteLikes(Likes likes);
 	int increaseLikes(int boardNo);
 	int decreaseLikes(int boardNo);
+	
+	// 스크랩
+	int selectScrapCount(Scrap scrap);
+	int deleteScrap(Scrap scrap);
+	int insertScrap(Scrap scrap);
 
 }

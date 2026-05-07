@@ -19,6 +19,7 @@ import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
 import com.kh.cookmate.board.model.vo.IngredientSet;
 import com.kh.cookmate.board.model.vo.Likes;
+import com.kh.cookmate.board.model.vo.Scrap;
 import com.kh.cookmate.board.model.vo.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -255,6 +256,32 @@ public class BoardServiceImpl implements BoardService {
 	        // 좋아요 추가
 	        boardDao.insertLikes(likes);
 	        boardDao.increaseLikes(boardNo);
+	        return 1; // 추가
+	    }
+	}
+	
+	// 스크랩
+	@Override
+	@Transactional
+	public int toggleScrap(int boardNo, int userNo) {
+
+	    // 작성자 본인 확인
+	    int writerNo = boardDao.selectBoardUserNo(boardNo);
+	    if (writerNo == userNo) {
+	        return -1; // 본인 게시글
+	    }
+
+	    Scrap scrap = new Scrap();
+	    scrap.setBoardNo(boardNo);
+	    scrap.setUserNo(userNo);
+
+	    int count = boardDao.selectScrapCount(scrap);
+
+	    if (count > 0) {
+	        boardDao.deleteScrap(scrap);
+	        return 0; // 취소
+	    } else {
+	        boardDao.insertScrap(scrap);
 	        return 1; // 추가
 	    }
 	}

@@ -12,6 +12,7 @@ import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
 import com.kh.cookmate.board.model.vo.IngredientSet;
 import com.kh.cookmate.board.model.vo.Likes;
+import com.kh.cookmate.board.model.vo.Scrap;
 import com.kh.cookmate.board.model.vo.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -128,4 +129,15 @@ public class BoardDaoImpl implements BoardDao{
 	@Override public int decreaseLikes(int boardNo) {
 	    return session.update("boardmapper.decreaseLikes", boardNo);
 	}
+	
+	// 스크랩
+	@Override public int insertScrap(Scrap scrap) {
+        return session.insert("boardmapper.insertScrap", scrap);
+    }
+    @Override public int deleteScrap(Scrap scrap) {
+        return session.delete("boardmapper.deleteScrap", scrap);
+    }
+    @Override public int selectScrapCount(Scrap scrap) {
+        return session.selectOne("boardmapper.selectScrapCount", scrap);
+    }
 }

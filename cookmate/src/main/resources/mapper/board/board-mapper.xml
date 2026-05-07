@@ -256,4 +256,25 @@
 	</update>
 	<!-- 좋아요 끝 -->
 	
+	
+	<!-- SCRAP ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ-->
+
+    <!-- 스크랩 추가 -->
+    <insert id="insertScrap" parameterType="Scrap">
+        INSERT INTO SCRAP (BOARD_NO, USER_NO, SCRAP_DATE)
+        VALUES (#{boardNo}, #{userNo}, NOW())
+    </insert>
+
+    <!-- 스크랩 취소 -->
+    <delete id="deleteScrap" parameterType="Scrap">
+        DELETE FROM SCRAP WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+    </delete>
+
+    <!-- 스크랩 여부 확인 -->
+    <select id="selectScrapCount" parameterType="Scrap" resultType="int">
+        SELECT COUNT(*) FROM SCRAP
+        WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+    </select>
+    
+    <!-- SCRAP 끝  ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ -->
 </mapper>

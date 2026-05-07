@@ -81,4 +81,21 @@ public class BoardController {
             return ResponseEntity.ok("좋아요 취소");
         }
     }
+    
+    // 스크랩
+    @PostMapping("/boards/{boardNo}/scrap")
+    public ResponseEntity<?> toggleScrap(
+            @PathVariable int boardNo,
+            @RequestParam int userNo) {
+
+        int result = service.toggleScrap(boardNo, userNo);
+
+        if (result == -1) {
+        	return ResponseEntity.badRequest().body("본인 게시글은 스크랩 불가");
+        }else if (result == 1) {
+        	return ResponseEntity.ok("스크랩 추가");
+        }else {
+        	return ResponseEntity.ok("스크랩 취소");
+        }
+    }
 }

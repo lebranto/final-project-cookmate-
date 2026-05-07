@@ -16,4 +16,6 @@ public interface BoardService{
 
 	int toggleLikes(int boardNo, int userNo);
 
+	int toggleScrap(int boardNo, int userNo);
+
 }
