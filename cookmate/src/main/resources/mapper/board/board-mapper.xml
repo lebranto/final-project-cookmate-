@@ -1,12 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
 <mapper namespace="boardmapper">
-	<!-- 공식 레시피 수 조회 -->
-	<select id="countApiRecipes" resultType="int">
-	    SELECT COUNT(*) FROM BOARD WHERE IS_API_DATA = 'Y'
-	</select>
-	
-	<!--  BOARD  -->
+
+    <!-- ResultMap -->
+
+    <resultMap id="boardDetailMap"
+               type="com.kh.cookmate.board.dto.BoardDto$BoardDetail">
+        <result property="boardNo"      column="BOARD_NO"/>
+        <result property="userNo"       column="USER_NO"/>
+        <result property="typeNo"       column="TYPE_NO"/>
+        <result property="boardTitle"   column="BOARD_TITLE"/>
+        <result property="nickname"     column="NICKNAME"/>
+        <result property="introduce"    column="INTRODUCE"/>
+        <result property="imageUrl"     column="IMAGE_URL"/>
+        <result property="url"          column="URL"/>
+        <result property="open"         column="OPEN"/>
+        <result property="likesCount"   column="LIKES_COUNT"/>
+        <result property="typeName"     column="TYPE_NAME"/>
+        <result property="difficult"    column="DIFFICULT"/>
+        <result property="cookTime"     column="COOK_TIME"/>
+        <result property="calory"       column="CALORY"/>
+        <result property="ai"           column="AI"/>
+        <collection property="ingredientSets"
+                    column="BOARD_NO"
+                    select="selectIngredientSetDetail"/>
+        <collection property="cookSteps"
+                    column="BOARD_NO"
+                    select="selectCookStepList"/>
+    </resultMap>
+
+    <resultMap id="ingredientSetDetailMap"
+               type="com.kh.cookmate.board.dto.IngredientSetDto$SetDetail">
+        <result property="setNo" column="SET_NO"/>
+        <collection property="ingredients"
+                    column="SET_NO"
+                    select="selectIngredientList"/>
+    </resultMap>
+
+    <!-- BOARD -->
+
+    <!-- 공식 레시피 수 조회 -->
+    <select id="countApiRecipes" resultType="int">
+        SELECT COUNT(*) FROM BOARD WHERE IS_API_DATA = 'Y'
+    </select>
 
     <!-- 레시피 등록 -->
     <insert id="insertBoard" parameterType="Board"
@@ -14,17 +52,46 @@
         INSERT INTO BOARD (
             USER_NO, TYPE_NO, BOARD_TITLE, NICKNAME,
             INTRODUCE, IMAGE_URL, URL, OPEN,
-            IS_API_DATA, LIKES_COUNT, BOARD_DELETE,
-            BOARD_POSTDATE
+            IS_API_DATA, LIKES_COUNT, BOARD_DELETE, BOARD_POSTDATE
         ) VALUES (
             #{userNo}, #{typeNo}, #{boardTitle}, #{nickname},
             #{introduce}, #{imageUrl}, #{url}, #{open},
-            #{isApiData}, 0, 'N',
-            NOW()
+            #{isApiData}, 0, 'N', NOW()
         )
     </insert>
+
+    <!-- 레시피 상세 조회 -->
+    <select id="getBoardDetail" parameterType="int" resultMap="boardDetailMap">
+        SELECT
+            b.BOARD_NO, b.USER_NO, b.TYPE_NO, b.BOARD_TITLE,
+            b.NICKNAME, b.INTRODUCE, b.IMAGE_URL, b.URL,
+            b.OPEN, b.LIKES_COUNT, b.BOARD_POSTDATE,
+            t.TYPE_NAME, t.DIFFICULT, t.COOK_TIME, t.CALORY, t.AI
+        FROM BOARD b
+        JOIN TAG t ON b.TYPE_NO = t.TYPE_NO
+        WHERE b.BOARD_NO = #{boardNo}
+          AND b.BOARD_DELETE = 'N'
+    </select>
+
+    <!-- 레시피 수정 -->
+    <update id="updateBoard" parameterType="Board">
+        UPDATE BOARD
+        <set>
+            <if test="boardTitle != null">BOARD_TITLE = #{boardTitle},</if>
+            <if test="introduce != null">INTRODUCE = #{introduce},</if>
+            <if test="imageUrl != null">IMAGE_URL = #{imageUrl},</if>
+            <if test="url != null">URL = #{url},</if>
+            <if test="open != 0">OPEN = #{open},</if>
+        </set>
+        WHERE BOARD_NO = #{boardNo}
+    </update>
+
+	<!-- 레시피 삭제 (논리삭제)-->
+    <update id="deleteBoard" parameterType="int">
+        UPDATE BOARD SET BOARD_DELETE = 'Y' WHERE BOARD_NO = #{boardNo}
+    </update>
     
-    <!-- TAG  -->
+    <!-- TAG -->
 
     <!-- 태그 등록 -->
     <insert id="insertTag" parameterType="Tag"
@@ -32,31 +99,182 @@
         INSERT INTO TAG (TYPE_NAME, DIFFICULT, COOK_TIME, CALORY, AI)
         VALUES (#{typeName}, #{difficult}, #{cookTime}, #{calory}, #{ai})
     </insert>
-    
+
+    <!-- 태그 수정 -->
+    <update id="updateTag" parameterType="Tag">
+        UPDATE TAG
+        <set>
+            <if test="typeName != null">TYPE_NAME = #{typeName},</if>
+            <if test="difficult != null">DIFFICULT = #{difficult},</if>
+            <if test="cookTime != null">COOK_TIME = #{cookTime},</if>
+            <if test="calory != null">CALORY = #{calory},</if>
+        </set>
+        WHERE TYPE_NO = #{typeNo}
+    </update>
+
     <!-- INGREDIENT_SET -->
 
     <!-- 재료 묶음 등록 -->
     <insert id="insertIngredientSet" parameterType="IngredientSet"
             useGeneratedKeys="true" keyProperty="setNo">
-        INSERT INTO INGREDIENT_SET (BOARD_NO)
-        VALUES (#{boardNo})
+        INSERT INTO INGREDIENT_SET (BOARD_NO) VALUES (#{boardNo})
     </insert>
 
+    <!-- 재료 묶음 상세 조회 (ResultMap용) -->
+    <select id="selectIngredientSetDetail" parameterType="int"
+            resultMap="ingredientSetDetailMap">
+        SELECT SET_NO FROM INGREDIENT_SET WHERE BOARD_NO = #{boardNo}
+    </select>
+
+    <!-- 재료 묶음 삭제 -->
+    <delete id="deleteIngredientSet" parameterType="int">
+        DELETE FROM INGREDIENT_SET WHERE SET_NO = #{setNo}
+    </delete>
 
     <!-- INGREDIENT -->
 
-    <!-- 재료 등록 -->
+    <!-- 재료 단건 등록 -->
     <insert id="insertIngredient" parameterType="Ingredient">
         INSERT INTO INGREDIENT (SET_NO, INGREDIENT_NAME, QUANTITY, UNIT)
         VALUES (#{setNo}, #{ingredientName}, #{quantity}, #{unit})
     </insert>
 
+    <!-- 재료 여러건 등록 (foreach) -->
+    <insert id="insertIngredients" parameterType="java.util.List">
+        INSERT INTO INGREDIENT (SET_NO, INGREDIENT_NAME, QUANTITY, UNIT) VALUES
+        <foreach collection="list" item="ing" separator=",">
+            (#{ing.setNo}, #{ing.ingredientName}, #{ing.quantity}, #{ing.unit})
+        </foreach>
+    </insert>
+
+    <!-- 재료 조회 (ResultMap용) -->
+    <select id="selectIngredientList" parameterType="int"
+            resultType="com.kh.cookmate.board.dto.IngredientDto$IngDetail">
+        SELECT INGREDIENT_NO, INGREDIENT_NAME, QUANTITY, UNIT
+        FROM INGREDIENT WHERE SET_NO = #{setNo}
+    </select>
+
+    <!-- 재료 여러건 수정 (foreach) -->
+    <update id="updateIngredients" parameterType="java.util.List">
+        <foreach collection="list" item="ing" separator=";">
+            UPDATE INGREDIENT
+            <set>
+                <if test="ing.ingredientName != null">INGREDIENT_NAME = #{ing.ingredientName},</if>
+                <if test="ing.quantity != null">QUANTITY = #{ing.quantity},</if>
+                <if test="ing.unit != null">UNIT = #{ing.unit},</if>
+            </set>
+            WHERE INGREDIENT_NO = #{ing.ingredientNo}
+        </foreach>
+    </update>
+
+    <!-- 재료 여러건 삭제 (foreach) -->
+    <delete id="deleteIngredients" parameterType="java.util.List">
+        DELETE FROM INGREDIENT WHERE INGREDIENT_NO IN
+        <foreach collection="list" item="no" open="(" separator="," close=")">
+            #{no}
+        </foreach>
+    </delete>
+    
+    <!-- 묶음 안 재료 전체 삭제 (묶음 삭제 전 선행) -->
+	<delete id="deleteIngredientsBySetNo" parameterType="int">
+	    DELETE FROM INGREDIENT WHERE SET_NO = #{setNo}
+	</delete>
 
     <!-- COOK_STEP -->
 
-    <!-- 조리 단계 등록 -->
-    <insert id="insertCookStep" parameterType="CookStep">
-        INSERT INTO COOK_STEP (BOARD_NO, COOK_CONTENT, COOK_IMAGE, STEP)
-        VALUES (#{boardNo}, #{cookContent}, #{cookImage}, #{step})
+    <!-- 조리단계 여러건 등록 (foreach) -->
+    <insert id="insertCookSteps" parameterType="java.util.List">
+        INSERT INTO COOK_STEP (BOARD_NO, COOK_CONTENT, COOK_IMAGE, STEP) VALUES
+        <foreach collection="list" item="step" separator=",">
+            (#{step.boardNo}, #{step.cookContent}, #{step.cookImage}, #{step.step})
+        </foreach>
     </insert>
+
+    <!-- 조리단계 조회 (ResultMap용) -->
+    <select id="selectCookStepList" parameterType="int"
+            resultType="com.kh.cookmate.board.dto.CookStepDto$StepDetail">
+        SELECT STEP, COOK_CONTENT, COOK_IMAGE
+        FROM COOK_STEP
+        WHERE BOARD_NO = #{boardNo}
+        ORDER BY STEP ASC
+    </select>
+
+    <!-- 조리단계 여러건 수정 (foreach) -->
+    <update id="updateCookSteps" parameterType="java.util.List">
+        <foreach collection="list" item="step" separator=";">
+            UPDATE COOK_STEP
+            <set>
+                <if test="step.cookContent != null">COOK_CONTENT = #{step.cookContent},</if>
+                <if test="step.cookImage != null">COOK_IMAGE = #{step.cookImage},</if>
+            </set>
+            WHERE BOARD_NO = #{step.boardNo} AND STEP = #{step.step}
+        </foreach>
+    </update>
+
+    <!-- 조리단계 여러건 삭제 (foreach) -->
+    <delete id="deleteCookSteps" parameterType="java.util.List">
+        DELETE FROM COOK_STEP WHERE (BOARD_NO, STEP) IN
+        <foreach collection="list" item="step" open="(" separator="," close=")">
+            (#{step.boardNo}, #{step.step})
+        </foreach>
+    </delete>
+    
+	<!-- 좋아요 -->
+    <!-- 좋아요 여부 확인 -->
+	<select id="selectLikesCount" resultType="int">
+	    SELECT COUNT(*) FROM LIKES
+	    WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+	</select>
+	
+	<!-- 작성자 확인 -->
+	<select id="selectBoardUserNo" parameterType="int" resultType="int">
+	    SELECT USER_NO FROM BOARD WHERE BOARD_NO = #{boardNo}
+	</select>
+	
+	<!-- 좋아요 추가 -->
+	<insert id="insertLikes">
+	    INSERT INTO LIKES (BOARD_NO, USER_NO)
+	    VALUES (#{boardNo}, #{userNo})
+	</insert>
+	
+	<!-- 좋아요 취소 -->
+	<delete id="deleteLikes">
+	    DELETE FROM LIKES
+	    WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+	</delete>
+	
+	<!-- 좋아요 수 증가 -->
+	<update id="increaseLikes">
+	    UPDATE BOARD SET LIKES_COUNT = LIKES_COUNT + 1
+	    WHERE BOARD_NO = #{boardNo}
+	</update>
+	
+	<!-- 좋아요 수 감소 -->
+	<update id="decreaseLikes">
+	    UPDATE BOARD SET LIKES_COUNT = LIKES_COUNT - 1
+	    WHERE BOARD_NO = #{boardNo}
+	</update>
+	<!-- 좋아요 끝 -->
+	
+	
+	<!-- SCRAP ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ-->
+
+    <!-- 스크랩 추가 -->
+    <insert id="insertScrap" parameterType="Scrap">
+        INSERT INTO SCRAP (BOARD_NO, USER_NO, SCRAP_DATE)
+        VALUES (#{boardNo}, #{userNo}, NOW())
+    </insert>
+
+    <!-- 스크랩 취소 -->
+    <delete id="deleteScrap" parameterType="Scrap">
+        DELETE FROM SCRAP WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+    </delete>
+
+    <!-- 스크랩 여부 확인 -->
+    <select id="selectScrapCount" parameterType="Scrap" resultType="int">
+        SELECT COUNT(*) FROM SCRAP
+        WHERE BOARD_NO = #{boardNo} AND USER_NO = #{userNo}
+    </select>
+    
+    <!-- SCRAP 끝  ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ -->
 </mapper>

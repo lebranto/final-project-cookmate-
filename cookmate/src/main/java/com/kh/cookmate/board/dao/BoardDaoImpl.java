@@ -1,12 +1,18 @@
 package com.kh.cookmate.board.dao;
 
+import java.util.List;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.IngredientDto;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
 import com.kh.cookmate.board.model.vo.IngredientSet;
+import com.kh.cookmate.board.model.vo.Likes;
+import com.kh.cookmate.board.model.vo.Scrap;
 import com.kh.cookmate.board.model.vo.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -44,5 +50,94 @@ public class BoardDaoImpl implements BoardDao{
 	public int countApiRecipes() {
         return session.selectOne("boardmapper.countApiRecipes");
     }
+
+	@Override
+	public BoardDetail getBoardDetail(int boardNo) {
+		return session.selectOne("boardmapper.getBoardDetail", boardNo);
+	}
+
+	@Override public int insertIngredients(List<Ingredient> list) {
+        return session.insert("boardmapper.insertIngredients", list);
+    }
+
+	@Override public int insertCookSteps(List<CookStep> list) {
+        return session.insert("boardmapper.insertCookSteps", list);
+    }
+
+	 @Override 
+	 public int updateBoard(Board board) {
+        return session.update("boardmapper.updateBoard", board);
+    }
+
+	 @Override 
+	 public int updateTag(Tag tag) {
+        return session.update("boardmapper.updateTag", tag);
+    }
+
+	 @Override 
+	 public int deleteIngredients(List<Integer> list) {
+        return session.delete("boardmapper.deleteIngredients", list);
+    }
+
+	 @Override 
+	 public int updateIngredients(List<IngredientDto.IngDetail> list) {
+        return session.update("boardmapper.updateIngredients", list);
+    }
+
+	 @Override
+	 public int deleteCookSteps(List<CookStep> list) {
+        return session.delete("boardmapper.deleteCookSteps", list);
+    }
+
+	@Override
+	public int updateCookSteps(List<CookStep> list) {
+		return session.update("boardmapper.updateCookSteps", list);
+	}
+
+	@Override
+	public int deleteIngredientSet(int setNo) {
+		return session.delete("boardmapper.deleteIngredientSet", setNo);
+	}
+
+	@Override
+	public int deleteIngredientsBySetNo(int setNo) {
+		return session.delete("boardmapper.deleteIngredientsBySetNo", setNo);
+	}
+
+	@Override
+	public int deleteBoard(int boardNo) {
+		return session.delete("boardmapper.deleteBoard", boardNo);
+	}
 	
+	
+	// 좋아요
+	@Override public int selectLikesCount(Likes likes) {
+	    return session.selectOne("boardmapper.selectLikesCount", likes);
+	}
+	@Override public int selectBoardUserNo(int boardNo) {
+	    return session.selectOne("boardmapper.selectBoardUserNo", boardNo);
+	}
+	@Override public int insertLikes(Likes likes) {
+	    return session.insert("boardmapper.insertLikes", likes);
+	}
+	@Override public int deleteLikes(Likes likes) {
+	    return session.delete("boardmapper.deleteLikes", likes);
+	}
+	@Override public int increaseLikes(int boardNo) {
+	    return session.update("boardmapper.increaseLikes", boardNo);
+	}
+	@Override public int decreaseLikes(int boardNo) {
+	    return session.update("boardmapper.decreaseLikes", boardNo);
+	}
+	
+	// 스크랩
+	@Override public int insertScrap(Scrap scrap) {
+        return session.insert("boardmapper.insertScrap", scrap);
+    }
+    @Override public int deleteScrap(Scrap scrap) {
+        return session.delete("boardmapper.deleteScrap", scrap);
+    }
+    @Override public int selectScrapCount(Scrap scrap) {
+        return session.selectOne("boardmapper.selectScrapCount", scrap);
+    }
 }

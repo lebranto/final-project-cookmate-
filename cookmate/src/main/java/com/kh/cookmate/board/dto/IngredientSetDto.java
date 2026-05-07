@@ -1,19 +1,22 @@
 package com.kh.cookmate.board.dto;
 
-import java.util.List;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 public class IngredientSetDto {
-	@Data
+
+    @Data 
     @NoArgsConstructor
     public static class SetWrite {
-        private String setName;                         // 주재료, 양념 등
+        private int setNo;          // 수정/삭제 식별용
+        private String setName;
+        private boolean deleted;    
+        private boolean isNew;      
         private List<IngredientDto.IngWrite> ingredients;
     }
 
-    @Data
+    @Data 
     @NoArgsConstructor
     public static class SetDetail {
         private int setNo;
