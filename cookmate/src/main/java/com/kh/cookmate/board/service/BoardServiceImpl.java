@@ -1,5 +1,6 @@
 package com.kh.cookmate.board.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kh.cookmate.board.dao.BoardDao;
 import com.kh.cookmate.board.dto.BoardDto;
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.CookStepDto;
+import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
+import com.kh.cookmate.board.dto.IngredientDto.IngWrite;
 import com.kh.cookmate.board.dto.IngredientSetDto.SetWrite;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.CookStep;
@@ -97,6 +101,126 @@ public class BoardServiceImpl implements BoardService {
 	@Override
     public BoardDetail getBoardDetail(int boardNo) {
         return boardDao.getBoardDetail(boardNo);
+    }
+
+	//레시피 수정 (부분 수정)
+    @Override
+    @Transactional
+    public int updateRecipe(int boardNo, BoardDto.BoardPut dto) {
+
+        // 1. BOARD 기본 정보 수정
+        Board board = new Board();
+        board.setBoardNo(boardNo);
+        board.setBoardTitle(dto.getBoardTitle());
+        board.setIntroduce(dto.getIntroduce());
+        board.setImageUrl(dto.getImageUrl());
+        board.setUrl(dto.getUrl());
+        board.setOpen(dto.getOpen());
+        boardDao.updateBoard(board);
+
+        // 2. TAG 수정
+        if (dto.getTypeName() != null || dto.getDifficult() != null
+                || dto.getCookTime() != null || dto.getCalory() != null) {
+            Tag tag = new Tag();
+            tag.setTypeNo(dto.getTypeNo());
+            tag.setTypeName(dto.getTypeName());
+            tag.setDifficult(dto.getDifficult());
+            tag.setCookTime(dto.getCookTime());
+            tag.setCalory(dto.getCalory());
+            boardDao.updateTag(tag);
+        }
+
+     // 3. 재료 묶음 분류 후 처리
+        if (dto.getIngredientSets() != null) {
+            List<Ingredient> toInsert = new ArrayList<>();
+            List<IngDetail> toUpdate = new ArrayList<>();
+            List<Integer> toDelete = new ArrayList<>();
+
+            for (SetWrite setDto : dto.getIngredientSets()) {
+
+                // 묶음 삭제
+                if (setDto.isDeleted()) {
+                    boardDao.deleteIngredientsBySetNo(setDto.getSetNo()); // 재료 먼저 삭제
+                    boardDao.deleteIngredientSet(setDto.getSetNo());      // 묶음 삭제
+                    continue;
+                }
+
+                // 묶음 신규 추가
+                if (setDto.isNew()) {
+                    IngredientSet newSet = new IngredientSet();
+                    newSet.setBoardNo(boardNo);
+                    boardDao.insertIngredientSet(newSet); 
+
+                    // 생성된 setNo로 재료 INSERT
+                    if (setDto.getIngredients() != null && !setDto.getIngredients().isEmpty()) {
+                        List<Ingredient> ings = setDto.getIngredients().stream()
+                            .filter(ingDto -> !ingDto.isDeleted()) 
+                            .map(ingDto -> {
+                                Ingredient ing = new Ingredient();
+                                ing.setSetNo(newSet.getSetNo()); 
+                                ing.setIngredientName(ingDto.getIngredientName());
+                                ing.setQuantity(ingDto.getQuantity());
+                                ing.setUnit(ingDto.getUnit());
+                                return ing;
+                            }).collect(Collectors.toList());
+
+                        if (!ings.isEmpty()) boardDao.insertIngredients(ings);
+                    }
+                    continue; 
+                }
+
+                // 기존 묶음 안의 재료 부분 수정
+                if (setDto.getIngredients() == null) continue;
+                for (IngWrite ingDto : setDto.getIngredients()) {
+                    if (ingDto.isDeleted()) {
+                        toDelete.add(ingDto.getIngredientNo());
+                    } else if (ingDto.getIngredientNo() == 0) {
+                        Ingredient ing = new Ingredient();
+                        ing.setSetNo(setDto.getSetNo());
+                        ing.setIngredientName(ingDto.getIngredientName());
+                        ing.setQuantity(ingDto.getQuantity());
+                        ing.setUnit(ingDto.getUnit());
+                        toInsert.add(ing);
+                    } else {
+                        IngDetail detail = new IngDetail();
+                        detail.setIngredientNo(ingDto.getIngredientNo());
+                        detail.setIngredientName(ingDto.getIngredientName());
+                        detail.setQuantity(ingDto.getQuantity());
+                        detail.setUnit(ingDto.getUnit());
+                        toUpdate.add(detail);
+                    }
+                }
+            }
+
+            if (!toDelete.isEmpty()) boardDao.deleteIngredients(toDelete);
+            if (!toUpdate.isEmpty()) boardDao.updateIngredients(toUpdate);
+            if (!toInsert.isEmpty()) boardDao.insertIngredients(toInsert);
+        }
+
+        // 4. 조리단계 분류 후 한번에 처리
+        if (dto.getCookSteps() != null) {
+            List<CookStep> toInsert = new ArrayList<>();
+            List<CookStep> toUpdate = new ArrayList<>();
+            List<CookStep> toDelete = new ArrayList<>();
+
+            for (CookStepDto.StepWrite stepDto : dto.getCookSteps()) {
+                CookStep step = new CookStep();
+                step.setBoardNo(boardNo);
+                step.setStep(stepDto.getStep());
+                step.setCookContent(stepDto.getCookContent());
+                step.setCookImage(stepDto.getCookImage() != null ? stepDto.getCookImage() : "");
+
+                if (stepDto.isDeleted())    toDelete.add(step);
+                else if (stepDto.isNew())   toInsert.add(step);
+                else                        toUpdate.add(step);
+            }
+
+            if (!toDelete.isEmpty()) boardDao.deleteCookSteps(toDelete);
+            if (!toUpdate.isEmpty()) boardDao.updateCookSteps(toUpdate);
+            if (!toInsert.isEmpty()) boardDao.insertCookSteps(toInsert);
+        }
+
+        return 1;
     }
 	
 	

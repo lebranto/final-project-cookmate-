@@ -1,10 +1,20 @@
 package com.kh.cookmate.controller;
 
 import java.net.URI;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.kh.cookmate.board.dto.BoardDto;
+import com.kh.cookmate.board.dto.BoardDto.BoardPut;
 import com.kh.cookmate.board.service.BoardService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,5 +44,14 @@ public class BoardController {
         if (detail == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(detail);
     }
-
+    
+ // 레시피 수정
+    @PutMapping("/boards/{boardNo}")
+    public ResponseEntity<?> updateRecipe(
+            @PathVariable int boardNo,
+            @RequestBody BoardPut dto) {
+        int result = service.updateRecipe(boardNo, dto);
+        if (result > 0) return ResponseEntity.ok().build();
+        return ResponseEntity.badRequest().build();
+    }
 }

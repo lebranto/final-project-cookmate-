@@ -11,6 +11,8 @@ public class IngredientSetDto {
     public static class SetWrite {
         private int setNo;          // 수정/삭제 식별용
         private String setName;
+        private boolean deleted;    
+        private boolean isNew;      
         private List<IngredientDto.IngWrite> ingredients;
     }
 

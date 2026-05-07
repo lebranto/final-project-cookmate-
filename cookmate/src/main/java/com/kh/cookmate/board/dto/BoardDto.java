@@ -58,4 +58,21 @@ public class BoardDto {
         private List<IngredientSetDto.SetDetail> ingredientSets;
         private List<CookStepDto.StepDetail> cookSteps;
     }
+    
+ // 레시피 수정
+    @Data @NoArgsConstructor
+    public static class BoardPut {
+        private int typeNo;         // TAG 수정용
+        private String boardTitle;
+        private String introduce;
+        private String imageUrl;
+        private String url;
+        private char open;
+        private String typeName;
+        private String difficult;
+        private String cookTime;
+        private String calory;
+        private List<IngredientSetDto.SetWrite> ingredientSets;
+        private List<CookStepDto.StepWrite> cookSteps;
+    }
 }

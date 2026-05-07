@@ -4,7 +4,7 @@
 
 <mapper namespace="boardmapper">
 
-    <!-- ── ResultMap ──────────────────────────── -->
+    <!-- ResultMap -->
 
     <resultMap id="boardDetailMap"
                type="com.kh.cookmate.board.dto.BoardDto$BoardDetail">
@@ -39,7 +39,7 @@
                     select="selectIngredientList"/>
     </resultMap>
 
-    <!-- ── BOARD ──────────────────────────────── -->
+    <!-- BOARD -->
 
     <!-- 공식 레시피 수 조회 -->
     <select id="countApiRecipes" resultType="int">
@@ -73,8 +73,21 @@
           AND b.BOARD_DELETE = 'N'
     </select>
 
+    <!-- 레시피 수정 -->
+    <update id="updateBoard" parameterType="Board">
+        UPDATE BOARD
+        <set>
+            <if test="boardTitle != null">BOARD_TITLE = #{boardTitle},</if>
+            <if test="introduce != null">INTRODUCE = #{introduce},</if>
+            <if test="imageUrl != null">IMAGE_URL = #{imageUrl},</if>
+            <if test="url != null">URL = #{url},</if>
+            <if test="open != 0">OPEN = #{open},</if>
+        </set>
+        WHERE BOARD_NO = #{boardNo}
+    </update>
 
-    <!-- TAG  -->
+
+    <!-- TAG -->
 
     <!-- 태그 등록 -->
     <insert id="insertTag" parameterType="Tag"
@@ -83,7 +96,19 @@
         VALUES (#{typeName}, #{difficult}, #{cookTime}, #{calory}, #{ai})
     </insert>
 
-    <!--INGREDIENT_SET -->
+    <!-- 태그 수정 -->
+    <update id="updateTag" parameterType="Tag">
+        UPDATE TAG
+        <set>
+            <if test="typeName != null">TYPE_NAME = #{typeName},</if>
+            <if test="difficult != null">DIFFICULT = #{difficult},</if>
+            <if test="cookTime != null">COOK_TIME = #{cookTime},</if>
+            <if test="calory != null">CALORY = #{calory},</if>
+        </set>
+        WHERE TYPE_NO = #{typeNo}
+    </update>
+
+    <!-- INGREDIENT_SET -->
 
     <!-- 재료 묶음 등록 -->
     <insert id="insertIngredientSet" parameterType="IngredientSet"
@@ -97,6 +122,10 @@
         SELECT SET_NO FROM INGREDIENT_SET WHERE BOARD_NO = #{boardNo}
     </select>
 
+    <!-- 재료 묶음 삭제 -->
+    <delete id="deleteIngredientSet" parameterType="int">
+        DELETE FROM INGREDIENT_SET WHERE SET_NO = #{setNo}
+    </delete>
 
     <!-- INGREDIENT -->
 
@@ -121,7 +150,33 @@
         FROM INGREDIENT WHERE SET_NO = #{setNo}
     </select>
 
-    <!-- COOK_STEP  -->
+    <!-- 재료 여러건 수정 (foreach) -->
+    <update id="updateIngredients" parameterType="java.util.List">
+        <foreach collection="list" item="ing" separator=";">
+            UPDATE INGREDIENT
+            <set>
+                <if test="ing.ingredientName != null">INGREDIENT_NAME = #{ing.ingredientName},</if>
+                <if test="ing.quantity != null">QUANTITY = #{ing.quantity},</if>
+                <if test="ing.unit != null">UNIT = #{ing.unit},</if>
+            </set>
+            WHERE INGREDIENT_NO = #{ing.ingredientNo}
+        </foreach>
+    </update>
+
+    <!-- 재료 여러건 삭제 (foreach) -->
+    <delete id="deleteIngredients" parameterType="java.util.List">
+        DELETE FROM INGREDIENT WHERE INGREDIENT_NO IN
+        <foreach collection="list" item="no" open="(" separator="," close=")">
+            #{no}
+        </foreach>
+    </delete>
+    
+    <!-- 묶음 안 재료 전체 삭제 (묶음 삭제 전 선행) -->
+	<delete id="deleteIngredientsBySetNo" parameterType="int">
+	    DELETE FROM INGREDIENT WHERE SET_NO = #{setNo}
+	</delete>
+
+    <!-- COOK_STEP -->
 
     <!-- 조리단계 여러건 등록 (foreach) -->
     <insert id="insertCookSteps" parameterType="java.util.List">
@@ -139,6 +194,26 @@
         WHERE BOARD_NO = #{boardNo}
         ORDER BY STEP ASC
     </select>
+
+    <!-- 조리단계 여러건 수정 (foreach) -->
+    <update id="updateCookSteps" parameterType="java.util.List">
+        <foreach collection="list" item="step" separator=";">
+            UPDATE COOK_STEP
+            <set>
+                <if test="step.cookContent != null">COOK_CONTENT = #{step.cookContent},</if>
+                <if test="step.cookImage != null">COOK_IMAGE = #{step.cookImage},</if>
+            </set>
+            WHERE BOARD_NO = #{step.boardNo} AND STEP = #{step.step}
+        </foreach>
+    </update>
+
+    <!-- 조리단계 여러건 삭제 (foreach) -->
+    <delete id="deleteCookSteps" parameterType="java.util.List">
+        DELETE FROM COOK_STEP WHERE (BOARD_NO, STEP) IN
+        <foreach collection="list" item="step" open="(" separator="," close=")">
+            (#{step.boardNo}, #{step.step})
+        </foreach>
+    </delete>
 
     
 

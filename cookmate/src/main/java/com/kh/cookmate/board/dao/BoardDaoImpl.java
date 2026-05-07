@@ -6,6 +6,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.IngredientDto;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
@@ -60,5 +61,45 @@ public class BoardDaoImpl implements BoardDao{
 	@Override public int insertCookSteps(List<CookStep> list) {
         return session.insert("boardmapper.insertCookSteps", list);
     }
+
+	 @Override 
+	 public int updateBoard(Board board) {
+        return session.update("boardmapper.updateBoard", board);
+    }
+
+	 @Override 
+	 public int updateTag(Tag tag) {
+        return session.update("boardmapper.updateTag", tag);
+    }
+
+	 @Override 
+	 public int deleteIngredients(List<Integer> list) {
+        return session.delete("boardmapper.deleteIngredients", list);
+    }
+
+	 @Override 
+	 public int updateIngredients(List<IngredientDto.IngDetail> list) {
+        return session.update("boardmapper.updateIngredients", list);
+    }
+
+	 @Override
+	 public int deleteCookSteps(List<CookStep> list) {
+        return session.delete("boardmapper.deleteCookSteps", list);
+    }
+
+	@Override
+	public int updateCookSteps(List<CookStep> list) {
+		return session.update("boardmapper.updateCookSteps", list);
+	}
+
+	@Override
+	public int deleteIngredientSet(int setNo) {
+		return session.delete("boardmapper.deleteIngredientSet", setNo);
+	}
+
+	@Override
+	public int deleteIngredientsBySetNo(int setNo) {
+		return session.delete("boardmapper.deleteIngredientsBySetNo", setNo);
+	}
 	
 }

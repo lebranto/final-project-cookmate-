@@ -3,6 +3,7 @@ package com.kh.cookmate.board.dao;
 import java.util.List;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
@@ -28,5 +29,21 @@ public interface BoardDao {
 	int insertIngredients(List<Ingredient> ings);
 
 	int insertCookSteps(List<CookStep> steps);
+
+	int updateBoard(Board board);
+
+	int updateTag(Tag tag);
+
+	int deleteIngredients(List<Integer> toDelete);
+
+	int updateIngredients(List<IngDetail> toUpdate);
+
+	int deleteCookSteps(List<CookStep> toDelete);
+
+	int updateCookSteps(List<CookStep> toUpdate);
+
+	int deleteIngredientSet(int setNo);
+
+	int deleteIngredientsBySetNo(int setNo);
 
 }
