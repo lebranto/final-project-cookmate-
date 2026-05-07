@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="member">
+
+    <!-- 마이페이지 유저 조회 -->
+    <select id="selectUserByNo" parameterType="long" resultType="Member">
+        SELECT * FROM USER WHERE USER_NO = #{userNo}
+    </select>
+
+    <select id="selectChefRanking" parameterType="string" resultType="Member">
+	    SELECT 
+	        u.USER_NO, 
+	        u.NICKNAME, 
+	        u.PROFILE_IMAGE_URL, 
+	        u.INTRODUCE,
+	        <!-- 1. 작성한 레시피 수 (삭제되지 않은 게시글 기준) -->
+	        (SELECT COUNT(*) FROM BOARD b 
+	         WHERE b.USER_NO = u.USER_NO 
+	           AND b.BOARD_DELETE = 'N') as recipe_count,
+<!--	        /* 2. 내 레시피가 스크랩된 총 횟수 */ -->
+	        (SELECT COUNT(*) FROM SCRAP s 
+	         JOIN BOARD b ON s.BOARD_NO = b.BOARD_NO 
+	         WHERE b.USER_NO = u.USER_NO) as scrap_count
+	    FROM USER u
+	    WHERE u.WITHDRAW = 'N'
+	    <choose>
+	        <when test="filter == 'scrap'">
+	            ORDER BY scrap_count DESC, recipe_count DESC
+	        </when>
+	        <otherwise>
+<!--	            /* 기본값: 레시피 많은 순 */-->
+	            ORDER BY recipe_count DESC, scrap_count DESC
+	        </otherwise>
+	    </choose>
+	</select>
+
+</mapper>
