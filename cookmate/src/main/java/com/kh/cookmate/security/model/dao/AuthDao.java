@@ -56,5 +56,10 @@ public class AuthDao {
 		return session.selectOne("auth.findUserByProvider",param);
 	}
 
+	public String findNicknameByUserNo(int userNo) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 }

@@ -38,7 +38,7 @@ public class CookieUtil {
 		}
 		
 		return null;
-		// 확인용
+		
 	}
 	
 }
