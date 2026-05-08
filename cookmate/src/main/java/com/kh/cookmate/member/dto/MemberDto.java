@@ -1,21 +1,31 @@
 package com.kh.cookmate.member.dto;
 
+import java.util.List;
 import lombok.*;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // 빌더 패턴을 쓰면 VO에서 DTO로 옮길 때 코드가 깔끔해집니다.
+@Builder
 public class MemberDto {
-    private int userNo;
+    private long userNo;          
     private String userEmail;
     private String nickname;
     private String profileImageUrl;
     private String introduce;
+    
+    // 마이페이지 통계 (UI 디자인 반영)
     private int recipeCount;
     private int scrapCount;
+    private int inquiryCount;  
 
-    // VO를 DTO로 변환해주는 정적 메서드를 만들어두면 편리합니다.
+    // 회원 정보 수정용 (알레르기 설정 반영)
+    private List<String> allergies; 
+
+    /**
+     * VO(Entity)를 DTO로 변환하는 메서드
+     * VO의 필드 타입도 long userNo로 맞춰주어야 오류가 나지 않습니다.
+     */
     public static MemberDto fromEntity(com.kh.cookmate.member.vo.Member member) {
         if (member == null) return null;
         
@@ -27,6 +37,8 @@ public class MemberDto {
                 .introduce(member.getIntroduce())
                 .recipeCount(member.getRecipeCount())
                 .scrapCount(member.getScrapCount())
+                .inquiryCount(member.getInquiryCount()) // VO에도 해당 필드 추가 필요
+                // allergies는 보통 별도 조인이 필요하므로 Service 단에서 별도로 set 해주는 것이 일반적입니다.
                 .build();
     }
 }

@@ -34,5 +34,100 @@
 	        </otherwise>
 	    </choose>
 	</select>
+	
+	<select id="selectMyRecipes" parameterType="map" resultType="RecipeDto">
+        SELECT 
+            BOARD_NO as boardNo,
+            BOARD_TITLE as title,
+            CATEGORY,
+            COOK_TIME as cookTime,
+            OPEN as open,
+            LIKES_COUNT as likesCount,
+            BOARD_POSTDATE as boardPostdate,
+            CASE 
+                WHEN CATEGORY = '한식' THEN 'thumb-green'
+                WHEN CATEGORY = '양식' THEN 'thumb-salmon'
+                WHEN CATEGORY = '일식' THEN 'thumb-blue'
+                WHEN CATEGORY = '분식' THEN 'thumb-peach'
+                ELSE 'thumb-mint'
+            END as thumbClass
+        FROM BOARD
+        WHERE USER_NO = #{userNo}
+          AND BOARD_DELETE = 'N'
+        <if test="category != null and category != '전체'">
+          AND CATEGORY = #{category}
+        </if>
+        ORDER BY BOARD_POSTDATE DESC
+    </select>
+
+    <select id="selectMyScraps" parameterType="map" resultType="RecipeDto">
+        SELECT 
+            B.BOARD_NO as boardNo,
+            B.BOARD_TITLE as title,
+            B.CATEGORY as category,
+            B.COOK_TIME as cookTime,
+            B.LIKES_COUNT as likesCount,
+            M.NICKNAME as authorNickname,
+            CASE 
+                WHEN B.CATEGORY = '한식' THEN 'thumb-green'
+                WHEN B.CATEGORY = '양식' THEN 'thumb-salmon'
+                ELSE 'thumb-peach'
+            END as thumbClass
+        FROM SCRAP S
+        JOIN BOARD B ON S.BOARD_NO = B.BOARD_NO
+        JOIN USER M ON B.USER_NO = M.USER_NO
+        WHERE S.USER_NO = #{userNo}
+          AND B.BOARD_DELETE = 'N'
+        <if test="category != null and category != '전체'">
+          AND B.CATEGORY = #{category}
+        </if>
+        ORDER BY S.SCRAP_DATE DESC
+    </select>
+
+    <select id="selectMyInquiries" parameterType="long" resultType="InquiryDto">
+        SELECT 
+            INQUIRY_NO as inquiryNo,
+            INQUIRY_TITLE as title,
+            INQUIRY_CONTENT as content,
+            INQUIRY_POSTDATE as createDate,
+            INQUIRY_STATUS as inquiryStatus,
+            TYPE_NAME as typeName
+        FROM INQUIRY
+        WHERE USER_NO = #{userNo}
+        ORDER BY INQUIRY_POSTDATE DESC
+    </select>
+
+    <update id="updateMember" parameterType="Member">
+        UPDATE USER
+        <set>
+            <if test="nickname != null">NICKNAME = #{nickname},</if>
+            <if test="introduce != null">INTRODUCE = #{introduce},</if>
+            <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl}</if>
+        </set>
+        WHERE USER_NO = #{userNo}
+    </update>
+
+    <delete id="deleteUserAllergies" parameterType="long">
+        DELETE FROM ALLERGY WHERE USER_NO = #{userNo}
+    </delete>
+
+    <insert id="insertUserAllergy" parameterType="map">
+        INSERT INTO ALLERGY (ALLERGY_NAME, USER_NO)
+        VALUES (#{allergyName}, #{userNo})
+    </insert>
+
+    <update id="withdrawMember" parameterType="long">
+        UPDATE USER 
+        SET WITHDRAW = 'Y' 
+        WHERE USER_NO = #{userNo}
+    </update>
+
+    <select id="getMemberStats" parameterType="long" resultType="MemberDto">
+        SELECT 
+            (SELECT COUNT(*) FROM BOARD WHERE USER_NO = #{userNo} AND BOARD_DELETE = 'N') as recipeCount,
+            (SELECT COUNT(*) FROM SCRAP WHERE USER_NO = #{userNo}) as scrapCount,
+            (SELECT COUNT(*) FROM INQUIRY WHERE USER_NO = #{userNo}) as inquiryCount
+        FROM DUAL
+    </select>
 
 </mapper>
