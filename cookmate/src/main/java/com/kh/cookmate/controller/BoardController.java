@@ -119,4 +119,11 @@ public class BoardController {
         return ResponseEntity.ok(service.getCommentList(boardNo));
     }
     
+ // 댓글 삭제
+    @DeleteMapping("/comments/{commentNo}")
+    public ResponseEntity<?> deleteComment(@PathVariable int commentNo) {
+        int result = service.deleteComment(commentNo);
+        if (result > 0) return ResponseEntity.ok().build();
+        return ResponseEntity.badRequest().build();
+    }
 }

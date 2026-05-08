@@ -26,5 +26,7 @@ public interface BoardService{
 
 	List<CommentDetail> getCommentList(int boardNo);
 
+	int deleteComment(int commentNo);
+
 
 }

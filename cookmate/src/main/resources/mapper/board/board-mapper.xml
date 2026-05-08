@@ -335,4 +335,10 @@
 	                column="COMMENT_NO"
 	                select="selectReplyList"/>
 	</resultMap>
+	
+	<!-- 댓글 삭제 (논리삭제)-->
+	<update id="deleteComment" parameterType="int">
+		UPDATE COMMENT SET COMMENT_DELETE = 'Y'
+		WHERE COMMENT_NO = #{commentNo}
+	</update>
 </mapper>

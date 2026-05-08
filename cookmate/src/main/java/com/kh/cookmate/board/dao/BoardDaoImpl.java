@@ -162,6 +162,11 @@ public class BoardDaoImpl implements BoardDao{
     public List<CommentDetail> selectCommentList(int boardNo) {
         return session.selectList("boardmapper.selectCommentList", boardNo);
     }
+
+	@Override
+	public int deleteComment(int commentNo) {
+		return session.update("boardmapper.deleteComment", commentNo);
+	}
     
   
 }

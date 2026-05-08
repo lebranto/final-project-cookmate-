@@ -68,6 +68,7 @@ public interface BoardDao {
 	// 댓글
 	int insertComment(Comment comment);
 	List<CommentDetail> selectCommentList(int boardNo);
+	int deleteComment(int commentNo);
 	
 
 
