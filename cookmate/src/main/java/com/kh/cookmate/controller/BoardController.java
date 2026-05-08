@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.cookmate.board.dto.BoardDto;
 import com.kh.cookmate.board.dto.BoardDto.BoardPut;
+import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
+import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
 import com.kh.cookmate.board.service.BoardService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,7 +32,7 @@ public class BoardController {
 
     // 레시피 등록
     @PostMapping("/boards")
-    public ResponseEntity<?> insertRecipe(@RequestBody BoardDto.BoardWrite dto) {
+    public ResponseEntity<?> insertRecipe(@RequestBody BoardWrite dto) {
         int result = service.insertRecipe(dto);
         if (result > 0) {
             URI location = URI.create("/boards/" + dto.getBoardNo());
@@ -98,4 +100,17 @@ public class BoardController {
         	return ResponseEntity.ok("스크랩 취소");
         }
     }
+    
+    // 댓글
+ // 댓글 등록
+    @PostMapping("/boards/{boardNo}/comments")
+    public ResponseEntity<?> insertComment(
+            @PathVariable int boardNo,
+            @RequestBody CommentWrite dto) {
+        dto.setBoardNo(boardNo);
+        int result = service.insertComment(dto);
+        if (result > 0) return ResponseEntity.ok().build();
+        return ResponseEntity.badRequest().build();
+    }
+    
 }

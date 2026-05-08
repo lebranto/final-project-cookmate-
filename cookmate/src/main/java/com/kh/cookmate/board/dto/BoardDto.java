@@ -59,7 +59,7 @@ public class BoardDto {
         private List<CookStepDto.StepDetail> cookSteps;
     }
     
- // 레시피 수정
+    // 레시피 수정
     @Data @NoArgsConstructor
     public static class BoardPut {
         private int typeNo;         // TAG 수정용
@@ -75,4 +75,6 @@ public class BoardDto {
         private List<IngredientSetDto.SetWrite> ingredientSets;
         private List<CookStepDto.StepWrite> cookSteps;
     }
+    
+    
 }

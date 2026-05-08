@@ -277,4 +277,17 @@
     </select>
     
     <!-- SCRAP 끝  ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ -->
+    
+    <!-- COMMENT  ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ -->
+    <!-- 댓글 등록 -->
+	<insert id="insertComment" parameterType="Comment"
+        useGeneratedKeys="true" keyProperty="commentNo">
+    INSERT INTO COMMENT (
+        BOARD_NO, PARENT_COMMENT_NO, USER_NO,
+        COMMENT_CONTENT, COMMENT_DELETE, COMMENT_POSTDATE
+    ) VALUES (
+        #{boardNo}, #{parentCommentNo}, #{userNo},
+        #{commentContent}, 'N', NOW()
+    )
+</insert>
 </mapper>

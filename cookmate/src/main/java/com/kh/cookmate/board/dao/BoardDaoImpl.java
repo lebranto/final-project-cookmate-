@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
 import com.kh.cookmate.board.dto.IngredientDto;
 import com.kh.cookmate.board.model.vo.Board;
+import com.kh.cookmate.board.model.vo.Comment;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
 import com.kh.cookmate.board.model.vo.IngredientSet;
@@ -111,33 +112,50 @@ public class BoardDaoImpl implements BoardDao{
 	
 	
 	// 좋아요
-	@Override public int selectLikesCount(Likes likes) {
+	@Override 
+	public int selectLikesCount(Likes likes) {
 	    return session.selectOne("boardmapper.selectLikesCount", likes);
 	}
-	@Override public int selectBoardUserNo(int boardNo) {
+	@Override 
+	public int selectBoardUserNo(int boardNo) {
 	    return session.selectOne("boardmapper.selectBoardUserNo", boardNo);
 	}
-	@Override public int insertLikes(Likes likes) {
+	@Override 
+	public int insertLikes(Likes likes) {
 	    return session.insert("boardmapper.insertLikes", likes);
 	}
-	@Override public int deleteLikes(Likes likes) {
+	@Override 
+	public int deleteLikes(Likes likes) {
 	    return session.delete("boardmapper.deleteLikes", likes);
 	}
-	@Override public int increaseLikes(int boardNo) {
+	@Override 
+	public int increaseLikes(int boardNo) {
 	    return session.update("boardmapper.increaseLikes", boardNo);
 	}
-	@Override public int decreaseLikes(int boardNo) {
+	@Override 
+	public int decreaseLikes(int boardNo) {
 	    return session.update("boardmapper.decreaseLikes", boardNo);
 	}
 	
 	// 스크랩
-	@Override public int insertScrap(Scrap scrap) {
+	@Override 
+	public int insertScrap(Scrap scrap) {
         return session.insert("boardmapper.insertScrap", scrap);
     }
-    @Override public int deleteScrap(Scrap scrap) {
+    @Override 
+    public int deleteScrap(Scrap scrap) {
         return session.delete("boardmapper.deleteScrap", scrap);
     }
-    @Override public int selectScrapCount(Scrap scrap) {
+    @Override 
+    public int selectScrapCount(Scrap scrap) {
         return session.selectOne("boardmapper.selectScrapCount", scrap);
     }
+    
+    // 댓글
+    @Override 
+    public int insertComment(Comment comment) {
+        return session.insert("boardmapper.insertComment", comment);
+    }
+    
+  
 }
