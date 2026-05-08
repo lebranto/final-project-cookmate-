@@ -102,7 +102,7 @@ public class BoardController {
     }
     
     // 댓글
- // 댓글 등록
+    // 댓글 등록
     @PostMapping("/boards/{boardNo}/comments")
     public ResponseEntity<?> insertComment(
             @PathVariable int boardNo,
@@ -111,6 +111,12 @@ public class BoardController {
         int result = service.insertComment(dto);
         if (result > 0) return ResponseEntity.ok().build();
         return ResponseEntity.badRequest().build();
+    }
+    
+    // 댓글 목록 조회
+    @GetMapping("/boards/{boardNo}/comments")
+    public ResponseEntity<?> getCommentList(@PathVariable int boardNo) {
+        return ResponseEntity.ok(service.getCommentList(boardNo));
     }
     
 }

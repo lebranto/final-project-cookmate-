@@ -3,6 +3,7 @@ package com.kh.cookmate.board.dao;
 import java.util.List;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.Comment;
@@ -66,6 +67,7 @@ public interface BoardDao {
 	
 	// 댓글
 	int insertComment(Comment comment);
+	List<CommentDetail> selectCommentList(int boardNo);
 	
 
 

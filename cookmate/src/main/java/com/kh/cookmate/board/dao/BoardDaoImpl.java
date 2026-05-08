@@ -6,6 +6,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.IngredientDto;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.Comment;
@@ -155,6 +156,11 @@ public class BoardDaoImpl implements BoardDao{
     @Override 
     public int insertComment(Comment comment) {
         return session.insert("boardmapper.insertComment", comment);
+    }
+
+    @Override
+    public List<CommentDetail> selectCommentList(int boardNo) {
+        return session.selectList("boardmapper.selectCommentList", boardNo);
     }
     
   

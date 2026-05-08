@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kh.cookmate.board.dao.BoardDao;
 import com.kh.cookmate.board.dto.BoardDto;
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
 import com.kh.cookmate.board.dto.CookStepDto.StepWrite;
 import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
@@ -297,6 +298,11 @@ public class BoardServiceImpl implements BoardService {
 	    comment.setUserNo(dto.getUserNo());
 	    comment.setCommentContent(dto.getCommentContent());
 	    return boardDao.insertComment(comment);
+	}
+
+	@Override
+	public List<CommentDetail> getCommentList(int boardNo) {
+	    return boardDao.selectCommentList(boardNo);
 	}
 
 	
