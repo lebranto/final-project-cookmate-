@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.cookmate.board.dto.BoardDto;
 import com.kh.cookmate.board.dto.BoardDto.BoardPut;
+import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
+import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
 import com.kh.cookmate.board.service.BoardService;
 
 import lombok.RequiredArgsConstructor;
@@ -30,7 +32,7 @@ public class BoardController {
 
     // 레시피 등록
     @PostMapping("/boards")
-    public ResponseEntity<?> insertRecipe(@RequestBody BoardDto.BoardWrite dto) {
+    public ResponseEntity<?> insertRecipe(@RequestBody BoardWrite dto) {
         int result = service.insertRecipe(dto);
         if (result > 0) {
             URI location = URI.create("/boards/" + dto.getBoardNo());
@@ -97,5 +99,31 @@ public class BoardController {
         }else {
         	return ResponseEntity.ok("스크랩 취소");
         }
+    }
+    
+    // 댓글
+    // 댓글 등록
+    @PostMapping("/boards/{boardNo}/comments")
+    public ResponseEntity<?> insertComment(
+            @PathVariable int boardNo,
+            @RequestBody CommentWrite dto) {
+        dto.setBoardNo(boardNo);
+        int result = service.insertComment(dto);
+        if (result > 0) return ResponseEntity.ok().build();
+        return ResponseEntity.badRequest().build();
+    }
+    
+    // 댓글 목록 조회
+    @GetMapping("/boards/{boardNo}/comments")
+    public ResponseEntity<?> getCommentList(@PathVariable int boardNo) {
+        return ResponseEntity.ok(service.getCommentList(boardNo));
+    }
+    
+ // 댓글 삭제
+    @DeleteMapping("/comments/{commentNo}")
+    public ResponseEntity<?> deleteComment(@PathVariable int commentNo) {
+        int result = service.deleteComment(commentNo);
+        if (result > 0) return ResponseEntity.ok().build();
+        return ResponseEntity.badRequest().build();
     }
 }

@@ -277,4 +277,68 @@
     </select>
     
     <!-- SCRAP 끝  ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ -->
+    
+    <!-- COMMENT  ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ -->
+    <!-- 댓글 등록 -->
+	<insert id="insertComment" parameterType="Comment"
+	    useGeneratedKeys="true" keyProperty="commentNo">
+	    INSERT INTO COMMENT (
+	        BOARD_NO, PARENT_COMMENT_NO, USER_NO,
+	        COMMENT_CONTENT, COMMENT_DELETE, COMMENT_POSTDATE
+	    ) VALUES (
+	        #{boardNo}, #{parentCommentNo}, #{userNo},
+	        #{commentContent}, 'N', NOW()
+	    )
+	</insert>
+	
+	<!-- 댓글 목록 조회 (부모 댓글만) -->
+	<select id="selectCommentList" parameterType="int"
+	        resultMap="commentDetailMap">
+	    SELECT
+	        c.COMMENT_NO, c.PARENT_COMMENT_NO, c.USER_NO,
+	        c.COMMENT_CONTENT, c.COMMENT_DELETE, c.COMMENT_POSTDATE,
+	        u.NICKNAME, u.PROFILE_IMAGE_URL
+	    FROM COMMENT c
+	    JOIN USER u ON c.USER_NO = u.USER_NO
+	    WHERE c.BOARD_NO = #{boardNo}
+	      AND c.COMMENT_DELETE = 'N'
+	      AND c.PARENT_COMMENT_NO IS NULL
+	    ORDER BY c.COMMENT_POSTDATE ASC
+	</select>
+	
+	<!-- 답글 조회 -->
+	<select id="selectReplyList" parameterType="int"
+	        resultType="com.kh.cookmate.board.dto.CommentDto$CommentDetail">
+	    SELECT
+	        c.COMMENT_NO, c.PARENT_COMMENT_NO, c.USER_NO,
+	        c.COMMENT_CONTENT, c.COMMENT_DELETE, c.COMMENT_POSTDATE,
+	        u.NICKNAME, u.PROFILE_IMAGE_URL
+	    FROM COMMENT c
+	    JOIN USER u ON c.USER_NO = u.USER_NO
+	    WHERE c.PARENT_COMMENT_NO = #{commentNo}
+	      AND c.COMMENT_DELETE = 'N'
+	    ORDER BY c.COMMENT_POSTDATE ASC
+	</select>
+	
+	<!-- ResultMap -->
+	<resultMap id="commentDetailMap"
+	           type="com.kh.cookmate.board.dto.CommentDto$CommentDetail">
+	    <result property="commentNo"        column="COMMENT_NO"/>
+	    <result property="parentCommentNo"  column="PARENT_COMMENT_NO"/>
+	    <result property="userNo"           column="USER_NO"/>
+	    <result property="nickname"         column="NICKNAME"/>
+	    <result property="profileImageUrl"  column="PROFILE_IMAGE_URL"/>
+	    <result property="commentContent"   column="COMMENT_CONTENT"/>
+	    <result property="commentDelete"    column="COMMENT_DELETE"/>
+	    <result property="commentPostdate"  column="COMMENT_POSTDATE"/>
+	    <collection property="replies"
+	                column="COMMENT_NO"
+	                select="selectReplyList"/>
+	</resultMap>
+	
+	<!-- 댓글 삭제 (논리삭제)-->
+	<update id="deleteComment" parameterType="int">
+		UPDATE COMMENT SET COMMENT_DELETE = 'Y'
+		WHERE COMMENT_NO = #{commentNo}
+	</update>
 </mapper>

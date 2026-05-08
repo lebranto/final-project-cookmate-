@@ -10,11 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kh.cookmate.board.dao.BoardDao;
 import com.kh.cookmate.board.dto.BoardDto;
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
-import com.kh.cookmate.board.dto.CookStepDto;
+import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
+import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
+import com.kh.cookmate.board.dto.CookStepDto.StepWrite;
 import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
 import com.kh.cookmate.board.dto.IngredientDto.IngWrite;
 import com.kh.cookmate.board.dto.IngredientSetDto.SetWrite;
 import com.kh.cookmate.board.model.vo.Board;
+import com.kh.cookmate.board.model.vo.Comment;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
 import com.kh.cookmate.board.model.vo.IngredientSet;
@@ -205,7 +208,7 @@ public class BoardServiceImpl implements BoardService {
             List<CookStep> toUpdate = new ArrayList<>();
             List<CookStep> toDelete = new ArrayList<>();
 
-            for (CookStepDto.StepWrite stepDto : dto.getCookSteps()) {
+            for (StepWrite stepDto : dto.getCookSteps()) {
                 CookStep step = new CookStep();
                 step.setBoardNo(boardNo);
                 step.setStep(stepDto.getStep());
@@ -286,9 +289,30 @@ public class BoardServiceImpl implements BoardService {
 	    }
 	}
 
+	@Override
+	@Transactional
+	public int insertComment(CommentWrite dto) {
+	    Comment comment = new Comment();
+	    comment.setBoardNo(dto.getBoardNo());
+	    comment.setParentCommentNo(dto.getParentCommentNo());
+	    comment.setUserNo(dto.getUserNo());
+	    comment.setCommentContent(dto.getCommentContent());
+	    return boardDao.insertComment(comment);
+	}
+
+	@Override
+	public List<CommentDetail> getCommentList(int boardNo) {
+	    return boardDao.selectCommentList(boardNo);
+	}
+
+	@Override
+	public int deleteComment(int commentNo) {
+		return boardDao.deleteComment(commentNo);
+	}
+
 	
-	
-	
+
+
 	
 	
 	

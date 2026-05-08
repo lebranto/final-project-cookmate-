@@ -3,8 +3,10 @@ package com.kh.cookmate.board.dao;
 import java.util.List;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
 import com.kh.cookmate.board.model.vo.Board;
+import com.kh.cookmate.board.model.vo.Comment;
 import com.kh.cookmate.board.model.vo.CookStep;
 import com.kh.cookmate.board.model.vo.Ingredient;
 import com.kh.cookmate.board.model.vo.IngredientSet;
@@ -62,5 +64,12 @@ public interface BoardDao {
 	int selectScrapCount(Scrap scrap);
 	int deleteScrap(Scrap scrap);
 	int insertScrap(Scrap scrap);
+	
+	// 댓글
+	int insertComment(Comment comment);
+	List<CommentDetail> selectCommentList(int boardNo);
+	int deleteComment(int commentNo);
+	
+
 
 }

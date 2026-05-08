@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class Comment {
     private int commentNo;
+    private int boardNo;
     private Integer parentCommentNo;  // null 가능 (답글)
     private int userNo;
     private String commentContent;
