@@ -23,8 +23,7 @@ public class CookieUtil {
 					maxAgeDays == 0 ? Duration.ZERO : 
 					name.equals(REFRESH_COOKIE) ? 
 							Duration.ofDays(maxAgeDays) :
-//						    Duration.ofMinutes(maxAgeDays)
-							Duration.ofSeconds(10)	
+						    Duration.ofMinutes(maxAgeDays)
 						) // 만료시간
 				.build();
 		

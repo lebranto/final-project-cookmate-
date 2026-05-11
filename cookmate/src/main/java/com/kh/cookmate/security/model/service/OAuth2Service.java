@@ -82,24 +82,24 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
 			if(user ==null) {
 				// 새로운 사용자인 경우 자동 회원가입
 				user = User.builder()
-						.email(email)
-						.name((String) profile.get("nickname"))
-						.profile((String) profile.get("profile_image_url"))
+						.userEmail(email)
+						.nickname((String) profile.get("nickname"))
+						.profileImageUrl((String) profile.get("profile_image_url"))
 						.build();
 				authDao.insertUser(user);
 				
 				// 유저 소셜정보
 				UserIdentities userIdentities = UserIdentities.builder()
 												.provider(provider)
-												.providerUserId(providerUserId)
+												.providerUserNo(providerUserId)
 												.accessToken(accessToken)
-												.userId(user.getId())
+												.userNo(user.getUserNo())
 												.build();
 				
 				authDao.insertUserIdentities(userIdentities);
 				
 				UserAuthority auth = UserAuthority.builder()
-													.userId(user.getId())
+													.userNo(user.getUserNo())
 													.roles(List.of("ROLE_USER"))
 													.build();
 				authDao.insertUserRole(auth);
@@ -109,7 +109,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
 			// 이미 회원가입은 된 경우 => 로그인처리
 			UserIdentities userIdentities  = UserIdentities.builder()
 															.provider(provider)
-														    .providerUserId(providerUserId)
+														    .providerUserNo(providerUserId) //의심
 														    .accessToken(accessToken)
 														    .build();
 			authDao.updateUserIdentities(userIdentities);
@@ -118,7 +118,7 @@ public class OAuth2Service implements OAuth2UserService<OAuth2UserRequest, OAuth
 					oAuth2User.getAuthorities() ,
 					attributes,
 					"id",
-					user.getId()
+					user.getUserNo()
 					);
 			
 		}

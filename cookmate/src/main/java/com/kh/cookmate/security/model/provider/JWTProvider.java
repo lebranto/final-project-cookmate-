@@ -39,7 +39,7 @@ public class JWTProvider {
 				.setSubject(String.valueOf(id)) //페이로드에 저장할 값.(사용자 id)
 				.setIssuedAt(now) // 언제 발급 됐냐.
 				//.setExpiration(new Date(now.getTime()+ (1000L * 60 * minutes))) // 만료시간
-				.setExpiration(new Date(now.getTime()+ (1000L * 10)))
+				.setExpiration(new Date(now.getTime()+ (1000L * 60 * minutes)))
 				.signWith(key, SignatureAlgorithm.HS256)
 				.compact();
 	}	
