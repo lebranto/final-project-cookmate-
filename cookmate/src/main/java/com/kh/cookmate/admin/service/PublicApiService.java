@@ -10,4 +10,6 @@ public interface PublicApiService {
 
     // 수집된 공식 레시피 수 확인
     int getApiRecipeCount();
+
+	void migrateIngredients();
 }

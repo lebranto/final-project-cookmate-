@@ -17,6 +17,7 @@
         <result property="imageUrl"     column="IMAGE_URL"/>
         <result property="url"          column="URL"/>
         <result property="open"         column="OPEN"/>
+        <result property="isApiData"    column="IS_API_DATA"/>
         <result property="likesCount"   column="LIKES_COUNT"/>
         <result property="typeName"     column="TYPE_NAME"/>
         <result property="difficult"    column="DIFFICULT"/>
@@ -65,7 +66,7 @@
         SELECT
             b.BOARD_NO, b.USER_NO, b.TYPE_NO, b.BOARD_TITLE,
             b.NICKNAME, b.INTRODUCE, b.IMAGE_URL, b.URL,
-            b.OPEN, b.LIKES_COUNT, b.BOARD_POSTDATE,
+            b.OPEN, b.IS_API_DATA, b.LIKES_COUNT, b.BOARD_POSTDATE,
             t.TYPE_NAME, t.DIFFICULT, t.COOK_TIME, t.CALORY, t.AI
         FROM BOARD b
         JOIN TAG t ON b.TYPE_NO = t.TYPE_NO
@@ -230,6 +231,10 @@
 	<select id="selectBoardUserNo" parameterType="int" resultType="int">
 	    SELECT USER_NO FROM BOARD WHERE BOARD_NO = #{boardNo}
 	</select>
+
+    <select id="selectBoardIsApiData" parameterType="int" resultType="char">
+        SELECT IS_API_DATA FROM BOARD WHERE BOARD_NO = #{boardNo}
+    </select>
 	
 	<!-- 좋아요 추가 -->
 	<insert id="insertLikes">
@@ -340,5 +345,20 @@
 	<update id="deleteComment" parameterType="int">
 		UPDATE COMMENT SET COMMENT_DELETE = 'Y'
 		WHERE COMMENT_NO = #{commentNo}
+	</update>
+	
+	
+	<!-- 공식 레시피 목록 조회 (마이그레이션용) -->
+	<select id="selectApiBoards" resultType="java.util.HashMap">
+	    SELECT BOARD_NO, INTRODUCE
+	    FROM BOARD
+	    WHERE IS_API_DATA = 'Y'
+	      AND INTRODUCE != ''
+	</select>
+	
+	<!-- INTRODUCE 비우기 -->
+	<update id="clearIntroduce" parameterType="int">
+	    UPDATE BOARD SET INTRODUCE = ''
+	    WHERE BOARD_NO = #{boardNo}
 	</update>
 </mapper>

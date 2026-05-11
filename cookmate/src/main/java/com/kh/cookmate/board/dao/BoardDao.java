@@ -1,6 +1,7 @@
 package com.kh.cookmate.board.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
@@ -55,6 +56,7 @@ public interface BoardDao {
 	// 좋아요
 	int selectLikesCount(Likes likes);
 	int selectBoardUserNo(int boardNo);
+	char selectBoardIsApiData(int boardNo);
 	int insertLikes(Likes likes);
 	int deleteLikes(Likes likes);
 	int increaseLikes(int boardNo);
@@ -69,6 +71,9 @@ public interface BoardDao {
 	int insertComment(Comment comment);
 	List<CommentDetail> selectCommentList(int boardNo);
 	int deleteComment(int commentNo);
+
+	List<Map<String, Object>> selectApiBoards();
+	int clearIntroduce(int boardNo);
 	
 
 

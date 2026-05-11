@@ -48,6 +48,7 @@ public class BoardDto {
         private String imageUrl;
         private String url;
         private char open;
+        private char isApiData;
         private int likesCount;
         private String nickname;
         private String typeName;

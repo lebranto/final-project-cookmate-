@@ -1,15 +1,19 @@
 package com.kh.cookmate.admin.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.kh.cookmate.board.dao.BoardDao;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.CookStep;
+import com.kh.cookmate.board.model.vo.Ingredient;
+import com.kh.cookmate.board.model.vo.IngredientSet;
 import com.kh.cookmate.board.model.vo.Tag;
 
 import lombok.RequiredArgsConstructor;
@@ -81,12 +85,12 @@ public class PublicApiServiceImpl implements PublicApiService {
     // API 데이터 파싱 후 DB 저장
     private void saveApiRecipe(Map row) {
 
-        // TAG 저장
+    	// TAG 저장
         Tag tag = new Tag();
-        tag.setTypeName((String) row.get("RCP_PAT2"));   // 국&찌개, 반찬 등
-        tag.setDifficult(null);                           // API에 없음
-        tag.setCookTime(null);                            // API에 없음
-        tag.setCalory(calcCalory(row.get("INFO_ENG")));   // 칼로리 기반 분류
+        tag.setTypeName((String) row.get("RCP_PAT2"));
+        tag.setDifficult(null);
+        tag.setCookTime(null);
+        tag.setCalory(calcCalory(row.get("INFO_ENG")));
         tag.setAi('N');
         boardDao.insertTag(tag);
 
@@ -94,30 +98,63 @@ public class PublicApiServiceImpl implements PublicApiService {
         Board board = new Board();
         board.setTypeNo(tag.getTypeNo());
         board.setBoardTitle((String) row.get("RCP_NM"));
-        board.setIntroduce((String) row.get("RCP_PARTS_DTLS"));
-        board.setImageUrl((String) row.get("ATT_FILE_NO_MAIN"));
+        board.setIntroduce("");              // ← 빈값으로 변경
+        String highResImageUrl = (String) row.get("ATT_FILE_NO_MK");
+        String mainImageUrl = (String) row.get("ATT_FILE_NO_MAIN");
+        board.setImageUrl(
+            highResImageUrl != null && !highResImageUrl.isBlank()
+                ? highResImageUrl
+                : mainImageUrl
+        );
         board.setNickname("공식");
-        board.setUserNo(1);  
+        board.setUserNo(1);
         board.setIsApiData('Y');
         board.setOpen('Y');
         board.setLikesCount(0);
         board.setBoardDelete('N');
         boardDao.insertBoard(board);
 
-        // 조리 단계 저장
+        // 재료 파싱 후 저장
+        String partsDtls = (String) row.get("RCP_PARTS_DTLS");
+        if (partsDtls != null && !partsDtls.trim().isEmpty()) {
+            IngredientSet set = new IngredientSet();
+            set.setBoardNo(board.getBoardNo());
+            boardDao.insertIngredientSet(set);
+
+            // 쉼표로 분리해서 재료 저장
+            String[] parts = partsDtls.split(",");
+            List<Ingredient> ings = new ArrayList<>();
+            for (String part : parts) {
+                String trimmed = part.trim();
+                if (trimmed.isEmpty()) continue;
+                Ingredient ing = new Ingredient();
+                ing.setSetNo(set.getSetNo());
+                ing.setIngredientName(trimmed);
+                ing.setQuantity("");
+                ing.setUnit("");
+                ings.add(ing);
+            }
+            if (!ings.isEmpty()) boardDao.insertIngredients(ings);
+        }
+
+     // 조리 단계 저장
+        List<CookStep> steps = new ArrayList<>();
+        int stepOrder = 1;
+
         for (int i = 1; i <= 20; i++) {
             String content = (String) row.get(String.format("MANUAL%02d", i));
-            if (content == null || content.trim().isEmpty()) break;
+            if (content == null || content.trim().isEmpty()) continue; // break → continue
 
             String img = (String) row.get(String.format("MANUAL_IMG%02d", i));
-
             CookStep step = new CookStep();
             step.setBoardNo(board.getBoardNo());
-            step.setStep(i);
-            step.setCookContent(content);
+            step.setStep(stepOrder++);
+            step.setCookContent(content.trim());
             step.setCookImage(img != null ? img : "");
-            boardDao.insertCookStep(step);
+            steps.add(step);
         }
+
+        if (!steps.isEmpty()) boardDao.insertCookSteps(steps);
     }
 
     // 칼로리 기반 분류
@@ -130,6 +167,46 @@ public class PublicApiServiceImpl implements PublicApiService {
             return "고칼로리";
         } catch (NumberFormatException e) {
             return "보통";
+        }
+    }
+
+    @Override
+    @Transactional
+    public void migrateIngredients() {
+
+        // 공식 레시피 목록 조회
+        List<Map<String, Object>> boards = boardDao.selectApiBoards();
+
+        for (Map<String, Object> board : boards) {
+            int boardNo = ((Number) board.get("BOARD_NO")).intValue();
+            String introduce = (String) board.get("INTRODUCE");
+
+            if (introduce == null || introduce.trim().isEmpty()) continue;
+
+            // 재료 묶음 생성
+            IngredientSet set = new IngredientSet();
+            set.setBoardNo(boardNo);
+            boardDao.insertIngredientSet(set);
+
+            // 쉼표로 분리해서 재료 저장
+            String[] parts = introduce.split(",");
+            List<Ingredient> ings = new ArrayList<>();
+            for (String part : parts) {
+                String trimmed = part.trim();
+                if (trimmed.isEmpty()) continue;
+                Ingredient ing = new Ingredient();
+                ing.setSetNo(set.getSetNo());
+                ing.setIngredientName(trimmed);
+                ing.setQuantity("");
+                ing.setUnit("");
+                ings.add(ing);
+            }
+            if (!ings.isEmpty()) boardDao.insertIngredients(ings);
+
+            // INTRODUCE 비우기
+            boardDao.clearIntroduce(boardNo);
+
+            log.info("boardNo {} 재료 마이그레이션 완료", boardNo);
         }
     }
 }

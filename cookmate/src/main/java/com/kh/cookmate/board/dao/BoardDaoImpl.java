@@ -1,6 +1,7 @@
 package com.kh.cookmate.board.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
@@ -121,6 +122,10 @@ public class BoardDaoImpl implements BoardDao{
 	public int selectBoardUserNo(int boardNo) {
 	    return session.selectOne("boardmapper.selectBoardUserNo", boardNo);
 	}
+	@Override
+	public char selectBoardIsApiData(int boardNo) {
+	    return session.selectOne("boardmapper.selectBoardIsApiData", boardNo);
+	}
 	@Override 
 	public int insertLikes(Likes likes) {
 	    return session.insert("boardmapper.insertLikes", likes);
@@ -166,6 +171,16 @@ public class BoardDaoImpl implements BoardDao{
 	@Override
 	public int deleteComment(int commentNo) {
 		return session.update("boardmapper.deleteComment", commentNo);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectApiBoards() {
+	    return session.selectList("boardmapper.selectApiBoards");
+	}
+
+	@Override
+	public int clearIntroduce(int boardNo) {
+	    return session.update("boardmapper.clearIntroduce", boardNo);
 	}
     
   
