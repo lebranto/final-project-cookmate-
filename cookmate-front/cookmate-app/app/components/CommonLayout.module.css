@@ -1,0 +1,219 @@
+.globalHeader {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid #f0e5dc;
+  backdrop-filter: blur(10px);
+}
+
+.ghInner {
+  max-width: 1180px;
+  height: 72px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.ghLogo {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 25px;
+  font-weight: 900;
+  color: #333;
+  white-space: nowrap;
+}
+
+.ghLogo span {
+  color: #e05a2b;
+}
+
+.ghSearch {
+  flex: 1;
+  max-width: 360px;
+  height: 38px;
+  padding: 0 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #eee;
+  border-radius: 999px;
+  background: #fafafa;
+}
+
+.ghSearch input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 14px;
+}
+
+.ghNav,
+.ghActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ghNav button,
+.ghNavBtn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: #555;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ghBell {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #fff4ed;
+  color: #e05a2b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.ghLoginBtn,
+.ghStart {
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 15px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ghLoginBtn {
+  background: #fff;
+  color: #333;
+  border: 1px solid #eee;
+}
+
+.ghStart {
+  background: #e05a2b;
+  color: #fff;
+}
+
+.ghMobileMenu {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff4ed;
+  cursor: pointer;
+}
+
+.ghMobileMenu span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  margin: 4px auto;
+  background: #e05a2b;
+  border-radius: 999px;
+}
+
+.ghMobileNav {
+  display: none;
+}
+
+.bottomNav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .ghInner {
+    height: 60px;
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  .ghLogo {
+    font-size: 22px;
+  }
+
+  .ghSearch,
+  .ghNav,
+  .ghNavBtn,
+  .ghBell,
+  .ghLoginBtn,
+  .ghStart {
+    display: none;
+  }
+
+  .ghActions {
+    margin-left: auto;
+  }
+
+  .ghMobileMenu {
+    display: block;
+  }
+
+  .ghMobileNav {
+    display: none;
+    padding: 8px 16px 14px;
+    border-top: 1px solid #f2e5dc;
+    background: #fff;
+  }
+
+  .ghMobileNav.open {
+    display: grid;
+    gap: 6px;
+  }
+
+  .ghMobileNav button {
+    width: 100%;
+    border: 0;
+    border-radius: 12px;
+    background: #fff7f2;
+    padding: 12px;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 800;
+    color: #4a3329;
+  }
+
+  .bottomNav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: block;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid #eee;
+    backdrop-filter: blur(10px);
+  }
+
+  .bottomNavInner {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .bnavItem {
+    border: 0;
+    background: transparent;
+    padding: 8px 4px;
+    color: #999;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .bnavItem.active {
+    color: #e05a2b;
+  }
+}

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<!--<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="admin">
 
@@ -18,9 +18,9 @@
         SELECT COUNT(*) FROM INQUIRY WHERE INQUIRY_STATUS = 'N'
     </select>
 
-	<!-- 오늘의 방문자 -->
+	 오늘의 방문자 
     <select id="countTodayVisitors" resultType="_int">
-        <!-- CURDATE()는 오늘 날짜만 가져오는 MySQL 함수입니다 -->
+         CURDATE()는 오늘 날짜만 가져오는 MySQL 함수입니다 
         SELECT COUNT(*) FROM ???? 
         WHERE DATE(VISIT_DATE) = CURDATE()
     </select>
@@ -41,7 +41,7 @@
         AND STATUS_UPDATE_DATE >= DATE_FORMAT(NOW(), '%Y-%m-01')
     </select>
 
-    <!-- =================== 대시 보드 리스트 영역 =================== -->
+     =================== 대시 보드 리스트 영역 =================== 
 
     <select id="selectRecentReports" resultType="reportDto">
         SELECT 
@@ -62,9 +62,9 @@
             BOARD_TITLE as boardTitle,
             NICKNAME as nickname,
             LIKES_COUNT as likesCount,
-            <!--VIEW_COUNT as viewCount-->
+            VIEW_COUNT as viewCount
         FROM BOARD
-        ORDER BY LIKES_COUNT DESC<!--, VIEW_COUNT DESC-->
+        ORDER BY LIKES_COUNT DESC, VIEW_COUNT DESC
         LIMIT 5
     </select>
 
@@ -86,11 +86,11 @@
         ) LIMIT 1
     </select>
 
-	<!-- 수정 예정 파트 -->
+	 수정 예정 파트 
 
-    <!-- =================== 회원 관리 영역 (추후 수정 예정) =================== -->
+     =================== 회원 관리 영역 (추후 수정 예정) =================== 
 
-    <!-- 회원 목록 조회 (검색 및 페이징 포함) -->
+     회원 목록 조회 (검색 및 페이징 포함) 
     <select id="selectUserList" parameterType="userSearchDto" resultType="userPageDto">
         SELECT 
             U.USER_NO as userNo,
@@ -137,4 +137,4 @@
         </where>
     </select>
 
-</mapper>
+</mapper>-->
