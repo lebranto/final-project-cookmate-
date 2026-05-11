@@ -21,7 +21,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.cookmate.security.model.dto.AuthDto.AuthResult;
+import com.kh.cookmate.security.model.dto.AuthDto.EmailSendRequest;
+import com.kh.cookmate.security.model.dto.AuthDto.EmailVerifyRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.LoginRequest;
+import com.kh.cookmate.security.model.dto.AuthDto.SignupRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.User;
 import com.kh.cookmate.security.model.provider.JWTProvider;
 import com.kh.cookmate.security.model.service.AuthService;
@@ -48,52 +51,43 @@ public class AuthController {
 	private final JWTProvider jwt;
 
 	
+	// 로그인
+	
 	@PostMapping("/login")
-	public ResponseEntity<AuthResult> login(@RequestBody LoginRequest req){
-		/*
-		 * 로그인
-		 *  - 현재 db에 존재하지 않는 이메일이면 404에러 반환
-		 *  - 프런트에서는 응답상태가 404인 경우 회원가입할지, 재로그인 할지 처리
-		 *  - 이메일은 존재하나 비밀번호가 틀린경우 401상태(미인증)반환 => 재로그인
-		 *  - 모두 성공시 유저정보와 JWT토큰 반환
-		 * */
-		
-		// 1) 사용자가 존재하는지 확인
-		
-		boolean exists = service.existsByEmail(req.getEmail());
-		
-		
-		if(!exists) {
-			//2) 사용자가 존재하지 않는 경우 404 상태 반환
-			return ResponseEntity.notFound().build();
-		}
-		
-		// 3) 사용자가 존재한다면 인증처리하고, 사용자정보 반환
-		
-		try {
-		AuthResult result = service.login(req.getEmail(),req.getPassword());
-		
-		// 인증 성공시 accessToken, refreshToken 생성하여 클라이언트의 쿠키로 전달.
-		return makeResponse(result);	
-		
-		}catch(BadCredentialsException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-		}
-		
+	public ResponseEntity<AuthResult> login(
+	        @RequestBody LoginRequest req
+	) {
+	    AuthResult result = service.login(req);
+	    return makeResponse(result);
 	}
 	
-	/*
-	 * 자동 회원가입
-	 * */
 	
-	@PostMapping("/signup")
-	public ResponseEntity<AuthResult> signup(
-			@RequestBody LoginRequest req){
-		AuthResult result = service.signup(req);
-		return makeResponse(result);
-		
-	}
 	
+
+	 // 회원가입 
+	  @PostMapping("/signup")
+	    public ResponseEntity<Void> signup(@RequestBody SignupRequest req) {
+	        service.signup(req);
+	    return ResponseEntity.ok().build();
+	    }
+	
+	  
+	  // 이메일 인증 번호 발송
+	  @PostMapping("/email/send")
+	  public ResponseEntity<Void> sendEmailCode(@RequestBody EmailSendRequest req) {
+	      service.sendEmailCode(req.getEmail());
+	      return ResponseEntity.ok().build();
+	  }
+	  
+	  
+	  // 이메일 인증 확인
+	  @PostMapping("/email/verify")
+	  public ResponseEntity<Void> verifyEmailCode(@RequestBody EmailVerifyRequest req) {
+	      service.verifyEmailCode(req.getEmail(), req.getCode());
+	      return ResponseEntity.ok().build();
+	  }
+	  
+	  
 	
 	
 	
@@ -102,7 +96,7 @@ public class AuthController {
 		// AccessToken을 쿠키에 담아서 전달
 			ResponseCookie accessCookie = createTokenCookie(ACCESS_COOKIE, result.getAccessToken(),30);
 			ResponseCookie refreshCookie = 
-					createTokenCookie(REFRESH_COOKIE, result.getAccessToken(),7);
+					createTokenCookie(REFRESH_COOKIE, result.getRefreshToken(),7);
 			
 			String roles = result.getUser().getRoles()
 					.stream().collect(Collectors.joining("|"));
@@ -189,7 +183,7 @@ public class AuthController {
 	}
 	
 	
-	//  사용자 정보 요청요 api
+	//  사용자 정보 요청요청 api
 	@GetMapping("/me")
 	public ResponseEntity<User> getUserInfo(HttpServletRequest req){
 		// 요청헤더에서 토큰 추출
@@ -212,6 +206,8 @@ public class AuthController {
 		
 	}
 	
+	
+	// 옛날 코드 필요 없다면 지워도 됨
 	
 	
 }

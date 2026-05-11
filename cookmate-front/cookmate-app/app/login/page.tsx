@@ -1,160 +1,189 @@
 "use client";
 
-import { useState } from "react";
+import { JSX, useEffect, useState } from "react";
+import type { SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
 
-export default function LoginPage() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function hasCookie(name: string): boolean {
+  if (typeof document === "undefined") {
+    return false;
+  }
+
+  return document.cookie.split("; ").some((cookie) => cookie.startsWith(`${name}=`));
+}
+
+// ── 타입 정의 ─────────────────────────────────────────────
+interface BrandTag {
+  label: string;
+}
+
+// ── 상수 ──────────────────────────────────────────────────
+const BRAND_TAGS: BrandTag[] = [
+  { label: "2.4만+ 레시피" },
+  { label: "18만+ 사용자" },
+  { label: "AI 맞춤 추천" },
+];
+
+// ── 왼쪽 브랜드 영역 ──────────────────────────────────────
+function AuthBrand(): JSX.Element {
+  return (
+    <div className={styles.authBrand}>
+      <div className={styles.authBrandLogo}>
+        Cook<span className={styles.dot}>.</span>Mate
+      </div>
+      <h2>
+        요리의 즐거움을<br />AI와 함께
+      </h2>
+      <p>
+        냉장고 속 재료를 입력하면<br />
+        GPT-4o가 맞춤 레시피를 추천해드립니다.
+      </p>
+      <div className={styles.authBrandTags}>
+        {BRAND_TAGS.map((tag) => (
+          <span key={tag.label} className={styles.authBrandTag}>
+            {tag.label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── 로그인 폼 ─────────────────────────────────────────────
+function LoginForm(): JSX.Element {
   const router = useRouter();
+  const [email,    setEmail]    = useState<string>("");
+  const [password, setPassword] = useState<string>("");
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    alert("로그인 처리 중입니다.");
+  useEffect(() => {
+    if (hasCookie("accessToken") || window.localStorage.getItem("accessToken")) {
+      router.replace("/");
+    }
+  }, [router]);
+
+ const handleSubmit = async (e: SubmitEvent) => {
+  e.preventDefault();
+
+  try {
+    const response = await fetch("http://localhost:8081/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        userEmail: email,
+        userPw: password,
+      }),
+    });
+
+    if (!response.ok) {
+      alert("로그인 실패");
+      return;
+    }
+
+    const authResult = await response.json();
+
+    if (authResult?.accessToken) {
+      window.localStorage.setItem("accessToken", authResult.accessToken);
+    }
+
+    if (authResult?.user) {
+      window.localStorage.setItem("authUser", JSON.stringify(authResult.user));
+    }
+
+    window.dispatchEvent(new Event("auth-state-changed"));
+    router.replace("/");
+    router.refresh();
+  } catch (error) {
+    console.error("요청 실패:", error);
+    alert("백엔드 서버에 연결할 수 없습니다.");
+  }
+};
+  const handleKakao = (): void => {
+    // TODO: 카카오 OAuth 연동
+    console.log("카카오 로그인");
   };
 
-  const handleKakao = () => {
-    alert("카카오 로그인으로 이동합니다.");
-  };
-
-  const regist = () => {
+  const handleSignup = (): void => {
     router.push("/regist");
   };
 
   return (
-    <>
-      <header className={styles.globalHeader}>
-        <div className={styles.ghInner}>
-          <span className={styles.ghLogo}>
-            Cook<span>Mate</span>
+    <div className={styles.authFormWrap}>
+      <div className={styles.authCard}>
+        <form onSubmit={handleSubmit}>
+          {/* 이메일 */}
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>이메일</label>
+            <input
+              className={styles.formInput}
+              type="email"
+              placeholder="이메일을 입력하세요"
+              value={email}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setEmail(e.target.value)
+              }
+              required
+            />
+          </div>
+
+          {/* 비밀번호 */}
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>비밀번호</label>
+            <input
+              className={styles.formInput}
+              type="password"
+              placeholder="비밀번호를 입력하세요"
+              value={password}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setPassword(e.target.value)
+              }
+              required
+            />
+          </div>
+
+          <button type="submit" className={styles.formSubmit}>
+            로그인
+          </button>
+        </form>
+
+        {/* 구분선 */}
+        <div className={styles.authDivider}>또는</div>
+
+        {/* 카카오 로그인 */}
+        <button
+          type="button"
+          className={`${styles.socialBtn} ${styles.kakao}`}
+          onClick={handleKakao}
+        >
+          카카오로 로그인
+        </button>
+
+        {/* 회원가입 링크 → /regist */}
+        <p className={styles.authFooterTxt}>
+          아직 계정이 없으신가요?{" "}
+          <span
+            className={styles.authFooterLink}
+            onClick={handleSignup}
+          >
+            회원가입
           </span>
-
-          <div className={styles.ghSearch}>
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-              <circle cx="9" cy="9" r="7" stroke="#aaa" strokeWidth="1.8" />
-              <line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#aaa" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            <input placeholder="레시피 또는 재료 검색..." />
-          </div>
-
-          <nav className={styles.ghNav}>
-            <a>레시피</a>
-            <a>AI추천</a>
-            <a>장보기</a>
-          </nav>
-
-          <div className={styles.ghActions}>
-            <span className={styles.ghNavBtn}>셰프</span>
-            <span className={styles.ghNavBtn}>공지사항</span>
-
-            <button className={styles.ghBell} aria-label="알림">
-              {/* <image/> */}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                <circle cx="18" cy="6" r="4" fill="#e05a2b" />
-              </svg> 
-            </button>
-
-            <button className={styles.ghLogin}>로그인</button>
-            <button className={styles.ghStart} onClick={regist}>회원가입</button>
-
-            <button
-              className={styles.ghMobileMenu}
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="메뉴"
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-          </div>
-        </div>
-
-        <div className={`${styles.ghMobileNav} ${menuOpen ? styles.open : ""}`}>
-          {["레시피", "AI추천", "장보기", "셰프", "공지사항", "로그인"].map((item) => (
-            <a key={item}>{item}</a>
-          ))}
-        </div>
-      </header>
-
-      <div className={styles.loginWrap}>
-        <div className={styles.loginBox}>
-          <div className={styles.loginLogoArea}>
-            <span className={styles.loginLogo}>
-              Cook<span>Mate</span>
-            </span>
-            <div className={styles.loginSub}>맛있는 요리의 시작</div>
-          </div>
-
-          <div className={styles.loginCard}>
-            <form onSubmit={handleLogin}>
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>이메일</label>
-                <input
-                  className={styles.formInput}
-                  type="email"
-                  placeholder="이메일 주소를 입력하세요"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>비밀번호</label>
-                <input
-                  className={styles.formInput}
-                  type="password"
-                  placeholder="비밀번호를 입력하세요"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-
-                <div className={styles.forgotPw}>
-                  <span>비밀번호를 잊으셨나요?</span>
-                </div>
-              </div>
-
-              <button type="submit" className={styles.btnLoginSubmit}>로그인</button>
-            </form>
-
-            <div className={styles.divider}>
-              <div className={styles.dividerLine} />
-              또는
-              <div className={styles.dividerLine} />
-            </div>
-
-            <button className={`${styles.socialBtn} ${styles.kakaoBtn}`} onClick={handleKakao}>
-              카카오로 로그인
-            </button>
-
-            <div className={styles.signupRow}>
-              계정이 없으신가요? <span onClick={regist}>회원가입</span>
-            </div>
-          </div>
-        </div>
+        </p>
       </div>
+    </div>
+  );
+}
 
-      <div className={styles.bottomNav}>
-        <div className={styles.bottomNavInner}>
-          {[
-            { label: "홈", active: false },
-            { label: "레시피", active: false },
-            { label: "AI추천", active: false },
-            { label: "내 정보", active: true },
-          ].map((item) => (
-            <span
-              key={item.label}
-              className={`${styles.bnavItem} ${item.active ? styles.active : ""}`}
-            >
-              <span className={styles.bnavIcon}></span>
-              {item.label}
-            </span>
-          ))}
-        </div>
-      </div>
-    </>
+// ── 메인 컴포넌트 ─────────────────────────────────────────
+// layout.tsx에서 GlobalHeader / MobileFooter를 이미 포함하므로
+// 이 페이지에서는 헤더·푸터를 별도로 렌더하지 않습니다.
+export default function LoginPage(): JSX.Element {
+  return (
+    <div className={styles.authWrap}>
+      <AuthBrand />
+      <LoginForm />
+    </div>
   );
 }

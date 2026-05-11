@@ -1,442 +1,185 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Gowun+Batang:wght@400;700&display=swap");
-
-.globalHeader,
-.globalHeader * {
-  box-sizing: border-box;
+/* ── CSS Variables ── */
+:root {
+  --bg: #F8F9F7;
+  --green: #2D5A27;
+  --orange: #FF5C00;
+  --ink: #111111;
+  --gray: #666666;
+  --muted: #999999;
+  --line: rgba(17, 17, 17, 0.08);
+  --line-md: rgba(17, 17, 17, 0.14);
+  --white: #FFFFFF;
+  --r: 16px;
+  --pill: 100px;
 }
 
-.loginWrap,
-.loginWrap * {
-  box-sizing: border-box;
-}
-
-.bottomNav,
-.bottomNav * {
-  box-sizing: border-box;
-}
-
-.globalHeader {
-  --cream: #fdfaf4;
-  --green-deep: #1e3a1e;
-  --green-mid: #3d6b35;
-  --orange: #e07a3a;
-  --text-primary: #1a1208;
-  --text-muted: #a89880;
-  --border: #e8ddd0;
-  --white: #ffffff;
-  --shadow: 0 2px 16px rgba(30, 58, 30, 0.08);
-  --r: 12px;
-  --r-sm: 8px;
-
-  position: sticky;
-  top: 0;
-  z-index: 300;
-  background: #fff;
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
-  font-family: "Noto Sans KR", sans-serif;
-}
-
-.ghInner {
+/* ── AUTH LAYOUT ── */
+.authWrap {
+  min-height: calc(100vh - 64px);
   display: flex;
-  align-items: center;
-  gap: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 56px;
 }
 
-.ghLogo {
-  font-weight: 700;
-  font-size: 17px;
-  color: #1a1a1a;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.ghLogo span {
-  color: #3a6e22;
-}
-
-.ghSearch {
-  flex: 1;
-  max-width: 320px;
+/* ── 왼쪽 브랜드 영역 ── */
+.authBrand {
+  flex: 0 0 480px;
+  background: var(--green);
   display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f0ede8;
-  border-radius: 20px;
-  padding: 7px 14px;
-  margin-right: 24px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 56px;
 }
-
-.ghSearch input {
-  border: none;
-  background: none;
-  outline: none;
-  font-size: 13px;
-  color: #1a1a1a;
-  width: 100%;
-  font-family: "Noto Sans KR", sans-serif;
-}
-
-.ghNav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-}
-
-.ghNav a,
-.ghNavBtn {
-  font-size: 13px;
-  color: #555;
-  text-decoration: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.ghNav a:hover,
-.ghNavBtn:hover {
-  background: #f0ede8;
-  color: #1a1a1a;
-}
-
-.ghActions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.ghBell {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #555;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  border-radius: 6px;
-  position: relative;
-}
-
-.ghBell:hover {
-  background: #f0ede8;
-}
-
-.ghLogin {
-  font-size: 13px;
-  color: #555;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: 0.5px solid rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  background: none;
-  font-family: "Noto Sans KR", sans-serif;
-}
-
-.ghStart {
-  font-size: 13px;
-  font-weight: 600;
+.authBrandLogo {
+  font-size: 28px;
+  font-weight: 800;
   color: #fff;
-  background: #3a6e22;
-  padding: 7px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: none;
-  font-family: "Noto Sans KR", sans-serif;
+  letter-spacing: -0.04em;
+  margin-bottom: 40px;
 }
+.authBrandLogo .dot { color: var(--orange); }
 
-.ghMobileMenu {
-  display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
-  flex-direction: column;
-  gap: 5px;
-  padding: 4px;
+.authBrand h2 {
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  margin-bottom: 16px;
 }
-
-.ghMobileMenu span {
-  display: block;
-  width: 22px;
-  height: 2px;
-  background: #1a1a1a;
-  border-radius: 2px;
+.authBrand p {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.65;
 }
-
-.ghMobileNav {
-  display: none;
-  flex-direction: column;
-  padding: 8px 16px 12px;
-  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
-  background: #fff;
-}
-
-.ghMobileNav.open {
+.authBrandTags {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 36px;
+}
+.authBrandTag {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--pill);
 }
 
-.ghMobileNav a {
-  font-size: 14px;
-  color: #444;
-  text-decoration: none;
-  padding: 11px 4px;
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-  cursor: pointer;
-}
-
-.loginWrap {
-  --cream: #fdfaf4;
-  --green-deep: #1e3a1e;
-  --green-mid: #3d6b35;
-  --orange: #e07a3a;
-  --text-primary: #1a1208;
-  --text-muted: #a89880;
-  --border: #e8ddd0;
-  --white: #ffffff;
-  --shadow: 0 2px 16px rgba(30, 58, 30, 0.08);
-  --r: 12px;
-  --r-sm: 8px;
-
-  min-height: calc(100vh - 56px);
+/* ── 오른쪽 폼 영역 ── */
+.authFormWrap {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 40px 16px;
-  background: var(--cream);
-  font-family: "Noto Sans KR", sans-serif;
+  padding: 40px 24px;
 }
-
-.loginBox {
+.authCard {
   width: 100%;
   max-width: 420px;
 }
 
-.loginLogoArea {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.loginLogo {
-  font-family: "Gowun Batang", serif;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--green-deep);
-  display: block;
-  margin-bottom: 8px;
-}
-
-.loginLogo span {
-  color: var(--orange);
-}
-
-.loginSub {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.loginCard {
-  background: var(--white);
-  border-radius: var(--r);
-  border: 1px solid var(--border);
-  padding: 28px;
-  box-shadow: var(--shadow);
-}
-
-.formGroup {
-  margin-bottom: 18px;
-}
-
+/* ── 폼 요소 ── */
+.formGroup { margin-bottom: 16px; }
 .formLabel {
+  display: block;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--ink);
   margin-bottom: 6px;
-  display: block;
 }
-
 .formInput {
   width: 100%;
-  border: 1.5px solid var(--border);
-  border-radius: var(--r-sm);
-  padding: 12px 14px;
-  font-family: "Noto Sans KR", sans-serif;
+  height: 48px;
+  border: 1px solid var(--line-md);
+  border-radius: 12px;
+  padding: 0 16px;
   font-size: 14px;
-  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  background: var(--bg);
   outline: none;
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+.formInput:focus {
+  border-color: var(--green);
   background: var(--white);
 }
+.formInput::placeholder { color: var(--muted); }
 
-.formInput:focus {
-  border-color: var(--green-mid);
-}
-
-.forgotPw {
-  text-align: right;
-  margin-top: 6px;
-}
-
-.forgotPw span {
-  font-size: 12px;
-  color: var(--green-mid);
-  cursor: pointer;
-}
-
-.btnLoginSubmit {
+.formSubmit {
   width: 100%;
-  padding: 14px;
-  background: var(--green-deep);
-  color: white;
+  height: 52px;
+  border-radius: var(--pill);
+  background: var(--green);
+  color: #fff;
   border: none;
-  border-radius: var(--r-sm);
-  font-size: 14px;
-  font-weight: 600;
-  font-family: "Noto Sans KR", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-top: 8px;
   cursor: pointer;
-  margin-bottom: 12px;
+  transition: opacity 0.15s;
 }
+.formSubmit:hover { opacity: 0.88; }
 
-.divider {
+/* ── 구분선 ── */
+.authDivider {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 18px 0;
-  color: var(--text-muted);
-  font-size: 13px;
+  margin: 20px 0;
+  color: var(--muted);
+  font-size: 12px;
 }
-
-.dividerLine {
+.authDivider::before,
+.authDivider::after {
+  content: '';
   flex: 1;
   height: 1px;
-  background: var(--border);
+  background: var(--line-md);
 }
 
+/* ── 소셜 버튼 ── */
 .socialBtn {
   width: 100%;
-  padding: 13px;
-  border-radius: var(--r-sm);
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--line-md);
+  background: var(--white);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   display: flex;
+  align-items: center;
   justify-content: center;
-  font-family: "Noto Sans KR", sans-serif;
+  gap: 10px;
+  cursor: pointer;
   margin-bottom: 10px;
-  border: none;
+  transition: border-color 0.15s;
+}
+.socialBtn:hover { border-color: var(--ink); }
+.kakao {
+  background: #FEE500;
+  border-color: #FEE500;
+  color: #3C1E1E;
 }
 
-.kakaoBtn {
-  background: #fee500;
-  color: #3a1d1d;
-}
-
-.signupRow {
+/* ── 하단 텍스트 ── */
+.authFooterTxt {
   text-align: center;
-  margin-top: 20px;
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--gray);
+  margin-top: 24px;
 }
-
-.signupRow span {
-  color: var(--green-deep);
+.authFooterLink {
+  color: var(--green);
   font-weight: 600;
   cursor: pointer;
+  text-decoration: none;
 }
+.authFooterLink:hover { text-decoration: underline; }
 
-.bottomNav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
-  z-index: 200;
-  padding: 4px 0;
-  font-family: "Noto Sans KR", sans-serif;
-}
-
-.bottomNavInner {
-  display: flex;
-}
-
-.bnavItem {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 6px 4px;
-  font-size: 9px;
-  color: #aaa;
-  flex: 1;
-  cursor: pointer;
-}
-
-.bnavItem.active {
-  color: #3a6e22;
-}
-
-.bnavIcon {
-  font-size: 20px;
-}
-
-/* 기존 모바일 반응형 유지 */
-@media (max-width: 640px) {
-  .ghInner {
-    padding: 0 16px;
-    height: 52px;
-    gap: 10px;
-  }
-
-  .ghLogo {
-    font-size: 16px;
-  }
-
-  .ghSearch {
-    margin-right: 0;
-    max-width: none;
-    flex: 1;
-  }
-
-  .ghNav {
-    display: none;
-  }
-
-  .ghActions .ghLogin,
-  .ghActions .ghStart,
-  .ghActions .ghBell,
-  .ghActions .ghNavBtn {
-    display: none;
-  }
-
-  .ghMobileMenu {
-    display: flex;
-  }
-
-  .loginWrap {
-    min-height: calc(100vh - 52px - 60px);
-    padding: 32px 16px 80px;
-    align-items: flex-start;
-  }
-
-  .loginBox {
-    max-width: 100%;
-  }
-
-  .loginLogo {
-    font-size: 24px;
-  }
-
-  .loginCard {
-    padding: 20px;
-  }
-
-  .bottomNav {
-    display: block;
-  }
+/* ── 반응형 ── */
+@media (max-width: 900px) {
+  .authBrand { display: none; }
+  .authFormWrap { min-height: calc(100vh - 64px); }
 }
