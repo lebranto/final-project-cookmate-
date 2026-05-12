@@ -322,10 +322,28 @@
 
 .videoLink {
   display: inline-flex;
+  margin-top: 12px;
   color: #2d5519;
   font-size: 13px;
   font-weight: 600;
   text-decoration: underline;
+}
+
+.videoEmbedWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #111;
+}
+
+.videoEmbedWrap iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
 .cartButton {

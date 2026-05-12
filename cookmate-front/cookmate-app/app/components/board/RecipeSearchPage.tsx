@@ -49,6 +49,7 @@ export default function RecipeSearchPage() {
   const [difficult, setDifficult] = useState("");
   const [sort, setSort] = useState<Sort>("popular");
   const [page, setPage] = useState(1);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [data, setData] = useState<SearchResponse>({
     list: [],
     totalCount: 0,
@@ -147,64 +148,76 @@ export default function RecipeSearchPage() {
   return (
     <main className={styles.page}>
       <div className={styles.layout}>
-        <aside className={styles.sidebar}>
-          <FilterSection title="카테고리">
-            {categories.map((item) => (
-              <FilterButton
-                key={item}
-                label={item}
-                active={category === item}
-                onClick={() => {
-                  setCategory(category === item ? "" : item);
-                  setPage(1);
-                }}
-              />
-            ))}
-          </FilterSection>
+        <aside className={`${styles.sidebar} ${filterOpen ? styles.filterOpen : ""}`}>
+          <button
+            type="button"
+            className={styles.filterToggle}
+            onClick={() => setFilterOpen((prev) => !prev)}
+            aria-expanded={filterOpen}
+          >
+            <span>필터</span>
+            <span>{filterOpen ? "접기" : "열기"}</span>
+          </button>
 
-          <FilterSection title="조리시간">
-            {COOK_TIMES.map((item) => (
-              <FilterButton
-                key={item}
-                label={item}
-                disabled={source === "official"}
-                active={cookTime === item}
-                onClick={() => {
-                  setCookTime(cookTime === item ? "" : item);
-                  setPage(1);
-                }}
-              />
-            ))}
-            {source === "official" && (
-              <p className={styles.disabledText}>공식 레시피는 조리시간 정보가 없어요.</p>
-            )}
-          </FilterSection>
-
-          <FilterSection title="난이도">
-            {DIFFICULTIES.map((item) => (
-              <FilterButton
-                key={item}
-                label={item}
-                disabled={source === "official"}
-                active={difficult === item}
-                onClick={() => {
-                  setDifficult(difficult === item ? "" : item);
-                  setPage(1);
-                }}
-              />
-            ))}
-            {source === "official" && (
-              <p className={styles.disabledText}>공식 레시피는 난이도 정보가 없어요.</p>
-            )}
-          </FilterSection>
-
-          {source === "user" && (
-            <FilterSection title="나의 메뉴">
-              <button type="button" className={styles.sideItem}>북마크</button>
-              <button type="button" className={styles.sideItem}>최근 본 레시피</button>
-              <button type="button" className={styles.sideItem}>알레르기 설정</button>
+          <div className={styles.filterPanel}>
+            <FilterSection title="카테고리">
+              {categories.map((item) => (
+                <FilterButton
+                  key={item}
+                  label={item}
+                  active={category === item}
+                  onClick={() => {
+                    setCategory(category === item ? "" : item);
+                    setPage(1);
+                  }}
+                />
+              ))}
             </FilterSection>
-          )}
+
+            <FilterSection title="조리시간">
+              {COOK_TIMES.map((item) => (
+                <FilterButton
+                  key={item}
+                  label={item}
+                  disabled={source === "official"}
+                  active={cookTime === item}
+                  onClick={() => {
+                    setCookTime(cookTime === item ? "" : item);
+                    setPage(1);
+                  }}
+                />
+              ))}
+              {source === "official" && (
+                <p className={styles.disabledText}>공식 레시피는 조리시간 정보가 없어요.</p>
+              )}
+            </FilterSection>
+
+            <FilterSection title="난이도">
+              {DIFFICULTIES.map((item) => (
+                <FilterButton
+                  key={item}
+                  label={item}
+                  disabled={source === "official"}
+                  active={difficult === item}
+                  onClick={() => {
+                    setDifficult(difficult === item ? "" : item);
+                    setPage(1);
+                  }}
+                />
+              ))}
+              {source === "official" && (
+                <p className={styles.disabledText}>공식 레시피는 난이도 정보가 없어요.</p>
+              )}
+            </FilterSection>
+
+            {source === "user" && (
+              <FilterSection title="나의 메뉴">
+                <button type="button" className={styles.sideItem}>북마크</button>
+                <button type="button" className={styles.sideItem}>최근 본 레시피</button>
+                <button type="button" className={styles.sideItem}>알레르기 설정</button>
+              </FilterSection>
+            )}
+          </div>
         </aside>
 
         <section className={styles.main}>

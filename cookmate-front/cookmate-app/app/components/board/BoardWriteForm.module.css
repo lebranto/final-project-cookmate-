@@ -1,0 +1,521 @@
+.page {
+  --green: #3a6e22;
+  --green-light: #e8f5e1;
+  --green-mid: #b8d9a0;
+  --green-text: #2d5519;
+  --red: #c0392b;
+  --bg: #f5f3ee;
+  --bg-card: #ffffff;
+  --bg-secondary: #f0ede8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #777777;
+  --text-hint: #aaaaaa;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-md: rgba(0, 0, 0, 0.15);
+
+  min-height: calc(100vh - 56px);
+  padding: 28px clamp(16px, 4vw, 36px) 92px;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.page,
+.page input,
+.page textarea,
+.page select,
+.page button {
+  font-family: inherit;
+}
+
+.card,
+.saveBar {
+  width: min(860px, 100%);
+  margin: 0 auto 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.card {
+  padding: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.required,
+.optional {
+  border: 1px solid var(--border-md);
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.required {
+  border-color: var(--green-mid);
+  background: var(--green-light);
+  color: var(--green-text);
+}
+
+.coverUpload {
+  position: relative;
+  display: flex;
+  height: 180px;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  border: 2px dashed var(--border-md);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font-size: 13px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.coverUpload:hover {
+  border-color: var(--green-mid);
+  background: var(--green-light);
+}
+
+.coverUpload input,
+.stepPhoto input {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.uploadIcon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--green);
+  font-size: 28px;
+}
+
+.coverPreviewWrap {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+}
+
+.coverPreview,
+.videoThumbnail,
+.stepPhoto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeFloating,
+.videoRemove,
+.stepPhoto button {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.62);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.removeFloating {
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+}
+
+.fieldStack {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.field {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.field span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.field input,
+.field textarea,
+.field select,
+.videoRow input,
+.groupHeader input,
+.ingredientRow input,
+.stepBody textarea {
+  width: 100%;
+  border: 1px solid var(--border-md);
+  border-radius: 8px;
+  outline: none;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 13px;
+  padding: 10px 12px;
+  transition: border-color 0.2s;
+}
+
+.field textarea,
+.stepBody textarea {
+  line-height: 1.6;
+  resize: none;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus,
+.videoRow input:focus,
+.groupHeader input:focus,
+.ingredientRow input:focus,
+.stepBody textarea:focus {
+  border-color: var(--green);
+}
+
+.videoRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.videoRow button,
+.saveButton {
+  border: 0;
+  border-radius: 8px;
+  background: var(--green);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 0 18px;
+}
+
+.videoPreview {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-top: 14px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  background: #000000;
+  cursor: pointer;
+}
+
+.playButton {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-size: 38px;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.videoRemove {
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+}
+
+.metaGrid,
+.tipsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tipsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.caloryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.caloryOption {
+  position: relative;
+}
+
+.caloryOption input {
+  position: absolute;
+  opacity: 0;
+}
+
+.caloryOption span {
+  display: grid;
+  min-height: 42px;
+  place-items: center;
+  border: 1px solid var(--border-md);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.caloryOption input:checked + span {
+  border-color: var(--green);
+  background: var(--green-light);
+  color: var(--green-text);
+  font-weight: 700;
+}
+
+.groupList,
+.stepList {
+  display: grid;
+  gap: 14px;
+}
+
+.ingredientGroup,
+.stepCard {
+  overflow: hidden;
+  border: 1px solid var(--border-md);
+  border-radius: 12px;
+  background: var(--bg-card);
+}
+
+.groupHeader,
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-secondary);
+  padding: 10px 14px;
+}
+
+.groupHeader input {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  padding: 4px 0;
+}
+
+.groupHeader button,
+.ingredientRow button,
+.stepHeader button {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #e0bcbc;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.ingredientHeader,
+.ingredientRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px 90px 34px;
+  gap: 8px;
+  align-items: center;
+}
+
+.ingredientHeader {
+  padding: 12px 14px 0;
+  color: var(--text-hint);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.ingredientRow {
+  margin: 8px 14px 0;
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 6px 8px;
+}
+
+.ingredientRow input {
+  background: var(--bg-card);
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.ghostButton,
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed var(--border-md);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 8px 16px;
+}
+
+.ghostButton {
+  margin: 10px 14px 14px;
+}
+
+.addButton {
+  display: flex;
+  width: fit-content;
+  margin: 14px auto 0;
+  border-color: var(--green);
+  color: var(--green-text);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 28px;
+}
+
+.stepBody {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.stepPhoto {
+  position: relative;
+  display: grid;
+  width: 112px;
+  height: 112px;
+  place-items: center;
+  overflow: hidden;
+  border: 2px dashed var(--border-md);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-hint);
+  cursor: pointer;
+  font-size: 26px;
+}
+
+.stepPhoto.hasImage {
+  border-style: solid;
+  border-color: var(--green-mid);
+}
+
+.stepPhoto button {
+  top: 5px;
+  right: 5px;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+}
+
+.saveBar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 18px 20px;
+}
+
+.publicToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.publicToggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+}
+
+.message {
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: right;
+}
+
+.saveButton {
+  min-height: 40px;
+  min-width: 110px;
+}
+
+.saveButton:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 16px 12px 92px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .coverPreviewWrap {
+    height: 190px;
+  }
+
+  .metaGrid,
+  .tipsGrid,
+  .caloryGrid,
+  .saveBar {
+    grid-template-columns: 1fr;
+  }
+
+  .videoRow {
+    grid-template-columns: 1fr;
+  }
+
+  .videoRow button {
+    min-height: 40px;
+  }
+
+  .ingredientHeader {
+    display: none;
+  }
+
+  .ingredientRow {
+    grid-template-columns: 1fr 72px 72px 32px;
+    margin-inline: 10px;
+  }
+
+  .message {
+    text-align: left;
+  }
+}

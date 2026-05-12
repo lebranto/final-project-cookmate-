@@ -143,6 +143,7 @@ export default function BoardDetail({ boardNo }: Props) {
   const isOwner = isLoggedIn && userInfo?.userNo === board?.userNo;
   const isOfficialPost = board?.isApiData === "Y" || board?.userNo === 0;
   const canFollowAuthor = isLoggedIn && !isOwner && !isOfficialPost;
+  const youtubeVideoId = useMemo(() => getYoutubeVideoId(board?.url), [board?.url]);
 
   const toggleIngredient = (ingredientNo: number) => {
     setCheckedIngredients((prev) => {
@@ -249,7 +250,7 @@ export default function BoardDetail({ boardNo }: Props) {
           <section className={styles.hero} aria-label="대표 이미지">
             {board.imageUrl ? (
               <img
-                src={board.imageUrl}
+                src={resolveRecipeImageUrl(board.imageUrl)}
                 alt={board.boardTitle}
                 className={styles.heroImage}
               />
@@ -348,6 +349,16 @@ export default function BoardDetail({ boardNo }: Props) {
           {board.url && (
             <section className={styles.sectionCard}>
               <SectionTitle title="동영상" />
+              {youtubeVideoId && (
+                <div className={styles.videoEmbedWrap}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${youtubeVideoId}`}
+                    title={`${board.boardTitle} 동영상`}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              )}
               <a
                 href={board.url}
                 target="_blank"
@@ -405,7 +416,7 @@ export default function BoardDetail({ boardNo }: Props) {
                     <p className={styles.stepText}>{step.cookContent}</p>
                     {step.cookImage && (
                       <img
-                        src={step.cookImage}
+                        src={resolveRecipeImageUrl(step.cookImage)}
                         alt={`조리 순서 ${step.step}`}
                         className={styles.stepImage}
                       />
@@ -526,4 +537,30 @@ function getErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+function resolveRecipeImageUrl(imageUrl?: string | null) {
+  if (!imageUrl) return "";
+
+  try {
+    const url = new URL(imageUrl);
+    if (url.hostname.includes(".s3.") && url.hostname.endsWith("amazonaws.com")) {
+      const key = url.pathname.replace(/^\/+/, "");
+      return `http://localhost:8081/api/files/images?key=${encodeURIComponent(key)}`;
+    }
+  } catch {
+    return imageUrl;
+  }
+
+  return imageUrl;
+}
+
+function getYoutubeVideoId(url?: string | null) {
+  if (!url) return "";
+
+  const match = url.trim().match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/
+  );
+
+  return match?.[1] ?? "";
 }
