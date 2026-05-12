@@ -1,6 +1,7 @@
 package com.kh.cookmate.controller;
 
 import java.net.URI;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -114,6 +115,13 @@ public class BoardController {
         } else {
             return ResponseEntity.ok("스크랩을 취소했습니다.");
         }
+    }
+
+    @GetMapping("/boards/{boardNo}/scrap/status")
+    public ResponseEntity<?> getScrapStatus(
+            @PathVariable int boardNo,
+            @RequestParam int userNo) {
+        return ResponseEntity.ok(Map.of("scrapped", service.isScrapped(boardNo, userNo)));
     }
 
     @PostMapping("/boards/{boardNo}/comments")

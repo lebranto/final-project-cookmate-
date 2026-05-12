@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -20,6 +20,8 @@ export default function BoardDetail({ boardNo }: Props) {
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isScrapped, setIsScrapped] = useState(false);
+  const [followVersion, setFollowVersion] = useState(0);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
     new Set()
   );
@@ -144,6 +146,30 @@ export default function BoardDetail({ boardNo }: Props) {
   const isOfficialPost = board?.isApiData === "Y" || board?.userNo === 0;
   const canFollowAuthor = isLoggedIn && !isOwner && !isOfficialPost;
   const youtubeVideoId = useMemo(() => getYoutubeVideoId(board?.url), [board?.url]);
+  const isFollowing = useMemo(() => {
+    void followVersion;
+    if (!isLoggedIn || !userInfo || !board) return false;
+    return window.localStorage.getItem(getFollowStorageKey(userInfo.userNo, board.userNo)) === "Y";
+  }, [board, followVersion, isLoggedIn, userInfo]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !userInfo || !board) {
+      return;
+    }
+
+    const fetchScrapStatus = async () => {
+      try {
+        const res = await api.get<{ scrapped: boolean }>(
+          `/boards/${boardNo}/scrap/status?userNo=${userInfo.userNo}`
+        );
+        setIsScrapped(res.data.scrapped);
+      } catch {
+        setIsScrapped(false);
+      }
+    };
+
+    void fetchScrapStatus();
+  }, [board, boardNo, isLoggedIn, userInfo]);
 
   const toggleIngredient = (ingredientNo: number) => {
     setCheckedIngredients((prev) => {
@@ -186,10 +212,25 @@ export default function BoardDetail({ boardNo }: Props) {
         `/boards/${boardNo}/scrap?userNo=${userInfo.userNo}`
       );
       alert(res.data);
+      setIsScrapped((prev) => !prev);
     } catch (error) {
       console.error("스크랩 처리 실패:", error);
       alert(getErrorMessage(error, "스크랩 처리에 실패했습니다."));
     }
+  };
+
+  const handleFollow = () => {
+    if (!isLoggedIn || !userInfo || !board) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    const next = !isFollowing;
+    window.localStorage.setItem(
+      getFollowStorageKey(userInfo.userNo, board.userNo),
+      next ? "Y" : "N"
+    );
+    setFollowVersion((version) => version + 1);
   };
 
   const handleDelete = async () => {
@@ -197,7 +238,7 @@ export default function BoardDetail({ boardNo }: Props) {
 
     try {
       await api.delete(`/boards/${boardNo}`);
-      alert("삭제되었습니다.");
+      alert("삭제했습니다.");
       router.push("/boards");
     } catch (error) {
       console.error("삭제 실패:", error);
@@ -207,7 +248,7 @@ export default function BoardDetail({ boardNo }: Props) {
 
   const handleAddCart = () => {
     if (checkedItems.length === 0) {
-      alert("추가할 재료를 선택해주세요.");
+      alert("추가할 재료를 선택해 주세요.");
       return;
     }
 
@@ -257,8 +298,10 @@ export default function BoardDetail({ boardNo }: Props) {
             ) : (
               <div className={styles.heroFallback}>CookMate</div>
             )}
-            {board.open === "Y" && (
-              <span className={styles.heroBadge}>공개</span>
+            {isOwner && (
+              <span className={styles.heroBadge}>
+                {board.open === "Y" ? "공개" : "비공개"}
+              </span>
             )}
           </section>
 
@@ -266,9 +309,11 @@ export default function BoardDetail({ boardNo }: Props) {
             <button
               type="button"
               onClick={handleScrap}
-              className={styles.reactionButton}
+              className={`${styles.reactionButton} ${
+                isScrapped ? styles.reactionButtonActive : ""
+              }`}
             >
-              <span>스크랩</span>
+              <span>{isScrapped ? "스크랩 중" : "스크랩"}</span>
             </button>
             <span className={styles.reactionDivider} aria-hidden="true" />
             <a href="#comments-section" className={styles.reactionButton}>
@@ -284,7 +329,6 @@ export default function BoardDetail({ boardNo }: Props) {
               <strong>{board.likesCount}</strong>
             </button>
           </section>
-
           {isOwner && (
             <div className={styles.ownerActions}>
               <button
@@ -317,20 +361,26 @@ export default function BoardDetail({ boardNo }: Props) {
                 <div className={styles.authorInfo}>
                   <span className={styles.authorName}>{board.nickname}</span>
                   <span className={styles.authorSub}>
-                    레시피 {board.recipeCount ?? 5} · 팔로워{" "}
-                    {board.followerCount ?? 128}
+                    레시피 {board.recipeCount ?? 0} · 팔로워{" "}
+                    {board.followerCount ?? 0}
                   </span>
                 </div>
               </div>
 
               {canFollowAuthor && (
-                <button type="button" className={styles.followButton}>
-                  팔로우
+                <button
+                  type="button"
+                  onClick={handleFollow}
+                  className={`${styles.followButton} ${
+                    isFollowing ? styles.followButtonActive : ""
+                  }`}
+                >
+                  {isFollowing ? "팔로우 중" : "팔로우"}
                 </button>
               )}
 
               <span className={styles.dateText}>
-                {board.boardPostdate || "2025년 4월 10일"}
+                작성일 {board.boardPostdate || "-"}
               </span>
             </div>
 
@@ -564,3 +614,10 @@ function getYoutubeVideoId(url?: string | null) {
 
   return match?.[1] ?? "";
 }
+
+function getFollowStorageKey(userNo: number, authorNo: number) {
+  return `cookmate-follow-${userNo}-${authorNo}`;
+}
+
+
+

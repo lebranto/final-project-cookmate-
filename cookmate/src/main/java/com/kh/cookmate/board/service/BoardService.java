@@ -26,6 +26,8 @@ public interface BoardService{
 
 	int toggleScrap(int boardNo, int userNo);
 
+	boolean isScrapped(int boardNo, int userNo);
+
 	int insertComment(CommentWrite dto);
 
 	List<CommentDetail> getCommentList(int boardNo);

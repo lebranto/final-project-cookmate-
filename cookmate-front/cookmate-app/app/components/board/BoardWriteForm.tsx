@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import api from "@/app/lib/api";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
+import { Board } from "@/app/type/board";
 import styles from "./BoardWriteForm.module.css";
 
 type Calory = "" | "저칼로리" | "보통" | "고칼로리";
 
 interface IngredientRow {
   id: string;
+  ingredientNo?: number;
   ingredientName: string;
   quantity: string;
   unit: string;
@@ -18,13 +20,16 @@ interface IngredientRow {
 
 interface IngredientGroup {
   id: string;
+  setNo?: number;
   setName: string;
   ingredients: IngredientRow[];
 }
 
 interface CookStepForm {
   id: string;
+  originalStep?: number;
   cookContent: string;
+  cookImage?: string;
   imageFile: File | null;
   imagePreview: string;
 }
@@ -33,7 +38,12 @@ interface UploadResponse {
   fileUrl: string;
 }
 
-const CATEGORIES = ["한식", "중식", "일식", "양식", "동남아식", "분식", "디저트", "음료", "기타"];
+interface BoardWriteFormProps {
+  mode?: "create" | "edit";
+  boardNo?: number;
+}
+
+const CATEGORIES = ["한식", "중식", "일식", "양식", "셀러드", "디저트"];
 const DIFFICULTIES = ["초급", "중급", "고급"];
 const COOK_TIMES = ["10분 이하", "10~20분", "20~30분", "30~45분", "45~60분", "1시간 이상"];
 
@@ -58,9 +68,101 @@ const createGroup = (setName = ""): IngredientGroup => ({
 const createStep = (): CookStepForm => ({
   id: newId(),
   cookContent: "",
+  cookImage: "",
   imageFile: null,
   imagePreview: "",
 });
+
+const toImageUrl = (imageUrl?: string | null) => {
+  if (!imageUrl) return "";
+
+  try {
+    const url = new URL(imageUrl);
+    if (url.hostname.includes(".s3.") && url.hostname.endsWith("amazonaws.com")) {
+      const key = url.pathname.replace(/^\/+/, "");
+      return `http://localhost:8081/api/files/images?key=${encodeURIComponent(key)}`;
+    }
+  } catch {
+    return imageUrl;
+  }
+
+  return imageUrl;
+};
+
+const splitIntroduce = (value?: string | null) => {
+  const sections = (value ?? "").split(/\n{2,}/);
+  const cautionSection = sections.find((section) => section.startsWith("주의점:"));
+  const tipSection = sections.find((section) => section.startsWith("팁:"));
+
+  return {
+    introduce: sections
+      .filter((section) => !section.startsWith("주의점:") && !section.startsWith("팁:"))
+      .join("\n\n"),
+    caution: cautionSection?.replace(/^주의점:\s*/, "") ?? "",
+    tip: tipSection?.replace(/^팁:\s*/, "") ?? "",
+  };
+};
+
+const buildIngredientPayload = (
+  groups: IngredientGroup[],
+  isEditMode: boolean,
+  initialSetNos: number[]
+) => {
+  const currentGroups = groups
+    .map((group) => ({
+      setNo: isEditMode ? 0 : group.setNo,
+      setName: group.setName.trim(),
+      new: isEditMode,
+      ingredients: group.ingredients
+        .filter((ingredient) => ingredient.ingredientName.trim())
+        .map((ingredient) => ({
+          ingredientNo: isEditMode ? 0 : ingredient.ingredientNo ?? 0,
+          ingredientName: ingredient.ingredientName.trim(),
+          quantity: ingredient.quantity.trim(),
+          unit: ingredient.unit.trim(),
+        })),
+    }))
+    .filter((group) => group.ingredients.length > 0);
+
+  if (!isEditMode) return currentGroups;
+
+  const deletedGroups = initialSetNos
+    .map((setNo) => ({
+      setNo,
+      deleted: true,
+      ingredients: [],
+    }));
+
+  return [...deletedGroups, ...currentGroups];
+};
+
+const buildCookStepPayload = (
+  steps: CookStepForm[],
+  imageUrls: string[],
+  isEditMode: boolean,
+  initialStepNumbers: number[]
+) => {
+  const currentSteps = steps
+    .map((step, index) => ({
+      step: index + 1,
+      cookContent: step.cookContent.trim(),
+      cookImage: imageUrls[index] ?? "",
+      new: isEditMode,
+    }))
+    .filter((step) => step.cookContent);
+
+  if (!isEditMode) return currentSteps;
+
+  const deletedSteps = initialStepNumbers
+    .map((step) => ({
+      step,
+      deleted: true,
+      cookContent: "",
+      cookImage: "",
+    }));
+
+  return [...deletedSteps, ...currentSteps];
+};
 
 function extractYoutubeId(url: string) {
   const trimmed = url.trim();
@@ -84,16 +186,19 @@ function getErrorMessage(error: unknown) {
   return "레시피 저장에 실패했습니다.";
 }
 
-export default function BoardWriteForm() {
+export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteFormProps) {
   const router = useRouter();
   const { userInfo, isLoggedIn } = useUserInfoActions();
+  const isEditMode = mode === "edit";
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [initialImageUrl, setInitialImageUrl] = useState("");
   const [coverPreview, setCoverPreview] = useState("");
   const [boardTitle, setBoardTitle] = useState("");
   const [introduce, setIntroduce] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [appliedYoutubeUrl, setAppliedYoutubeUrl] = useState("");
+  const [typeNo, setTypeNo] = useState(0);
   const [typeName, setTypeName] = useState("");
   const [difficult, setDifficult] = useState("");
   const [cookTime, setCookTime] = useState("");
@@ -102,11 +207,14 @@ export default function BoardWriteForm() {
     createGroup("주재료"),
     createGroup("양념"),
   ]);
+  const [initialSetNos, setInitialSetNos] = useState<number[]>([]);
   const [cookSteps, setCookSteps] = useState<CookStepForm[]>([createStep()]);
+  const [initialStepNumbers, setInitialStepNumbers] = useState<number[]>([]);
   const [caution, setCaution] = useState("");
   const [tip, setTip] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadingInitialData, setLoadingInitialData] = useState(isEditMode);
   const [message, setMessage] = useState("");
 
   const youtubeId = useMemo(() => extractYoutubeId(appliedYoutubeUrl), [appliedYoutubeUrl]);
@@ -116,6 +224,86 @@ export default function BoardWriteForm() {
       router.replace("/login");
     }
   }, [isLoggedIn, router]);
+
+  useEffect(() => {
+    if (!isEditMode || !boardNo || !isLoggedIn || !userInfo) return;
+
+    let ignore = false;
+
+    const fetchBoard = async () => {
+      try {
+        setLoadingInitialData(true);
+        const res = await api.get<Board>(`/boards/${boardNo}`);
+        const board = res.data;
+
+        if (ignore) return;
+
+        if (board.isApiData === "Y" || board.userNo !== userInfo.userNo) {
+          alert("본인이 작성한 레시피만 수정할 수 있습니다.");
+          router.replace(`/boards/${boardNo}`);
+          return;
+        }
+
+        const parsedIntroduce = splitIntroduce(board.introduce);
+        setInitialImageUrl(board.imageUrl || "");
+        setCoverPreview(toImageUrl(board.imageUrl));
+        setBoardTitle(board.boardTitle || "");
+        setIntroduce(parsedIntroduce.introduce);
+        setYoutubeUrl(board.url || "");
+        setAppliedYoutubeUrl(board.url || "");
+        setTypeNo(board.typeNo || 0);
+        setTypeName(board.typeName || "");
+        setDifficult(board.difficult || "");
+        setCookTime(board.cookTime || "");
+        setCalory((board.calory || "") as Calory);
+        setCaution(parsedIntroduce.caution);
+        setTip(parsedIntroduce.tip);
+        setIsPublic(board.open === "Y");
+        setInitialSetNos(board.ingredientSets?.map((group) => group.setNo).filter(Boolean) ?? []);
+        setInitialStepNumbers(board.cookSteps?.map((step) => step.step).filter(Boolean) ?? []);
+        setIngredientGroups(
+          board.ingredientSets?.length
+            ? board.ingredientSets.map((group, index) => ({
+                id: newId(),
+                setNo: group.setNo,
+                setName: group.setName || (index === 0 ? "주재료" : ""),
+                ingredients: group.ingredients?.length
+                  ? group.ingredients.map((ingredient) => ({
+                      id: newId(),
+                      ingredientNo: ingredient.ingredientNo,
+                      ingredientName: ingredient.ingredientName || "",
+                      quantity: ingredient.quantity || "",
+                      unit: ingredient.unit || "",
+                    }))
+                  : [createIngredient()],
+              }))
+            : [createGroup("주재료")]
+        );
+        setCookSteps(
+          board.cookSteps?.length
+            ? board.cookSteps.map((step) => ({
+                id: newId(),
+                originalStep: step.step,
+                cookContent: step.cookContent || "",
+                cookImage: step.cookImage || "",
+                imageFile: null,
+                imagePreview: toImageUrl(step.cookImage),
+              }))
+            : [createStep()]
+        );
+      } catch (error) {
+        setMessage(getErrorMessage(error));
+      } finally {
+        if (!ignore) setLoadingInitialData(false);
+      }
+    };
+
+    void fetchBoard();
+
+    return () => {
+      ignore = true;
+    };
+  }, [boardNo, isEditMode, isLoggedIn, router, userInfo]);
 
   const handleCoverChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -162,7 +350,7 @@ export default function BoardWriteForm() {
   const updateIngredient = (
     groupId: string,
     ingredientId: string,
-    key: keyof Omit<IngredientRow, "id">,
+    key: keyof Omit<IngredientRow, "id" | "ingredientNo">,
     value: string
   ) => {
     setIngredientGroups((groups) =>
@@ -211,6 +399,7 @@ export default function BoardWriteForm() {
         step.id === stepId
           ? {
               ...step,
+              cookImage: file ? "" : "",
               imageFile: file,
               imagePreview: file ? URL.createObjectURL(file) : "",
             }
@@ -229,7 +418,7 @@ export default function BoardWriteForm() {
   };
 
   const validateForm = () => {
-    if (!coverFile) return "대표 사진을 등록해 주세요.";
+    if (!coverFile && !coverPreview) return "대표 사진을 등록해 주세요.";
     if (!boardTitle.trim()) return "레시피 이름을 입력해 주세요.";
     if (!typeName) return "요리 종류를 선택해 주세요.";
     if (!difficult) return "난이도를 선택해 주세요.";
@@ -256,25 +445,28 @@ export default function BoardWriteForm() {
     }
 
     if (!isLoggedIn || !userInfo) {
-      setMessage("로그인 후 레시피를 작성할 수 있습니다.");
+      setMessage(`로그인 후 레시피를 ${isEditMode ? "수정" : "작성"}할 수 있습니다.`);
       router.replace("/login");
       return;
     }
 
     try {
       setSaving(true);
-      setMessage("이미지를 업로드하고 있습니다.");
+      setMessage(coverFile ? "이미지를 업로드하고 있습니다." : "레시피를 저장하고 있습니다.");
 
-      const imageUrl = await uploadImage(coverFile as File, "recipes/covers");
+      const imageUrl = coverFile ? await uploadImage(coverFile, "recipes/covers") : initialImageUrl;
       const stepImageUrls = await Promise.all(
         cookSteps.map((step) =>
-          step.imageFile ? uploadImage(step.imageFile, "recipes/steps") : Promise.resolve("")
+          step.imageFile
+            ? uploadImage(step.imageFile, "recipes/steps")
+            : Promise.resolve(step.cookImage || "")
         )
       );
 
       const payload = {
         userNo: userInfo.userNo,
         nickname: userInfo.nickname,
+        typeNo: isEditMode ? typeNo : undefined,
         boardTitle: boardTitle.trim(),
         introduce: [introduce, caution && `주의점: ${caution}`, tip && `팁: ${tip}`]
           .filter(Boolean)
@@ -288,39 +480,34 @@ export default function BoardWriteForm() {
         cookTime,
         calory,
         ai: "N",
-        ingredientSets: ingredientGroups
-          .map((group) => ({
-            setName: group.setName.trim(),
-            ingredients: group.ingredients
-              .filter((ingredient) => ingredient.ingredientName.trim())
-              .map((ingredient) => ({
-                ingredientName: ingredient.ingredientName.trim(),
-                quantity: ingredient.quantity.trim(),
-                unit: ingredient.unit.trim(),
-              })),
-          }))
-          .filter((group) => group.ingredients.length > 0),
-        cookSteps: cookSteps
-          .map((step, index) => ({
-            step: index + 1,
-            cookContent: step.cookContent.trim(),
-            cookImage: stepImageUrls[index] ?? "",
-          }))
-          .filter((step) => step.cookContent),
+        ingredientSets: buildIngredientPayload(ingredientGroups, isEditMode, initialSetNos),
+        cookSteps: buildCookStepPayload(cookSteps, stepImageUrls, isEditMode, initialStepNumbers),
       };
 
       setMessage("레시피를 저장하고 있습니다.");
-      const res = await api.post("/boards", payload);
+      const res = isEditMode && boardNo
+        ? await api.put(`/boards/${boardNo}`, payload)
+        : await api.post("/boards", payload);
       const location = res.headers.location as string | undefined;
 
-      setMessage("레시피가 저장되었습니다.");
-      router.push(location?.startsWith("/boards/") ? location : "/boards");
+      setMessage(isEditMode ? "레시피가 수정되었습니다." : "레시피가 저장되었습니다.");
+      router.push(isEditMode && boardNo ? `/boards/${boardNo}` : location?.startsWith("/boards/") ? location : "/boards");
     } catch (error) {
       setMessage(getErrorMessage(error));
     } finally {
       setSaving(false);
     }
   };
+
+  if (loadingInitialData) {
+    return (
+      <div className={styles.page}>
+        <section className={styles.card}>
+          <p className={styles.message}>레시피 정보를 불러오고 있습니다.</p>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <form className={styles.page} onSubmit={handleSubmit}>
@@ -623,7 +810,7 @@ export default function BoardWriteForm() {
         </label>
         {message && <p className={styles.message}>{message}</p>}
         <button className={styles.saveButton} type="submit" disabled={saving}>
-          {saving ? "저장 중" : "저장하기"}
+          {saving ? "저장 중" : isEditMode ? "수정하기" : "저장하기"}
         </button>
       </div>
     </form>

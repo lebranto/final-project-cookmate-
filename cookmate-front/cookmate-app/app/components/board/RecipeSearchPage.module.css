@@ -237,6 +237,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 14px;
 }
 
@@ -249,7 +250,32 @@
   color: #2b3a20;
 }
 
+.resultActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.writeButton {
+  min-height: 34px;
+  border: 0;
+  border-radius: 6px;
+  background: #2b3a20;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 14px;
+  white-space: nowrap;
+}
+
+.writeButton:hover {
+  background: #3d522f;
+}
+
 .sortSelect {
+  min-height: 34px;
   border: 1px solid #ddd5c2;
   border-radius: 6px;
   background: #fff;
@@ -277,13 +303,12 @@
 }
 
 .recipeCard {
+  position: relative;
   overflow: hidden;
   border: 1px solid #ede7d8;
   border-radius: 10px;
   background: #fff;
   color: inherit;
-  cursor: pointer;
-  text-decoration: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -294,6 +319,12 @@
 
 .officialCard {
   border-color: #d0ddf5;
+}
+
+.recipeLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
 }
 
 .recipeImage {
@@ -325,10 +356,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgba(232, 132, 43, 0.22);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.86);
   color: #e8842b;
+  cursor: pointer;
+  font-family: inherit;
   font-size: 16px;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  z-index: 2;
+}
+
+.bookmark:hover:not(:disabled) {
+  background: #fff7ed;
+  transform: scale(1.05);
+}
+
+.bookmark:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.bookmarkActive {
+  background: #e8842b;
+  color: #fff;
 }
 
 .recipeInfo {
@@ -462,6 +514,20 @@
 
   .searchRow {
     flex-direction: column;
+  }
+
+  .resultsHead {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .resultActions {
+    width: 100%;
+  }
+
+  .writeButton,
+  .sortSelect {
+    flex: 1;
   }
 
   .recipeGrid {

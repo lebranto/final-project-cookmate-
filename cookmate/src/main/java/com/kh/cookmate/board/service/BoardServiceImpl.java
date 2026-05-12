@@ -61,7 +61,8 @@ public class BoardServiceImpl implements BoardService {
         board.setLikesCount(0);
         board.setBoardDelete('N');
         board.setUserNo(dto.getUserNo());
-        board.setNickname(dto.getNickname());
+        String nickname = boardDao.selectNicknameByUserNo(dto.getUserNo());
+        board.setNickname(nickname != null && !nickname.isBlank() ? nickname : dto.getNickname());
         int result = boardDao.insertBoard(board);
         dto.setBoardNo(board.getBoardNo());
 
@@ -310,6 +311,14 @@ public class BoardServiceImpl implements BoardService {
 	        boardDao.insertScrap(scrap);
 	        return 1; // 추가
 	    }
+	}
+
+	@Override
+	public boolean isScrapped(int boardNo, int userNo) {
+	    Scrap scrap = new Scrap();
+	    scrap.setBoardNo(boardNo);
+	    scrap.setUserNo(userNo);
+	    return boardDao.selectScrapCount(scrap) > 0;
 	}
 
 	@Override

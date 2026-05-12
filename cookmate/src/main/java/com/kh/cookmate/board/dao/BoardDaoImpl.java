@@ -37,6 +37,11 @@ public class BoardDaoImpl implements BoardDao{
 	}
 
 	@Override
+	public String selectNicknameByUserNo(int userNo) {
+		return session.selectOne("boardmapper.selectNicknameByUserNo", userNo);
+	}
+
+	@Override
 	public int insertIngredientSet(IngredientSet set) {
 		return session.insert("boardmapper.insertIngredientSet", set);
 	}

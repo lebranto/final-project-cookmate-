@@ -29,7 +29,7 @@ export default function CommentForm({
     }
 
     if (!content.trim()) {
-      alert("댓글 내용을 입력해주세요.");
+      alert("댓글 내용을 입력해 주세요.");
       return;
     }
 
@@ -40,7 +40,7 @@ export default function CommentForm({
         parentCommentNo: parentCommentNo ?? null,
       });
       setContent("");
-      alert(res.data || "댓글이 등록되었습니다.");
+      alert(res.data || "댓글을 등록했습니다.");
       onSuccess();
       onCancel?.();
     } catch (error) {
@@ -63,7 +63,7 @@ export default function CommentForm({
       <div className={styles.commentInputWrap}>
         <textarea
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(event) => setContent(event.target.value)}
           placeholder={
             parentCommentNo ? "답글을 입력하세요..." : "댓글을 남겨주세요..."
           }

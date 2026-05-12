@@ -121,6 +121,13 @@
   color: #2d5519;
 }
 
+.reactionButtonActive {
+  border-color: #3a6e22;
+  background: #e8f5e1;
+  color: #2d5519;
+  font-weight: 700;
+}
+
 .reactionDivider {
   width: 0.5px;
   height: 20px;
@@ -255,6 +262,12 @@
 
 .followButton:hover {
   opacity: 0.85;
+}
+
+.followButtonActive {
+  border: 1px solid #3a6e22;
+  background: #fff;
+  color: #2d5519;
 }
 
 .dateText {
@@ -468,8 +481,8 @@
 }
 
 .stepImage {
-  width: 140px;
-  height: 140px;
+  width: min(100%, 260px);
+  height: 190px;
   display: block;
   border-radius: 8px;
   background: #f0ede8;
@@ -517,5 +530,11 @@
   .ingredientColumns {
     grid-template-columns: 1fr;
     gap: 18px;
+  }
+
+  .stepImage {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
   }
 }

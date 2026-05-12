@@ -56,6 +56,7 @@ public class BoardDto {
         private String cookTime;
         private String calory;
         private char ai;
+        private String boardPostdate;
         private List<IngredientSetDto.SetDetail> ingredientSets;
         private List<CookStepDto.StepDetail> cookSteps;
     }

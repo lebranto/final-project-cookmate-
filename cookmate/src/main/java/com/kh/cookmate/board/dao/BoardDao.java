@@ -23,6 +23,8 @@ public interface BoardDao {
 
 	int insertBoard(Board board);
 
+	String selectNicknameByUserNo(int userNo);
+
 	int insertIngredientSet(IngredientSet set);
 
 	int insertIngredient(Ingredient ing);

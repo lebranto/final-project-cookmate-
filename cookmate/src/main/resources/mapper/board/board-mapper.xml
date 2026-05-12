@@ -19,6 +19,7 @@
         <result property="open"         column="OPEN"/>
         <result property="isApiData"    column="IS_API_DATA"/>
         <result property="likesCount"   column="LIKES_COUNT"/>
+        <result property="boardPostdate" column="BOARD_POSTDATE"/>
         <result property="typeName"     column="TYPE_NAME"/>
         <result property="difficult"    column="DIFFICULT"/>
         <result property="cookTime"     column="COOK_TIME"/>
@@ -43,6 +44,7 @@
     <sql id="searchWhere">
         FROM BOARD b
         JOIN TAG t ON b.TYPE_NO = t.TYPE_NO
+        LEFT JOIN USER u ON b.USER_NO = u.USER_NO
         WHERE b.BOARD_DELETE = 'N'
           AND b.OPEN = 'Y'
         <choose>
@@ -57,7 +59,7 @@
             AND (
                 b.BOARD_TITLE LIKE CONCAT('%', #{keyword}, '%')
                 OR b.INTRODUCE LIKE CONCAT('%', #{keyword}, '%')
-                OR b.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
+                OR COALESCE(u.NICKNAME, b.NICKNAME) LIKE CONCAT('%', #{keyword}, '%')
                 OR EXISTS (
                     SELECT 1
                     FROM INGREDIENT_SET iset
@@ -71,7 +73,23 @@
             AND t.TYPE_NAME = #{category}
         </if>
         <if test="source != 'official' and cookTime != null and cookTime != ''">
-            AND t.COOK_TIME = #{cookTime}
+            AND
+            CASE
+                WHEN t.COOK_TIME IN ('10분 이하', '10분 이내') THEN 10
+                WHEN t.COOK_TIME IN ('10~20분', '20분 이내') THEN 20
+                WHEN t.COOK_TIME IN ('20~30분', '30분 이내') THEN 30
+                WHEN t.COOK_TIME IN ('30~45분', '45분 이내') THEN 45
+                WHEN t.COOK_TIME IN ('45~60분', '1시간 이내', '60분 이내') THEN 60
+                WHEN t.COOK_TIME IN ('1시간 이상', '60분 이상') THEN 9999
+                ELSE 9999
+            END
+            <![CDATA[ <= ]]>
+            CASE
+                WHEN #{cookTime} IN ('15분 이내', '15분 이하') THEN 15
+                WHEN #{cookTime} IN ('30분 이내', '30분 이하') THEN 30
+                WHEN #{cookTime} IN ('1시간 이내', '60분 이내', '1시간 이하') THEN 60
+                ELSE 9999
+            END
         </if>
         <if test="source != 'official' and difficult != null and difficult != ''">
             AND t.DIFFICULT = #{difficult}
@@ -95,7 +113,7 @@
             b.INTRODUCE,
             b.IMAGE_URL,
             b.LIKES_COUNT,
-            b.NICKNAME,
+            COALESCE(u.NICKNAME, b.NICKNAME) AS NICKNAME,
             b.IS_API_DATA,
             DATE_FORMAT(b.BOARD_POSTDATE, '%Y-%m-%d') AS BOARD_POSTDATE,
             t.TYPE_NAME,
@@ -112,7 +130,17 @@
                 ORDER BY b.LIKES_COUNT DESC, b.BOARD_POSTDATE DESC
             </when>
             <when test="sort == 'cookTime'">
-                ORDER BY t.COOK_TIME ASC, b.LIKES_COUNT DESC
+                ORDER BY
+                    CASE
+                        WHEN t.COOK_TIME IN ('10분 이하', '10분 이내') THEN 10
+                        WHEN t.COOK_TIME IN ('10~20분', '20분 이내') THEN 20
+                        WHEN t.COOK_TIME IN ('20~30분', '30분 이내') THEN 30
+                        WHEN t.COOK_TIME IN ('30~45분', '45분 이내') THEN 45
+                        WHEN t.COOK_TIME IN ('45~60분', '1시간 이내', '60분 이내') THEN 60
+                        WHEN t.COOK_TIME IN ('1시간 이상', '60분 이상') THEN 9999
+                        ELSE 9999
+                    END ASC,
+                    b.LIKES_COUNT DESC
             </when>
             <otherwise>
                 ORDER BY b.LIKES_COUNT DESC, b.BOARD_POSTDATE DESC
@@ -129,6 +157,10 @@
     </select>
 
     <!-- 레시피 등록 -->
+    <select id="selectNicknameByUserNo" parameterType="int" resultType="string">
+        SELECT NICKNAME FROM USER WHERE USER_NO = #{userNo}
+    </select>
+
     <insert id="insertBoard" parameterType="Board"
             useGeneratedKeys="true" keyProperty="boardNo">
         INSERT INTO BOARD (
@@ -146,11 +178,12 @@
     <select id="getBoardDetail" parameterType="int" resultMap="boardDetailMap">
         SELECT
             b.BOARD_NO, b.USER_NO, b.TYPE_NO, b.BOARD_TITLE,
-            b.NICKNAME, b.INTRODUCE, b.IMAGE_URL, b.URL,
-            b.OPEN, b.IS_API_DATA, b.LIKES_COUNT, b.BOARD_POSTDATE,
+            COALESCE(u.NICKNAME, b.NICKNAME) AS NICKNAME, b.INTRODUCE, b.IMAGE_URL, b.URL,
+            b.OPEN, b.IS_API_DATA, b.LIKES_COUNT, DATE_FORMAT(b.BOARD_POSTDATE, '%Y년 %c월 %e일') AS BOARD_POSTDATE,
             t.TYPE_NAME, t.DIFFICULT, t.COOK_TIME, t.CALORY, t.AI
         FROM BOARD b
         JOIN TAG t ON b.TYPE_NO = t.TYPE_NO
+        LEFT JOIN USER u ON b.USER_NO = u.USER_NO
         WHERE b.BOARD_NO = #{boardNo}
           AND b.BOARD_DELETE = 'N'
     </select>
