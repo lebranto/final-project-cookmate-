@@ -1,11 +1,14 @@
 package com.kh.cookmate.board.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchResult;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.IngredientDto;
 import com.kh.cookmate.board.model.vo.Board;
@@ -34,6 +37,11 @@ public class BoardDaoImpl implements BoardDao{
 	}
 
 	@Override
+	public String selectNicknameByUserNo(int userNo) {
+		return session.selectOne("boardmapper.selectNicknameByUserNo", userNo);
+	}
+
+	@Override
 	public int insertIngredientSet(IngredientSet set) {
 		return session.insert("boardmapper.insertIngredientSet", set);
 	}
@@ -56,6 +64,16 @@ public class BoardDaoImpl implements BoardDao{
 	@Override
 	public BoardDetail getBoardDetail(int boardNo) {
 		return session.selectOne("boardmapper.getBoardDetail", boardNo);
+	}
+
+	@Override
+	public List<BoardSearchResult> searchBoards(BoardSearchRequest request) {
+		return session.selectList("boardmapper.searchBoards", request);
+	}
+
+	@Override
+	public int countSearchBoards(BoardSearchRequest request) {
+		return session.selectOne("boardmapper.countSearchBoards", request);
 	}
 
 	@Override public int insertIngredients(List<Ingredient> list) {
@@ -121,6 +139,10 @@ public class BoardDaoImpl implements BoardDao{
 	public int selectBoardUserNo(int boardNo) {
 	    return session.selectOne("boardmapper.selectBoardUserNo", boardNo);
 	}
+	@Override
+	public char selectBoardIsApiData(int boardNo) {
+	    return session.selectOne("boardmapper.selectBoardIsApiData", boardNo);
+	}
 	@Override 
 	public int insertLikes(Likes likes) {
 	    return session.insert("boardmapper.insertLikes", likes);
@@ -166,6 +188,16 @@ public class BoardDaoImpl implements BoardDao{
 	@Override
 	public int deleteComment(int commentNo) {
 		return session.update("boardmapper.deleteComment", commentNo);
+	}
+
+	@Override
+	public List<Map<String, Object>> selectApiBoards() {
+	    return session.selectList("boardmapper.selectApiBoards");
+	}
+
+	@Override
+	public int clearIntroduce(int boardNo) {
+	    return session.update("boardmapper.clearIntroduce", boardNo);
 	}
     
   

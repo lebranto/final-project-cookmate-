@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -134,7 +134,7 @@ export default function GlobalHeader() {
 
   const mobileMenuItems = useMemo(() => {
     const baseItems = [
-      { label: "레시피", path: "/recipes" },
+      { label: "레시피", path: "/boards" },
       { label: "AI추천", path: "/ai" },
       { label: "장보기", path: "/shop" },
       { label: "셰프", path: "/chef" },
@@ -249,7 +249,7 @@ export default function GlobalHeader() {
         </div>
 
         <nav className={styles.ghNav}>
-          <button type="button">레시피</button>
+          <button type="button" onClick={() => router.push("/boards")}>레시피</button>
           <button type="button">AI추천</button>
           <button type="button">장보기</button>
         </nav>

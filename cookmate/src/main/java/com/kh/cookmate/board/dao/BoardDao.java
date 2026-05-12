@@ -1,8 +1,11 @@
 package com.kh.cookmate.board.dao;
 
 import java.util.List;
+import java.util.Map;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchResult;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
 import com.kh.cookmate.board.model.vo.Board;
@@ -20,6 +23,8 @@ public interface BoardDao {
 
 	int insertBoard(Board board);
 
+	String selectNicknameByUserNo(int userNo);
+
 	int insertIngredientSet(IngredientSet set);
 
 	int insertIngredient(Ingredient ing);
@@ -29,6 +34,10 @@ public interface BoardDao {
 	int countApiRecipes();
 
 	BoardDetail getBoardDetail(int boardNo);
+
+	List<BoardSearchResult> searchBoards(BoardSearchRequest request);
+
+	int countSearchBoards(BoardSearchRequest request);
 
 	int insertIngredients(List<Ingredient> ings);
 
@@ -55,6 +64,7 @@ public interface BoardDao {
 	// 좋아요
 	int selectLikesCount(Likes likes);
 	int selectBoardUserNo(int boardNo);
+	char selectBoardIsApiData(int boardNo);
 	int insertLikes(Likes likes);
 	int deleteLikes(Likes likes);
 	int increaseLikes(int boardNo);
@@ -69,6 +79,9 @@ public interface BoardDao {
 	int insertComment(Comment comment);
 	List<CommentDetail> selectCommentList(int boardNo);
 	int deleteComment(int commentNo);
+
+	List<Map<String, Object>> selectApiBoards();
+	int clearIntroduce(int boardNo);
 	
 
 
