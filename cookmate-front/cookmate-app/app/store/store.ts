@@ -1,21 +1,17 @@
-import { create } from "zustand";
+import { useSyncExternalStore } from "react";
 import type { AgreementKey, RegisterForm } from "../type/register";
 
-type RegisterStore = RegisterForm & {
-  setField: <K extends keyof RegisterForm>(
-    key: K,
-    value: RegisterForm[K]
-  ) => void;
-
+type RegisterActions = {
+  setField: <K extends keyof RegisterForm>(key: K, value: RegisterForm[K]) => void;
   setAgreement: (key: AgreementKey, value: boolean) => void;
   setAllAgreements: (value: boolean) => void;
-
   addAllergy: (value: string) => void;
   removeAllergy: (value: string) => void;
   toggleAllergy: (value: string) => void;
-
   resetRegister: () => void;
 };
+
+type RegisterStore = RegisterForm & RegisterActions;
 
 const initialState: RegisterForm = {
   agreements: {
@@ -24,37 +20,44 @@ const initialState: RegisterForm = {
     age: false,
     marketing: false,
   },
-
   nickname: "",
   email: "",
   code: "",
   password: "",
   confirmPassword: "",
-
   introduce: "",
   address: "",
-
   allergies: [],
 };
 
-export const useRegisterStore = create<RegisterStore>((set) => ({
-  ...initialState,
+let registerState: RegisterForm = initialState;
+const listeners = new Set<() => void>();
 
+const emit = () => listeners.forEach((listener) => listener());
+
+const setRegisterState = (
+  updater: Partial<RegisterForm> | ((state: RegisterForm) => RegisterForm)
+) => {
+  registerState =
+    typeof updater === "function" ? updater(registerState) : { ...registerState, ...updater };
+  emit();
+};
+
+const actions: RegisterActions = {
   setField: (key, value) => {
-    set({ [key]: value } as Pick<RegisterStore, typeof key>);
+    setRegisterState({ [key]: value } as Partial<RegisterForm>);
   },
-
   setAgreement: (key, value) => {
-    set((state) => ({
+    setRegisterState((state) => ({
+      ...state,
       agreements: {
         ...state.agreements,
         [key]: value,
       },
     }));
   },
-
   setAllAgreements: (value) => {
-    set({
+    setRegisterState({
       agreements: {
         terms: value,
         privacy: value,
@@ -63,41 +66,38 @@ export const useRegisterStore = create<RegisterStore>((set) => ({
       },
     });
   },
-
   addAllergy: (value) => {
     const trimmed = value.trim();
-    if (!trimmed) return;
-
-    set((state) => {
-      if (state.allergies.includes(trimmed)) return state;
-
-      return {
-        allergies: [...state.allergies, trimmed],
-      };
-    });
+    if (!trimmed || registerState.allergies.includes(trimmed)) return;
+    setRegisterState((state) => ({ ...state, allergies: [...state.allergies, trimmed] }));
   },
-
   removeAllergy: (value) => {
-    set((state) => ({
+    setRegisterState((state) => ({
+      ...state,
       allergies: state.allergies.filter((item) => item !== value),
     }));
   },
-
   toggleAllergy: (value) => {
-    set((state) => {
-      if (state.allergies.includes(value)) {
-        return {
-          allergies: state.allergies.filter((item) => item !== value),
-        };
-      }
-
-      return {
-        allergies: [...state.allergies, value],
-      };
-    });
+    setRegisterState((state) => ({
+      ...state,
+      allergies: state.allergies.includes(value)
+        ? state.allergies.filter((item) => item !== value)
+        : [...state.allergies, value],
+    }));
   },
-
   resetRegister: () => {
-    set(initialState);
+    setRegisterState(initialState);
   },
-}));
+};
+
+const getSnapshot = (): RegisterStore => ({
+  ...registerState,
+  ...actions,
+});
+
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+
+export const useRegisterStore = () => useSyncExternalStore(subscribe, getSnapshot, getSnapshot);

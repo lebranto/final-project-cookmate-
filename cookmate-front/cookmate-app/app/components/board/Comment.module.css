@@ -1,0 +1,223 @@
+.commentInputRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.replyInputRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.commentAvatar,
+.replyAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #f5e6c8;
+  color: #2d5519;
+  font-weight: 700;
+}
+
+.commentAvatar {
+  width: 32px;
+  height: 32px;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.replyAvatar {
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  background: #e8f0f8;
+  font-size: 11px;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.commentInputWrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.commentInput {
+  width: 100%;
+  resize: none;
+  outline: none;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: #f5f3ee;
+  color: #1a1a1a;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 9px 12px;
+  transition: border-color 0.2s ease;
+}
+
+.commentInput:focus {
+  border-color: #3a6e22;
+}
+
+.commentSubmitRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.submitButton,
+.cancelButton {
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 16px;
+}
+
+.submitButton {
+  border: 0;
+  background: #3a6e22;
+  color: #fff;
+}
+
+.cancelButton {
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+  background: transparent;
+  color: #777;
+}
+
+.commentList {
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyText {
+  margin: 0;
+  padding: 24px 0 8px;
+  color: #aaa;
+  font-size: 13px;
+  text-align: center;
+}
+
+.commentBlock {
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.commentBlock:last-child {
+  border-bottom: 0;
+}
+
+.commentItem {
+  display: flex;
+  gap: 10px;
+  padding: 14px 0;
+}
+
+.commentBody,
+.replyBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.commentNameRow,
+.replyNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.commentName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.replyName {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.commentTime,
+.replyTime {
+  color: #aaa;
+  font-size: 11px;
+}
+
+.commentText,
+.replyText {
+  margin: 0;
+  color: #333;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.commentText {
+  font-size: 13px;
+}
+
+.replyText {
+  color: #444;
+  font-size: 12px;
+}
+
+.commentActions,
+.replyActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 7px;
+}
+
+.commentActionButton,
+.commentActionButtonDanger {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  padding: 0;
+  transition: color 0.2s ease;
+}
+
+.commentActionButton {
+  color: #aaa;
+}
+
+.commentActionButton:hover {
+  color: #3a6e22;
+}
+
+.commentActionButtonDanger {
+  color: #c0392b;
+}
+
+.replyList {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  padding-left: 42px;
+}
+
+.replyItem {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 720px) {
+  .replyList {
+    padding-left: 24px;
+  }
+}

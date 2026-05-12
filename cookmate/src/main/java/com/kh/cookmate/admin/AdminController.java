@@ -52,4 +52,11 @@ public class AdminController {
 	    publicApiService.fetchAndSaveAll();
 	    return ResponseEntity.ok("수집 완료");
 	}
+	
+	@PostMapping("/migrate-api-ingredients")
+	public ResponseEntity<?> migrateApiIngredients() {
+	    publicApiService.migrateIngredients();
+	    return ResponseEntity.ok("재료 마이그레이션 완료");
+	}	
+	
 }
