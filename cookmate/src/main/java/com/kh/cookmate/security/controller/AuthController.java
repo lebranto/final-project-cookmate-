@@ -62,8 +62,6 @@ public class AuthController {
 	}
 	
 	
-	
-
 	 // 회원가입 
 	  @PostMapping("/signup")
 	    public ResponseEntity<Void> signup(@RequestBody SignupRequest req) {
@@ -87,16 +85,12 @@ public class AuthController {
 	      return ResponseEntity.ok().build();
 	  }
 	  
-	  
-	
-	
-	
 	
 	private ResponseEntity<AuthResult> makeResponse(AuthResult result){
 		// AccessToken을 쿠키에 담아서 전달
 			ResponseCookie accessCookie = createTokenCookie(ACCESS_COOKIE, result.getAccessToken(),30);
 			ResponseCookie refreshCookie = 
-					createTokenCookie(REFRESH_COOKIE, result.getRefreshToken(),7);
+					createTokenCookie(REFRESH_COOKIE, result.getRefreshToken(),1);
 			
 			String roles = result.getUser().getRoles()
 					.stream().collect(Collectors.joining("|"));

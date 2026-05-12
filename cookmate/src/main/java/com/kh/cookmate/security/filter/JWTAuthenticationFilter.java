@@ -74,14 +74,14 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter{
 				
 				
 				// 5) 인증토큰 생성
-//				UsernamePasswordAuthenticationToken authToken
-//				 = new UsernamePasswordAuthenticationToken(userId,null,u.ge()
-//						                                                .stream()
-//						                                                .map(s -> new SimpleGrantedAuthority(s))
-//						                                                .toList());
+				UsernamePasswordAuthenticationToken authToken
+				 = new UsernamePasswordAuthenticationToken(userId,null,u.getRoles()
+						                                                .stream()
+						                                                .map(s -> new SimpleGrantedAuthority(s))
+					                                                .toList());
 				
 				// 6) 스레드 로컬에 토큰 저장
-//				SecurityContextHolder.getContext().setAuthentication(authToken);
+				SecurityContextHolder.getContext().setAuthentication(authToken);
 				
 			}
 			

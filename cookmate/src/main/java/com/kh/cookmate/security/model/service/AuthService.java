@@ -58,7 +58,7 @@ public class AuthService {
 		
 		// 2) 토큰 발급 처리
 		String accessToken = jwt.createAccessToken(user.getUserNo(),30);
-		String refreshToken = jwt.createRefreshToken(user.getUserNo(),7);
+		String refreshToken = jwt.createRefreshToken(user.getUserNo(),1);
 		 
 		User userNoPassword = User
 				               .builder()

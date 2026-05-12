@@ -1,17 +1,10 @@
 "use client";
 
-import { JSX, useEffect, useState } from "react";
+import { JSX, useState } from "react";
 import type { SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
 
-function hasCookie(name: string): boolean {
-  if (typeof document === "undefined") {
-    return false;
-  }
-
-  return document.cookie.split("; ").some((cookie) => cookie.startsWith(`${name}=`));
-}
 
 // ── 타입 정의 ─────────────────────────────────────────────
 interface BrandTag {
@@ -56,12 +49,6 @@ function LoginForm(): JSX.Element {
   const [email,    setEmail]    = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  useEffect(() => {
-    if (hasCookie("accessToken") || window.localStorage.getItem("accessToken")) {
-      router.replace("/");
-    }
-  }, [router]);
-
  const handleSubmit = async (e: SubmitEvent) => {
   e.preventDefault();
 
@@ -79,7 +66,7 @@ function LoginForm(): JSX.Element {
     });
 
     if (!response.ok) {
-      alert("로그인 실패");
+      alert("이메일이나 비밀번호가 올바르지 않습니다.");
       return;
     }
 
@@ -101,9 +88,9 @@ function LoginForm(): JSX.Element {
     alert("백엔드 서버에 연결할 수 없습니다.");
   }
 };
+  
   const handleKakao = (): void => {
-    // TODO: 카카오 OAuth 연동
-    console.log("카카오 로그인");
+    window.location.href = "http://localhost:8081/api/oauth2/authorization/kakao";
   };
 
   const handleSignup = (): void => {
