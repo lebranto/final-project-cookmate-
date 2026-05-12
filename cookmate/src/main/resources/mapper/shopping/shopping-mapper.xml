@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="shoppingmapper">
+    <select id="selectShoppingNoByUserAndBoard" parameterType="map" resultType="int">
+        SELECT SHOPPING_NO
+        FROM SHOPPING_LIST
+        WHERE USER_NO = #{userNo}
+          AND BOARD_NO = #{boardNo}
+        LIMIT 1
+    </select>
+
+    <insert id="insertShoppingList"
+            parameterType="com.kh.cookmate.shopping.model.vo.ShoppingList"
+            useGeneratedKeys="true"
+            keyProperty="shoppingNo"
+            keyColumn="SHOPPING_NO">
+        INSERT INTO SHOPPING_LIST (
+            USER_NO,
+            BOARD_NO,
+            SHOPPING_TITLE,
+            IMAGE_URL
+        )
+        VALUES (
+            #{userNo},
+            #{boardNo},
+            (
+                SELECT b.BOARD_TITLE
+                FROM BOARD b
+                WHERE b.BOARD_NO = #{boardNo}
+                  AND b.BOARD_DELETE = 'N'
+            ),
+            (
+                SELECT b.IMAGE_URL
+                FROM BOARD b
+                WHERE b.BOARD_NO = #{boardNo}
+                  AND b.BOARD_DELETE = 'N'
+            )
+        )
+    </insert>
+
+    <insert id="insertShoppingItemsFromRecipe" parameterType="int">
+        INSERT INTO SHOPPING_ITEM (
+            SHOPPING_NO,
+            SET_NAME,
+            INGREDIENT_NAME,
+            QUANTITY,
+            UNIT,
+            ITEM_STATUS,
+            ITEM_ORDER
+        )
+        SELECT
+            #{_parameter},
+            '재료',
+            i.INGREDIENT_NAME,
+            i.QUANTITY,
+            i.UNIT,
+            'NEED',
+            i.INGREDIENT_NO
+        FROM SHOPPING_LIST sl
+        JOIN INGREDIENT_SET s ON s.BOARD_NO = sl.BOARD_NO
+        JOIN INGREDIENT i ON i.SET_NO = s.SET_NO
+        WHERE sl.SHOPPING_NO = #{_parameter}
+    </insert>
+</mapper>
