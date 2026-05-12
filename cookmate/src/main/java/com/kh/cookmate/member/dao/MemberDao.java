@@ -9,11 +9,8 @@ import com.kh.cookmate.member.dto.RecipeDto;
 import com.kh.cookmate.member.vo.Member;
 
 public interface MemberDao {
-    // 1. 마이페이지 유저 정보 조회
+	
     Member selectUserByNo(long userNo);
-
-    // 2. 셰프 랭킹 조회
-    List<Member> selectChefRanking(String filter);
 
 	MemberDto getMemberStats(long userNo);
 
@@ -36,4 +33,22 @@ public interface MemberDao {
 	int insertInquiry(InquiryDto inquiryDto);
 
 	int deleteInquiry(long inquiryNo);
+	
+	List<MemberDto> selectChefRanking(Map<String, Object> params);
+	
+    MemberDto selectChefDetail(Map<String, Object> params);
+    
+    int checkFollow(Map<String, Object> params);
+    
+    void insertFollow(Map<String, Object> params);
+    
+    void deleteFollow(Map<String, Object> params);
+
+	List<Map<String, Object>> selectChefRecipeComments(long chefNo);
+
+	int updateInquiry(InquiryDto inquiryDto);
+
+	List<String> selectUserAllergies(long userNo);
+
+	String selectPassword(long userNo);
 }
