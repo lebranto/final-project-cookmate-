@@ -24,9 +24,8 @@ public class Member {
     private String userStatus;
     private String withdraw;
     
- // 랭킹 지표 필드
-    private int recipeCount;    // 작성한 레시피 수
-    private int scrapCount;     // 내 레시피가 스크랩된 총 횟수
+    private int recipeCount;   
+    private int scrapCount;    
     private int inquiryCount;
     
     

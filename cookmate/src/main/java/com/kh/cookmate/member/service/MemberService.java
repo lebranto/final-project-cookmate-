@@ -9,12 +9,14 @@ import com.kh.cookmate.member.dto.RecipeDto;
 
 public interface MemberService {
     
-    // 마이페이지: 유저 기본 정보 조회 (VO -> DTO 변환)
     MemberDto selectUserByNo(long userNo);
 
-    // 셰프 리스트: 필터에 따른 랭킹 조회 (List<VO> -> List<DTO> 변환)
-    List<MemberDto> selectChefRanking(String filter);
-
+    List<MemberDto> getChefRanking(String filter, Long loginUserNo);
+    
+    MemberDto getChefDetail(long chefNo, Long loginUserNo);
+    
+    boolean toggleFollow(long loginUserNo, String targetEmail);
+    
     List<InquiryDto> selectMyInquiries(long userNo);
 
 	List<RecipeDto> selectMyScraps(Map<String, Object> params);
@@ -32,4 +34,14 @@ public interface MemberService {
 	int insertInquiry(InquiryDto inquiryDto);
 
 	int deleteInquiry(long inquiryNo);
+
+	List<Map<String, Object>> getChefRecipeComments(long chefNo);
+
+	int updateInquiry(InquiryDto inquiryDto);
+
+	void updateProfileWithAllergies(Map<String, Object> payload);
+
+	List<String> selectUserAllergies(long userNo);
+
+	boolean verifyPassword(long userNo, String password);
 }

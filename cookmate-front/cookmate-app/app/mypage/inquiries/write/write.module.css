@@ -1,0 +1,44 @@
+/* app/mypage/inquiries/write/write.module.css */
+
+.mainInner { max-width: 760px; margin: 0 auto; }
+
+.pageHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.pageTitle { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.pageTitleIcon { font-size: 18px; }
+
+.card { background: #ffffff; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); overflow: hidden; }
+
+/* 폼 섹션 */
+.formSection { padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+
+.formGroup { display: flex; flex-direction: column; gap: 6px; }
+.formLabel { font-size: 13px; font-weight: 600; color: #2d2d2d; }
+.formLabel span { color: #e8914a; } /* 필수 표시 오렌지색 */
+
+.formInput {
+  padding: 11px 14px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px;
+  font-size: 14px; font-family: inherit; background: #ffffff; color: #2d2d2d;
+  transition: border-color .2s; outline: none;
+}
+.formInput:focus { border-color: #3a6e22; }
+
+/* 셀렉트 박스 화살표 처리 */
+select.formInput { 
+  appearance: none; 
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); 
+  background-repeat: no-repeat; 
+  background-position: right 14px center; 
+  padding-right: 36px; 
+  cursor: pointer; 
+}
+
+textarea.formInput { resize: vertical; min-height: 180px; line-height: 1.6; }
+
+/* 폼 푸터 */
+.formFooter { display: flex; justify-content: flex-end; gap: 10px; padding: 20px 32px; border-top: 1px solid rgba(0,0,0,0.1); background: #f5f2ee; }
+.btn { padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
+.btnCancel { background: #ffffff; border: 1px solid rgba(0,0,0,0.1); color: #2d2d2d; }
+.btnCancel:hover { background: #f5f2ee; }
+.btnSubmit { background: #3a6e22; color: white; }
+.btnSubmit:hover { background: #3a6347; }
+.btnSubmit:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -4,12 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -43,26 +45,45 @@ public class MemberController {
         }
     }
      
-    @GetMapping("/ranking")
+    //셰프리스트
+    @GetMapping("/chef")
     public ResponseEntity<List<MemberDto>> getChefRanking(
-        @RequestParam(value="filter", defaultValue="recipe") String filter) {
-        
-        List<MemberDto> list = memberService.selectChefRanking(filter);
-        return ResponseEntity.ok(list);
+            @RequestParam(defaultValue = "recipe") String filter,
+            @RequestParam(required = false) Long loginUserNo) {
+        return ResponseEntity.ok(memberService.getChefRanking(filter, loginUserNo));
     }
     
-    /**
-     * 1. 마이페이지 상단 통계 조회 (레시피, 스크랩, 문의 개수)
-     */
+    //셰프 상세보기
+    @GetMapping("/chef/{chefNo}")
+    public ResponseEntity<MemberDto> getChefDetail(
+            @PathVariable long chefNo,
+            @RequestParam(required = false) Long loginUserNo) {
+        return ResponseEntity.ok(memberService.getChefDetail(chefNo, loginUserNo));
+    }
+    
+    //셰프 상세보기 - 댓글
+    @GetMapping("/chef/{chefNo}/recipe-comments")
+    public ResponseEntity<List<Map<String, Object>>> getChefRecipeComments(@PathVariable long chefNo) {
+        log.info("셰프 댓글 목록 조회 - 셰프번호: {}", chefNo);
+        return ResponseEntity.ok(memberService.getChefRecipeComments(chefNo));
+    }
+
+    //팔로우
+    @PostMapping("/follow")
+    public ResponseEntity<Boolean> toggleFollow(
+            @RequestParam long loginUserNo,
+            @RequestParam String targetEmail) {
+        return ResponseEntity.ok(memberService.toggleFollow(loginUserNo, targetEmail));
+    }
+    
+    //마이페이지 상단 통계 조회 (레시피, 스크랩, 문의 개수)
     @GetMapping("/stats")
     public ResponseEntity<MemberDto> getMemberStats(@RequestParam long userNo) {
         log.info("마이페이지 통계 조회 - 유저번호: {}", userNo);
         return ResponseEntity.ok(memberService.getMemberStats(userNo));
     }
 
-    /**
-     * 2. 내가 만든 레시피 목록 조회
-     */
+    //내가 만든 레시피 목록 조회
     @GetMapping("/recipes")
     public ResponseEntity<List<RecipeDto>> getMyRecipes(
             @RequestParam long userNo,
@@ -75,9 +96,7 @@ public class MemberController {
         return ResponseEntity.ok(memberService.selectMyRecipes(params));
     }
 
-    /**
-     * 3. 스크랩한 레시피 목록 조회
-     */
+    //스크랩한 레시피 목록 조회
     @GetMapping("/scraps")
     public ResponseEntity<List<RecipeDto>> getMyScraps(
             @RequestParam long userNo,
@@ -90,17 +109,13 @@ public class MemberController {
         return ResponseEntity.ok(memberService.selectMyScraps(params));
     }
 
-    /**
-     * 4. 문의 내역 목록 조회
-     */
+    //문의 내역 목록 조회
     @GetMapping("/inquiries")
     public ResponseEntity<List<InquiryDto>> getMyInquiries(@RequestParam long userNo) {
         return ResponseEntity.ok(memberService.selectMyInquiries(userNo));
     }
     
-    /**
-     * 4-1. 문의 상세 조회 (user_inquiry_view_pc.html 용)
-     */
+    //문의 상세 조회
     @GetMapping("/inquiries/{inquiryNo}")
     public ResponseEntity<InquiryDto> getInquiryDetail(@PathVariable("inquiryNo") long inquiryNo) {
         log.info("문의 상세 조회 - 번호: {}", inquiryNo);
@@ -109,9 +124,22 @@ public class MemberController {
         return inquiry != null ? ResponseEntity.ok(inquiry) : ResponseEntity.notFound().build();
     }
 
-    /**
-     * 4-2. 문의 등록 (user_inquiry_write_pc.html 용)
-     */
+    //문의 수정
+    @PutMapping("/inquiries/{inquiryNo}")
+    public ResponseEntity<String> updateInquiry(@PathVariable long inquiryNo, @RequestBody InquiryDto inquiryDto) {
+    	
+    	inquiryDto.setInquiryNo(inquiryNo);
+    	
+    	int result = memberService.updateInquiry(inquiryDto);
+    	
+    	if(result > 0) {
+    		return ResponseEntity.ok("문의 수정 성공");
+    	} else {
+    		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("문의 수정 실패");
+    	}
+    }
+    
+    //문의 등록 
     @PostMapping("/inquiries")
     public ResponseEntity<String> insertInquiry(@RequestBody InquiryDto inquiryDto) {
         log.info("문의 등록 요청: {}", inquiryDto);
@@ -124,9 +152,7 @@ public class MemberController {
         }
     }
 
-    /**
-     * 4-3. 문의 삭제 (상세 보기 페이지 내 삭제 버튼 용)
-     */
+    //문의 삭제 (상세 보기 페이지 내 삭제 버튼 용)
     @DeleteMapping("/inquiries/{inquiryNo}")
     public ResponseEntity<String> deleteInquiry(@PathVariable("inquiryNo") long inquiryNo) {
         log.info("문의 삭제 요청 - 번호: {}", inquiryNo);
@@ -139,9 +165,8 @@ public class MemberController {
         }
     }
     
-    /**
-     * 5. 회원 정보 수정 (닉네임, 소개글, 알레르기)
-     */
+    
+    //회원 정보 수정 (프로필,닉네임, 소개글, 알레르기,비밀번호)
     @PatchMapping("/profile")
     public ResponseEntity<String> updateProfile(@RequestBody MemberDto memberDto) {
         log.info("회원 정보 수정 요청: {}", memberDto);
@@ -154,9 +179,7 @@ public class MemberController {
         }
     }
 
-    /**
-     * 6. 회원 탈퇴 (소프트 딜리트)
-     */
+    //회원 탈퇴 (소프트 딜리트)
     @PostMapping("/withdraw")
     public ResponseEntity<String> withdrawMember(@RequestParam long userNo) {
         log.info("회원 탈퇴 요청 - 유저번호: {}", userNo);
@@ -167,5 +190,58 @@ public class MemberController {
         } else {
             return ResponseEntity.badRequest().body("탈퇴 처리에 실패했습니다.");
         }
+    }
+    
+    //프로필 정보 및 알레르기 조회
+    @GetMapping("/profile/{userNo}")
+    public ResponseEntity<Map<String, Object>> getProfileDetail(@PathVariable long userNo) {
+        log.info("프로필 및 알레르기 조회 요청 - 유저번호: {}", userNo);
+        
+        //회원 조회 서비스 호출
+        MemberDto member = memberService.selectUserByNo(userNo); 
+        //알레르기 조회 서비스 호출
+        List<String> allergies = memberService.selectUserAllergies(userNo);
+        
+        if(member != null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("userNo", member.getUserNo());
+            response.put("userEmail", member.getUserEmail());
+            response.put("nickname", member.getNickname());
+            response.put("introduce", member.getIntroduce());
+            response.put("profileImageUrl", member.getProfileImageUrl());
+            response.put("allergies", allergies); // 알레르기 배열 포함
+            return ResponseEntity.ok(response);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @PostMapping("/profile/update")
+    public ResponseEntity<String> updateProfileWithAllergies(@RequestBody Map<String, Object> payload) {
+        log.info("프로필 및 알레르기 수정 요청 (JSON): {}", payload);
+        try {
+            // 프론트엔드에서 보낸 JSON 데이터를 그대로 서비스 단으로 넘김
+            memberService.updateProfileWithAllergies(payload);
+            return ResponseEntity.ok("회원 정보가 성공적으로 수정되었습니다.");
+        } catch (Exception e) {
+            log.error("프로필 수정 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("수정 중 오류가 발생했습니다.");
+        }
+    }
+    
+    //회원 정보 수정 - 현재 비밀번호 확인
+    @PostMapping("/profile/verify-password")
+    public ResponseEntity<Map<String, Boolean>> verifyPassword(@RequestBody Map<String, Object> payload) {
+        long userNo = Long.parseLong(payload.get("userNo").toString());
+        String password = (String) payload.get("password"); // 프론트에서 보낸 평문 비밀번호
+
+        log.info("비밀번호 검증 요청 - 유저번호: {}, 입력비번: {}", userNo, password);
+
+        // 서비스에서 비밀번호 일치 여부 확인
+        boolean isValid = memberService.verifyPassword(userNo, password);
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("isValid", isValid);
+
+        return ResponseEntity.ok(response);
     }
 }

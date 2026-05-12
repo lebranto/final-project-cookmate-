@@ -1,7 +1,14 @@
 package com.kh.cookmate.member.dto;
 
+import java.time.format.DateTimeFormatter; 
 import java.util.List;
-import lombok.*;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -14,20 +21,29 @@ public class MemberDto {
     private String profileImageUrl;
     private String introduce;
     
-    // 마이페이지 통계 (UI 디자인 반영)
+    private String enrollDate; 
     private int recipeCount;
     private int scrapCount;
     private int inquiryCount;  
 
-    // 회원 정보 수정용 (알레르기 설정 반영)
+    private int followerCount;   
+    private int followingCount;    
+    
+    private boolean isFollowing;
+    
     private List<String> allergies; 
 
-    /**
-     * VO(Entity)를 DTO로 변환하는 메서드
-     * VO의 필드 타입도 long userNo로 맞춰주어야 오류가 나지 않습니다.
-     */
+    
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String userPw; 
+    
     public static MemberDto fromEntity(com.kh.cookmate.member.vo.Member member) {
         if (member == null) return null;
+        
+        String formattedDate = "";
+        if (member.getUserEnrollDate() != null) {
+            formattedDate = member.getUserEnrollDate().format(DateTimeFormatter.ofPattern("yyyy년 M월"));
+        }
         
         return MemberDto.builder()
                 .userNo(member.getUserNo())
@@ -37,8 +53,13 @@ public class MemberDto {
                 .introduce(member.getIntroduce())
                 .recipeCount(member.getRecipeCount())
                 .scrapCount(member.getScrapCount())
-                .inquiryCount(member.getInquiryCount()) // VO에도 해당 필드 추가 필요
-                // allergies는 보통 별도 조인이 필요하므로 Service 단에서 별도로 set 해주는 것이 일반적입니다.
+                .inquiryCount(member.getInquiryCount())
+                .enrollDate(formattedDate) 
                 .build();
     }
+    
+
+    
+
+
 }
