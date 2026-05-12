@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kh.cookmate.shopping.dao.ShoppingDao;
 import com.kh.cookmate.shopping.dto.ShoppingDto.CreateRequest;
 import com.kh.cookmate.shopping.dto.ShoppingDto.CreateResponse;
+import com.kh.cookmate.shopping.dto.ShoppingDto.ListResponse;
 import com.kh.cookmate.shopping.model.vo.ShoppingList;
 
 import lombok.RequiredArgsConstructor;
@@ -35,5 +36,19 @@ public class ShoppingServiceImpl implements ShoppingService {
         shoppingDao.insertShoppingItemsFromRecipe(shoppingList.getShoppingNo());
 
         return new CreateResponse(shoppingList.getShoppingNo(), true);
+    }
+
+    @Override
+    public ListResponse getShoppingLists(int userNo) {
+        var list = shoppingDao.selectShoppingLists(userNo);
+        return new ListResponse(list, list.size());
+    }
+
+    @Override
+    @Transactional
+    public int deleteShoppingList(int shoppingNo, int userNo) {
+        Map<String, Object> params = Map.of("shoppingNo", shoppingNo, "userNo", userNo);
+        shoppingDao.deleteShoppingItems(params);
+        return shoppingDao.deleteShoppingList(params);
     }
 }

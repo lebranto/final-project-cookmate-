@@ -63,4 +63,43 @@
         JOIN INGREDIENT i ON i.SET_NO = s.SET_NO
         WHERE sl.SHOPPING_NO = #{_parameter}
     </insert>
+
+    <select id="selectShoppingLists"
+            parameterType="int"
+            resultType="com.kh.cookmate.shopping.dto.ShoppingDto$ListItem">
+        SELECT
+            sl.SHOPPING_NO,
+            sl.BOARD_NO,
+            sl.SHOPPING_TITLE,
+            sl.IMAGE_URL,
+            DATE_FORMAT(sl.SHOPPING_DATE, '%Y.%m.%d') AS SHOPPING_DATE,
+            COUNT(si.ITEM_NO) AS TOTAL_COUNT,
+            COALESCE(SUM(CASE WHEN si.ITEM_STATUS IN ('BOUGHT', 'OWNED') THEN 1 ELSE 0 END), 0) AS COMPLETED_COUNT
+        FROM SHOPPING_LIST sl
+        LEFT JOIN SHOPPING_ITEM si ON si.SHOPPING_NO = sl.SHOPPING_NO
+        WHERE sl.USER_NO = #{_parameter}
+        GROUP BY
+            sl.SHOPPING_NO,
+            sl.BOARD_NO,
+            sl.SHOPPING_TITLE,
+            sl.IMAGE_URL,
+            sl.SHOPPING_DATE
+        ORDER BY sl.SHOPPING_DATE DESC, sl.SHOPPING_NO DESC
+    </select>
+
+    <delete id="deleteShoppingList" parameterType="map">
+        DELETE FROM SHOPPING_LIST
+        WHERE SHOPPING_NO = #{shoppingNo}
+          AND USER_NO = #{userNo}
+    </delete>
+
+    <delete id="deleteShoppingItems" parameterType="map">
+        DELETE FROM SHOPPING_ITEM
+        WHERE SHOPPING_NO IN (
+            SELECT SHOPPING_NO
+            FROM SHOPPING_LIST
+            WHERE SHOPPING_NO = #{shoppingNo}
+              AND USER_NO = #{userNo}
+        )
+    </delete>
 </mapper>
