@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.cookmate.board.dto.BoardDto;
 import com.kh.cookmate.board.dto.BoardDto.BoardPut;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
 import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
 import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
 import com.kh.cookmate.board.service.BoardService;
@@ -45,6 +46,28 @@ public class BoardController {
         BoardDto.BoardDetail detail = service.getBoardDetail(boardNo);
         if (detail == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(detail);
+    }
+
+    @GetMapping("/boards/search")
+    public ResponseEntity<?> searchBoards(
+            @RequestParam(defaultValue = "user") String source,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String cookTime,
+            @RequestParam(required = false) String difficult,
+            @RequestParam(defaultValue = "popular") String sort,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        BoardSearchRequest request = new BoardSearchRequest();
+        request.setSource(source);
+        request.setKeyword(keyword);
+        request.setCategory(category);
+        request.setCookTime(cookTime);
+        request.setDifficult(difficult);
+        request.setSort(sort);
+        request.setPage(page);
+        request.setSize(size);
+        return ResponseEntity.ok(service.searchBoards(request));
     }
 
     @PutMapping("/boards/{boardNo}")

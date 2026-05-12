@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchResult;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
 import com.kh.cookmate.board.model.vo.Board;
@@ -30,6 +32,10 @@ public interface BoardDao {
 	int countApiRecipes();
 
 	BoardDetail getBoardDetail(int boardNo);
+
+	List<BoardSearchResult> searchBoards(BoardSearchRequest request);
+
+	int countSearchBoards(BoardSearchRequest request);
 
 	int insertIngredients(List<Ingredient> ings);
 

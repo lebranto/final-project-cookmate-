@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
 import com.kh.cookmate.board.dto.BoardDto.BoardPut;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchResponse;
 import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
@@ -13,6 +15,8 @@ public interface BoardService{
 	int insertRecipe(BoardWrite dto);
 
 	BoardDetail getBoardDetail(int boardNo);
+
+	BoardSearchResponse searchBoards(BoardSearchRequest request);
 
 	int updateRecipe(int boardNo, BoardPut dto);
 

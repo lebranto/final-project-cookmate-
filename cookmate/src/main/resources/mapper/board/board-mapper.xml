@@ -40,6 +40,87 @@
                     select="selectIngredientList"/>
     </resultMap>
 
+    <sql id="searchWhere">
+        FROM BOARD b
+        JOIN TAG t ON b.TYPE_NO = t.TYPE_NO
+        WHERE b.BOARD_DELETE = 'N'
+          AND b.OPEN = 'Y'
+        <choose>
+            <when test="source == 'official'">
+                AND b.IS_API_DATA = 'Y'
+            </when>
+            <otherwise>
+                AND b.IS_API_DATA = 'N'
+            </otherwise>
+        </choose>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                b.BOARD_TITLE LIKE CONCAT('%', #{keyword}, '%')
+                OR b.INTRODUCE LIKE CONCAT('%', #{keyword}, '%')
+                OR b.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
+                OR EXISTS (
+                    SELECT 1
+                    FROM INGREDIENT_SET iset
+                    JOIN INGREDIENT ing ON iset.SET_NO = ing.SET_NO
+                    WHERE iset.BOARD_NO = b.BOARD_NO
+                      AND ing.INGREDIENT_NAME LIKE CONCAT('%', #{keyword}, '%')
+                )
+            )
+        </if>
+        <if test="category != null and category != ''">
+            AND t.TYPE_NAME = #{category}
+        </if>
+        <if test="source != 'official' and cookTime != null and cookTime != ''">
+            AND t.COOK_TIME = #{cookTime}
+        </if>
+        <if test="source != 'official' and difficult != null and difficult != ''">
+            AND t.DIFFICULT = #{difficult}
+        </if>
+    </sql>
+
+    <select id="countSearchBoards"
+            parameterType="com.kh.cookmate.board.dto.BoardDto$BoardSearchRequest"
+            resultType="int">
+        SELECT COUNT(*)
+        <include refid="searchWhere"/>
+    </select>
+
+    <select id="searchBoards"
+            parameterType="com.kh.cookmate.board.dto.BoardDto$BoardSearchRequest"
+            resultType="com.kh.cookmate.board.dto.BoardDto$BoardSearchResult">
+        SELECT
+            b.BOARD_NO,
+            b.USER_NO,
+            b.BOARD_TITLE,
+            b.INTRODUCE,
+            b.IMAGE_URL,
+            b.LIKES_COUNT,
+            b.NICKNAME,
+            b.IS_API_DATA,
+            DATE_FORMAT(b.BOARD_POSTDATE, '%Y-%m-%d') AS BOARD_POSTDATE,
+            t.TYPE_NAME,
+            t.DIFFICULT,
+            t.COOK_TIME,
+            t.CALORY,
+            t.AI
+        <include refid="searchWhere"/>
+        <choose>
+            <when test="sort == 'latest'">
+                ORDER BY b.BOARD_POSTDATE DESC
+            </when>
+            <when test="sort == 'likes'">
+                ORDER BY b.LIKES_COUNT DESC, b.BOARD_POSTDATE DESC
+            </when>
+            <when test="sort == 'cookTime'">
+                ORDER BY t.COOK_TIME ASC, b.LIKES_COUNT DESC
+            </when>
+            <otherwise>
+                ORDER BY b.LIKES_COUNT DESC, b.BOARD_POSTDATE DESC
+            </otherwise>
+        </choose>
+        LIMIT #{offset}, #{size}
+    </select>
+
     <!-- BOARD -->
 
     <!-- 공식 레시피 수 조회 -->

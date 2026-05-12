@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kh.cookmate.board.dao.BoardDao;
 import com.kh.cookmate.board.dto.BoardDto;
 import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchResponse;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchResult;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
 import com.kh.cookmate.board.dto.CookStepDto.StepWrite;
@@ -107,6 +110,26 @@ public class BoardServiceImpl implements BoardService {
     public BoardDetail getBoardDetail(int boardNo) {
         return boardDao.getBoardDetail(boardNo);
     }
+
+	@Override
+	public BoardSearchResponse searchBoards(BoardSearchRequest request) {
+		int page = request.getPage() < 1 ? 1 : request.getPage();
+		int size = request.getSize() < 1 ? 12 : Math.min(request.getSize(), 50);
+		request.setPage(page);
+		request.setSize(size);
+		request.setOffset((page - 1) * size);
+
+		if (request.getSource() == null || request.getSource().isBlank()) {
+			request.setSource("user");
+		}
+		if (request.getSort() == null || request.getSort().isBlank()) {
+			request.setSort("popular");
+		}
+
+		int totalCount = boardDao.countSearchBoards(request);
+		List<BoardSearchResult> list = boardDao.searchBoards(request);
+		return new BoardSearchResponse(list, totalCount, page, size);
+	}
 
 	//레시피 수정 (부분 수정)
     @Override

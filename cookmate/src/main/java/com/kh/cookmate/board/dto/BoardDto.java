@@ -76,6 +76,58 @@ public class BoardDto {
         private List<IngredientSetDto.SetWrite> ingredientSets;
         private List<CookStepDto.StepWrite> cookSteps;
     }
+
+    @Data @NoArgsConstructor
+    public static class BoardSearchRequest {
+        private String source;
+        private String keyword;
+        private String category;
+        private String cookTime;
+        private String difficult;
+        private String sort;
+        private int page = 1;
+        private int size = 12;
+        private int offset;
+    }
+
+    @Data @NoArgsConstructor
+    public static class BoardSearchResult {
+        private int boardNo;
+        private int userNo;
+        private String boardTitle;
+        private String introduce;
+        private String imageUrl;
+        private int likesCount;
+        private String nickname;
+        private String typeName;
+        private String difficult;
+        private String cookTime;
+        private String calory;
+        private char ai;
+        private char isApiData;
+        private String boardPostdate;
+    }
+
+    @Data @NoArgsConstructor
+    public static class BoardSearchResponse {
+        private List<BoardSearchResult> list;
+        private int totalCount;
+        private int page;
+        private int size;
+        private int totalPages;
+
+        public BoardSearchResponse(
+                List<BoardSearchResult> list,
+                int totalCount,
+                int page,
+                int size) {
+            this.list = list;
+            this.totalCount = totalCount;
+            this.page = page;
+            this.size = size;
+            this.totalPages = (int) Math.ceil((double) totalCount / size);
+        }
+    }
     
     
 }
