@@ -44,7 +44,7 @@ interface BoardWriteFormProps {
 }
 
 const CATEGORIES = ["한식", "중식", "일식", "양식", "셀러드", "디저트"];
-const DIFFICULTIES = ["초급", "중급", "고급"];
+const DIFFICULTIES = ["쉬움", "보통", "어려움"];
 const COOK_TIMES = ["10분 이하", "10~20분", "20~30분", "30~45분", "45~60분", "1시간 이상"];
 
 const newId = () =>
