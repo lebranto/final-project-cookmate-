@@ -3,83 +3,116 @@
 
 <mapper namespace="member">
 
-    <!-- 마이페이지 유저 조회 -->
     <select id="selectUserByNo" parameterType="long" resultType="Member">
         SELECT * FROM USER WHERE USER_NO = #{userNo}
     </select>
 
-    <select id="selectChefRanking" parameterType="string" resultType="Member">
-	    SELECT 
-	        u.USER_NO, 
-	        u.NICKNAME, 
-	        u.PROFILE_IMAGE_URL, 
-	        u.INTRODUCE,
-	        <!-- 1. 작성한 레시피 수 (삭제되지 않은 게시글 기준) -->
-	        (SELECT COUNT(*) FROM BOARD b 
-	         WHERE b.USER_NO = u.USER_NO 
-	           AND b.BOARD_DELETE = 'N') as recipe_count,
-<!--	        /* 2. 내 레시피가 스크랩된 총 횟수 */ -->
-	        (SELECT COUNT(*) FROM SCRAP s 
-	         JOIN BOARD b ON s.BOARD_NO = b.BOARD_NO 
-	         WHERE b.USER_NO = u.USER_NO) as scrap_count
-	    FROM USER u
-	    WHERE u.WITHDRAW = 'N'
-	    <choose>
-	        <when test="filter == 'scrap'">
-	            ORDER BY scrap_count DESC, recipe_count DESC
-	        </when>
-	        <otherwise>
-<!--	            /* 기본값: 레시피 많은 순 */-->
-	            ORDER BY recipe_count DESC, scrap_count DESC
-	        </otherwise>
-	    </choose>
-	</select>
+    <select id="selectChefRanking" parameterType="map" resultType="MemberDto">
+        SELECT 
+            u.USER_NO as userNo,
+            u.NICKNAME as nickname,
+            u.PROFILE_IMAGE_URL as profileImageUrl,
+            u.USER_EMAIL as userEmail,
+            DATE_FORMAT(u.USER_ENROLL_DATE, '%Y.%m.%d') as enrollDate,
+            (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO AND b.BOARD_DELETE = 'N') as recipeCount,
+            (SELECT COUNT(*) FROM SCRAP s JOIN BOARD b ON s.BOARD_NO = b.BOARD_NO WHERE b.USER_NO = u.USER_NO) as scrapCount,
+            (SELECT COUNT(*) FROM FOLLOWING f WHERE f.FOLLOWING_ID = u.USER_EMAIL) as followerCount
+            <if test="loginUserNo != null">
+            , (SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = u.USER_EMAIL) > 0 as isFollowing
+            </if>
+        FROM USER u
+        WHERE u.WITHDRAW = 'N' AND u.USER_STATUS = 'N'
+        ORDER BY 
+            <choose>
+                <when test="filter == 'scrap'">scrapCount DESC</when>
+                <when test="filter == 'follower'">followerCount DESC</when>
+                <otherwise>recipeCount DESC</otherwise>
+            </choose>
+    </select>
+
+    <select id="selectChefDetail" parameterType="map" resultType="MemberDto">
+        SELECT 
+            USER_NO as userNo,
+            USER_EMAIL as userEmail,
+            NICKNAME as nickname,
+            INTRODUCE as introduce,
+            PROFILE_IMAGE_URL as profileImageUrl,
+            DATE_FORMAT(USER_ENROLL_DATE, '%Y.%m.%d') as enrollDate,
+            (SELECT COUNT(*) FROM BOARD WHERE USER_NO = #{chefNo} AND BOARD_DELETE = 'N') as recipeCount,
+            (SELECT COUNT(*) FROM FOLLOWING WHERE FOLLOWING_ID = (SELECT USER_EMAIL FROM USER WHERE USER_NO = #{chefNo})) as followerCount,
+            (SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{chefNo}) as followingCount
+            <if test="loginUserNo != null">
+            , (SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = (SELECT USER_EMAIL FROM USER WHERE USER_NO = #{chefNo})) > 0 as isFollowing
+            </if>
+        FROM USER
+        WHERE USER_NO = #{chefNo} AND WITHDRAW = 'N'
+    </select>
+
+    <select id="checkFollow" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
+    </select>
+
+    <insert id="insertFollow" parameterType="map">
+        INSERT INTO FOLLOWING (USER_NO, FOLLOWING_ID, CREATE_AT) VALUES (#{loginUserNo}, #{targetEmail}, NOW())
+    </insert>
+
+    <delete id="deleteFollow" parameterType="map">
+        DELETE FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
+    </delete>
 	
 	<select id="selectMyRecipes" parameterType="map" resultType="RecipeDto">
         SELECT 
-            BOARD_NO as boardNo,
-            BOARD_TITLE as title,
-            CATEGORY,
-            COOK_TIME as cookTime,
-            OPEN as open,
-            LIKES_COUNT as likesCount,
-            BOARD_POSTDATE as boardPostdate,
+            B.BOARD_NO as boardNo,
+            B.BOARD_TITLE as title,
+            
+            T.TYPE_NAME as category,
+            T.COOK_TIME as cookTime,
+            
+            B.OPEN as open,
+            B.LIKES_COUNT as likesCount,
+            B.BOARD_POSTDATE as boardPostdate,
+            
             CASE 
-                WHEN CATEGORY = '한식' THEN 'thumb-green'
-                WHEN CATEGORY = '양식' THEN 'thumb-salmon'
-                WHEN CATEGORY = '일식' THEN 'thumb-blue'
-                WHEN CATEGORY = '분식' THEN 'thumb-peach'
+                WHEN T.TYPE_NAME = '한식' THEN 'thumb-green'
+                WHEN T.TYPE_NAME = '양식' THEN 'thumb-salmon'
+                WHEN T.TYPE_NAME = '일식' THEN 'thumb-blue'
+                WHEN T.TYPE_NAME = '분식' THEN 'thumb-peach'
                 ELSE 'thumb-mint'
             END as thumbClass
-        FROM BOARD
-        WHERE USER_NO = #{userNo}
-          AND BOARD_DELETE = 'N'
+        FROM BOARD B
+        JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
+        WHERE B.USER_NO = #{userNo}
+          AND B.BOARD_DELETE = 'N'
         <if test="category != null and category != '전체'">
-          AND CATEGORY = #{category}
+          AND T.TYPE_NAME = #{category}
         </if>
-        ORDER BY BOARD_POSTDATE DESC
+        ORDER BY B.BOARD_POSTDATE DESC
     </select>
 
     <select id="selectMyScraps" parameterType="map" resultType="RecipeDto">
         SELECT 
             B.BOARD_NO as boardNo,
             B.BOARD_TITLE as title,
-            B.CATEGORY as category,
-            B.COOK_TIME as cookTime,
+            
+            T.TYPE_NAME as category,
+            T.COOK_TIME as cookTime,
+            
             B.LIKES_COUNT as likesCount,
             M.NICKNAME as authorNickname,
+            
             CASE 
-                WHEN B.CATEGORY = '한식' THEN 'thumb-green'
-                WHEN B.CATEGORY = '양식' THEN 'thumb-salmon'
+                WHEN T.TYPE_NAME = '한식' THEN 'thumb-green'
+                WHEN T.TYPE_NAME = '양식' THEN 'thumb-salmon'
                 ELSE 'thumb-peach'
             END as thumbClass
         FROM SCRAP S
         JOIN BOARD B ON S.BOARD_NO = B.BOARD_NO
+        JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
         JOIN USER M ON B.USER_NO = M.USER_NO
         WHERE S.USER_NO = #{userNo}
           AND B.BOARD_DELETE = 'N'
         <if test="category != null and category != '전체'">
-          AND B.CATEGORY = #{category}
+          AND T.TYPE_NAME = #{category}
         </if>
         ORDER BY S.SCRAP_DATE DESC
     </select>
@@ -90,19 +123,20 @@
             INQUIRY_TITLE as title,
             INQUIRY_CONTENT as content,
             INQUIRY_POSTDATE as createDate,
-            INQUIRY_STATUS as inquiryStatus,
+            INQUIRY_STATUS as status, 
             TYPE_NAME as typeName
         FROM INQUIRY
         WHERE USER_NO = #{userNo}
         ORDER BY INQUIRY_POSTDATE DESC
     </select>
 
-    <update id="updateMember" parameterType="Member">
+    <update id="updateMember" parameterType="MemberDto">
         UPDATE USER
         <set>
             <if test="nickname != null">NICKNAME = #{nickname},</if>
             <if test="introduce != null">INTRODUCE = #{introduce},</if>
-            <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl}</if>
+            <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl},</if>
+            <if test="userPw != null">USER_PW = #{userPw}</if>
         </set>
         WHERE USER_NO = #{userNo}
     </update>
@@ -130,4 +164,79 @@
         FROM DUAL
     </select>
 
+    <select id="selectChefRecipeComments" parameterType="long" resultType="map">
+        SELECT 
+            c.COMMENT_NO as commentNo,
+            c.COMMENT_CONTENT as commentContent,
+            DATE_FORMAT(c.COMMENT_POSTDATE, '%Y.%m.%d') as commentPostDate,
+            b.BOARD_NO as boardNo,
+            b.BOARD_TITLE as boardTitle,
+            u.NICKNAME as commenterNickname,
+            u.PROFILE_IMAGE_URL as commenterProfileUrl
+        FROM COMMENT c
+        JOIN BOARD b ON c.BOARD_NO = b.BOARD_NO
+        JOIN USER u ON c.USER_NO = u.USER_NO
+        WHERE b.USER_NO = #{chefNo}
+          AND c.COMMENT_DELETE = 'N'
+        ORDER BY c.COMMENT_POSTDATE DESC
+    </select>
+    
+    <select id="selectInquiryDetail" parameterType="long" resultType="InquiryDto">
+        SELECT 
+            INQUIRY_NO as inquiryNo,
+            USER_NO as userNo,
+            INQUIRY_TITLE as title,
+            INQUIRY_CONTENT as content,
+            INQUIRY_POSTDATE as createDate,
+            TYPE_NAME as typeName,
+            INQUIRY_STATUS as status,
+            ANSWER as answer,
+            ANSWER_DATE as answerDate
+        FROM INQUIRY
+        WHERE INQUIRY_NO = #{inquiryNo}
+    </select>
+
+    <insert id="insertInquiry" parameterType="InquiryDto">
+        INSERT INTO INQUIRY (
+            USER_NO, 
+            INQUIRY_TITLE, 
+            INQUIRY_CONTENT, 
+            TYPE_NAME,
+            INQUIRY_STATUS, 
+            INQUIRY_POSTDATE
+        ) VALUES (
+            #{userNo}, 
+            #{title}, 
+            #{content}, 
+            #{typeName}, 
+            'N',  NOW()
+        )
+    </insert>
+
+    <update id="updateInquiry" parameterType="InquiryDto">
+        UPDATE INQUIRY
+        SET 
+            INQUIRY_TITLE = #{title},
+            INQUIRY_CONTENT = #{content},
+            TYPE_NAME = #{typeName}
+        WHERE INQUIRY_NO = #{inquiryNo}
+    </update>
+
+    <delete id="deleteInquiry" parameterType="long">
+        DELETE FROM INQUIRY 
+        WHERE INQUIRY_NO = #{inquiryNo}
+    </delete>
+    
+    <select id="selectUserAllergies" parameterType="long" resultType="string">
+        SELECT ALLERGY_NAME 
+        FROM ALLERGY 
+        WHERE USER_NO = #{userNo}
+    </select>
+	
+	<select id="selectPassword" resultType="string" parameterType="long">
+        SELECT USER_PW 
+        FROM USER 
+        WHERE USER_NO = #{userNo}
+    </select>
+    
 </mapper>

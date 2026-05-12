@@ -3,8 +3,8 @@ package com.kh.cookmate.member.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,51 +20,72 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
 
-    private final MemberDao memberDao; // DAO 주입
-
+    private final MemberDao memberDao; 
+    private final PasswordEncoder passwordEncoder;
+    
     @Override
     public MemberDto selectUserByNo(long userNo) {
         Member member = memberDao.selectUserByNo(userNo);
-        // DB에서 가져온 VO를 안전한 DTO로 변환해서 반환
         return MemberDto.fromEntity(member);
     }
 
     @Override
-    public List<MemberDto> selectChefRanking(String filter) {
-        List<Member> list = memberDao.selectChefRanking(filter);
-        // 리스트 내의 모든 VO 객체들을 DTO로 변환
-        return list.stream()
-                   .map(MemberDto::fromEntity)
-                   .collect(Collectors.toList());
+    public List<MemberDto> getChefRanking(String filter, Long loginUserNo) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("filter", filter);
+        params.put("loginUserNo", loginUserNo);
+        return memberDao.selectChefRanking(params);
+    }
+
+    @Override
+    public MemberDto getChefDetail(long chefNo, Long loginUserNo) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("chefNo", chefNo);
+        params.put("loginUserNo", loginUserNo);
+        return memberDao.selectChefDetail(params);
+    }
+
+    @Override
+    @Transactional
+    public boolean toggleFollow(long loginUserNo, String targetEmail) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("loginUserNo", loginUserNo);
+        params.put("targetEmail", targetEmail);
+
+        if (memberDao.checkFollow(params) > 0) {
+            memberDao.deleteFollow(params);
+            return false;
+        } else {
+            memberDao.insertFollow(params);
+            return true;
+        }
     }
     
     @Override
     public MemberDto getMemberStats(long userNo) {
-        return memberDao.getMemberStats(userNo); // 매퍼의 통계 쿼리 호출
+        return memberDao.getMemberStats(userNo); 
     }
 
     @Override
     public List<RecipeDto> selectMyRecipes(Map<String, Object> params) {
-        return memberDao.selectMyRecipes(params); // BOARD 테이블 조회
+        return memberDao.selectMyRecipes(params); 
     }
 
     @Override
     public List<RecipeDto> selectMyScraps(Map<String, Object> params) {
-        return memberDao.selectMyScraps(params); // SCRAP + BOARD 조인 조회
+        return memberDao.selectMyScraps(params); 
     }
 
     @Override
     public List<InquiryDto> selectMyInquiries(long userNo) {
-        return memberDao.selectMyInquiries(userNo); // INQUIRY 테이블 조회
+        return memberDao.selectMyInquiries(userNo); 
     }
 
     @Override
-    @Transactional // 수정 중 오류 발생 시 롤백을 위해 반드시 필요합니다.
+    @Transactional 
     public int updateProfile(MemberDto memberDto) {
-        // 1. 기본 정보 수정 (USER 테이블)
         int result = memberDao.updateMember(memberDto);
         
-        // 2. 알레르기 수정 (기존 삭제 후 새 목록 삽입)
         if (result > 0 && memberDto.getAllergies() != null) {
             memberDao.deleteUserAllergies(memberDto.getUserNo());
             for (String allergyName : memberDto.getAllergies()) {
@@ -79,26 +100,83 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public int withdrawMember(long userNo) {
-        return memberDao.withdrawMember(userNo); // WITHDRAW = 'Y' 업데이트
+        return memberDao.withdrawMember(userNo); 
     }
     
     @Override
     public InquiryDto selectInquiryDetail(long inquiryNo) {
-        // 특정 문의의 상세 내용과 답변을 가져옵니다.
         return memberDao.selectInquiryDetail(inquiryNo);
     }
 
     @Override
-    @Transactional // 데이터 삽입이므로 트랜잭션 처리를 권장합니다.
+    @Transactional
     public int insertInquiry(InquiryDto inquiryDto) {
-        // 사용자가 작성한 제목, 종류, 내용을 저장합니다.
         return memberDao.insertInquiry(inquiryDto);
     }
 
     @Override
     @Transactional
     public int deleteInquiry(long inquiryNo) {
-        // 상세 페이지에서 요청된 삭제 작업을 수행합니다.
         return memberDao.deleteInquiry(inquiryNo);
+    }
+    
+    @Override
+    public List<Map<String, Object>> getChefRecipeComments(long chefNo) {
+        return memberDao.selectChefRecipeComments(chefNo);
+    }
+    
+    @Override
+    public int updateInquiry(InquiryDto inquiryDto) {
+        return memberDao.updateInquiry(inquiryDto);
+    }
+    
+    @Override
+    public List<String> selectUserAllergies(long userNo) {
+        return memberDao.selectUserAllergies(userNo);
+    }
+
+    @Override
+    @Transactional
+    public void updateProfileWithAllergies(Map<String, Object> payload) {
+    	long userNo = Long.parseLong(payload.get("userNo").toString());
+        
+        MemberDto memberDto = new MemberDto(); 
+        memberDto.setUserNo(userNo);
+        memberDto.setNickname((String) payload.get("nickname"));
+        memberDto.setIntroduce((String) payload.get("introduce"));
+        memberDto.setProfileImageUrl((String) payload.get("profileImageUrl"));
+        
+        String newPassword = (String) payload.get("newPassword");
+        if (newPassword != null && !newPassword.trim().isEmpty()) {
+            memberDto.setUserPw(passwordEncoder.encode(newPassword));
+        }
+        
+        memberDao.updateMember(memberDto); 
+        
+        memberDao.deleteUserAllergies(userNo);
+        List<String> allergies = (List<String>) payload.get("allergies");
+        if (allergies != null && !allergies.isEmpty()) {
+            for (String allergyName : allergies) {
+                Map<String, Object> param = new HashMap<>();
+                param.put("userNo", userNo);
+                param.put("allergyName", allergyName);
+                memberDao.insertUserAllergy(param);
+            }
+        }
+    }
+    
+    @Override
+    public boolean verifyPassword(long userNo, String rawPassword) {
+        // 1. DB에서 해당 유저의 비밀번호를 가져옴 (이 값은 $2a$10$... 형태여야 함)
+        String dbPassword = memberDao.selectPassword(userNo);
+        
+        if (dbPassword == null) {
+            return false;
+        }
+
+        // 🌟 2. BCrypt 전용 비교 메서드 사용
+        // 첫 번째 인자: 사용자가 입력한 평문 ("1234")
+        // 두 번째 인자: DB에 저장된 암호화된 문자열 ("$2a$10$...")
+        return passwordEncoder.matches(rawPassword, dbPassword);
     }
 }

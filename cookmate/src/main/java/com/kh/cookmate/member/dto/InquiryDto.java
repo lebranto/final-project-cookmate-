@@ -14,8 +14,8 @@ public class InquiryDto {
     private String createDate;
     private String typeName;
     
-    private char status; // 답변 여부 (Y/N 처리)
+    private char status; 
     
-    private String answer;      // 관리자 답변
+    private String answer;     
     private String answerDate;
 }

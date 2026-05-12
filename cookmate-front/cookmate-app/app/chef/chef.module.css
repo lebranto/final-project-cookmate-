@@ -1,0 +1,222 @@
+.main { padding-bottom: 60px; } 
+.inner { 
+    max-width: 860px; 
+    margin: 0 auto; 
+    padding: 0 24px; 
+}
+
+/* 타이틀 */
+.pageTitle { 
+    font-size: 22px; 
+    font-weight: 700; 
+    margin-bottom: 4px; 
+    color: #1a1a1a; 
+}
+.pageSubtitle { 
+    font-size: 13px; 
+    color: #888; 
+    margin-bottom: 24px; 
+}
+
+/* 컨트롤 (검색, 필터) */
+.controls { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    margin-bottom: 20px; 
+    flex-wrap: wrap; 
+}
+.chefSearchWrap { 
+    flex: 1; 
+    min-width: 200px; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    background: #ffffff; 
+    border: 1px solid rgba(0,0,0,0.1); 
+    border-radius: 10px; 
+    padding: 9px 14px; 
+    transition: border-color .15s; 
+}
+.chefSearchWrap:focus-within { border-color: #3a6e22; }
+.chefSearchWrap svg { flex-shrink: 0; }
+.chefSearchWrap input { 
+    border: none; 
+    background: none; 
+    outline: none; 
+    font-size: 13px; 
+    color: #1a1a1a; 
+    width: 100%; 
+    font-family: inherit; 
+}
+.chefSearchWrap input::placeholder { color: #888; }
+
+.filterSelect { padding: 9px 32px 9px 14px; 
+    border: 1px solid rgba(0,0,0,0.1); 
+    border-radius: 10px; 
+    font-size: 13px; 
+    font-family: inherit; 
+    background: #ffffff; 
+    color: #1a1a1a; 
+    appearance: none; 
+    cursor: pointer; 
+    outline: none; 
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); 
+    background-repeat: no-repeat; 
+    background-position: right 12px center; 
+    transition: border-color .15s; 
+}
+.filterSelect:focus { border-color: #3a6e22; }
+.resultCount { 
+    font-size: 13px; 
+    color: #888; 
+    margin-left: auto; 
+    white-space: nowrap; 
+}
+
+/* 리스트 및 카드 */
+.chefList { 
+    display: flex; 
+    flex-direction: column; 
+    background: #ffffff; 
+    border-radius: 14px; 
+    border: 1px solid rgba(0,0,0,0.1); 
+    overflow: hidden; 
+}
+.chefCard { 
+    display: flex; 
+    align-items: center; 
+    gap: 20px; 
+    padding: 22px 24px; 
+    border-bottom: 1px solid rgba(0,0,0,0.1); 
+    transition: background .15s; 
+    color: #1a1a1a; 
+    text-decoration: none; 
+}
+.chefCard:last-child { border-bottom: none; }
+.chefCard:hover { background: #e8f5e1; }
+
+/* 카드 내부 요소 */
+.chefRank { 
+    font-size: 22px; 
+    font-weight: 800; 
+    color: #888; 
+    min-width: 36px; 
+    text-align: center; 
+    flex-shrink: 0; 
+}
+.top1 { color: #c9862e; }
+.top2 { color: #888; }
+.top3 { color: #a0733a; }
+
+.chefAvatar { 
+    width: 62px; 
+    height: 62px; border-radius: 50%; 
+    object-fit: cover; 
+    border: 2px solid rgba(0,0,0,0.1); 
+    flex-shrink: 0; 
+    background: #f5f2ee; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 26px; 
+}
+.chefInfo { 
+    flex: 1; 
+    min-width: 0; 
+}
+.chefNameRow { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 8px; 
+    flex-wrap: wrap; 
+}
+.chefName { 
+    font-size: 16px; 
+    font-weight: 700; 
+    color: #3a6347; 
+}
+.btnFollow { 
+    padding: 5px 14px; 
+    border-radius: 20px; 
+    font-size: 12px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: all .15s; 
+    border: 1.5px solid #3a6e22; 
+    background: #ffffff; 
+    color: #3a6e22; 
+    white-space: nowrap; 
+}
+.btnFollow:hover, .following { 
+    background: #3a6e22; 
+    color: white; 
+}
+
+.chefStats { 
+    display: flex; 
+    gap: 20px; 
+    flex-wrap: wrap; 
+}
+.chefStat { 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; 
+    font-size: 13px; 
+    color: #888; 
+}
+.chefStatIcon { font-size: 14px; }
+.chefStatNum { 
+    font-weight: 600; 
+    color: #1a1a1a; 
+}
+.chefEmpty { 
+    padding: 60px 0; 
+    text-align: center; 
+    color: #888; 
+    font-size: 14px; 
+    background: #ffffff; 
+    border-radius: 14px; 
+    border: 1px solid rgba(0,0,0,0.1); 
+}
+
+/* 페이징 */
+.pagination { 
+    display: flex; 
+    justify-content: center; 
+    gap: 6px; 
+    margin-top: 28px; 
+}
+.pageBtn { 
+    width: 38px; 
+    height: 38px; 
+    border-radius: 9px; 
+    border: 1px solid rgba(0,0,0,0.1); 
+    background: #ffffff; 
+    font-size: 13px; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    color: #1a1a1a; 
+    transition: all .15s; 
+}
+.pageBtn:hover:not(:disabled) { 
+    border-color: #3a6e22; 
+    color: #3a6e22; 
+}
+.active { 
+    background: #3a6e22; 
+    color: white; 
+    border-color: #3a6e22; 
+    font-weight: 700; 
+}
+.arrow { 
+    font-size: 18px; 
+    color: #888; 
+}
+.pageBtn:disabled { 
+    opacity: .35; 
+    cursor: not-allowed; 
+}
