@@ -5,6 +5,7 @@ import java.util.Map;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.kh.cookmate.security.model.dto.AuthDto.PasswordResetRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.SignupRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.User;
 import com.kh.cookmate.security.model.dto.AuthDto.UserAuthority;
@@ -75,6 +76,10 @@ public class AuthDao {
 
     public int insertAllergies(SignupRequest req) {
         return session.insert("auth.insertAllergies", req);
+    }
+
+    public int updatePasswordByEmail(PasswordResetRequest req) {
+        return session.update("auth.updatePasswordByEmail", req);
     }
     
     

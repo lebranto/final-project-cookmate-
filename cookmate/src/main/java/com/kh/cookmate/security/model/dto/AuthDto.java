@@ -133,5 +133,14 @@ public class AuthDto {
         private String email;
         private String code;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class PasswordResetRequest {
+        private String email;
+        private String newPassword;
+    }
     
 }

@@ -45,13 +45,13 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler{
 	Long id = (Long) oauthUser.getUserId();
 	
 	String accessToken = jwt.createAccessToken(id, 30);
-	String refreshToken = jwt.createAccessToken(id, 7);
+	String refreshToken = jwt.createRefreshToken(id, 7);
 	String roles = oauthUser.getAuthorities().stream()
 			                .map(GrantedAuthority::getAuthority)
 			                .collect(Collectors.joining("|"));
 		
 	ResponseCookie accessCookie = CookieUtil.createTokenCookie( CookieUtil.ACCESS_COOKIE, accessToken.toString(),30);
-	ResponseCookie refreshCookie = CookieUtil.createTokenCookie(CookieUtil.REFRESH_COOKIE, refreshToken.toString(), 30);
+	ResponseCookie refreshCookie = CookieUtil.createTokenCookie(CookieUtil.REFRESH_COOKIE, refreshToken.toString(), 7);
 	ResponseCookie roleCookie = CookieUtil.createTokenCookie(CookieUtil.ROLE_COOKIE, roles, 30);
 	
 	
