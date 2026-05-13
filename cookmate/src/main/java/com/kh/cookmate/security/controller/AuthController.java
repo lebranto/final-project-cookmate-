@@ -36,10 +36,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -79,6 +75,12 @@ public class AuthController {
 	  
 	  
 	  // 이메일 인증 확인
+	  @PostMapping("/signup/email/send")
+	  public ResponseEntity<Void> sendSignupEmailCode(@RequestBody EmailSendRequest req) {
+	      service.sendSignupEmailCode(req.getEmail());
+	      return ResponseEntity.ok().build();
+	  }
+
 	  @PostMapping("/email/verify")
 	  public ResponseEntity<Void> verifyEmailCode(@RequestBody EmailVerifyRequest req) {
 	      service.verifyEmailCode(req.getEmail(), req.getCode());

@@ -54,10 +54,14 @@ public class AuthService {
 	public AuthResult login(String email, String pw) {
 		User user = authDao.findByEmail(email);
 		if (user == null) {
+			if (authDao.existsByEmail(email) > 0) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN, "로그인 할 수 없는 계정입니다.");
+			}
 			throw new BadCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.");
 		}
+
 		if (!encoder.matches(pw, user.getUserPw())) {
-			throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+			throw new BadCredentialsException("이메일 또는 비밀번호가 일치하지 않습니다.");
 		}
 
 		authDao.updateLastLogin(user.getUserNo());
@@ -165,8 +169,7 @@ public class AuthService {
 		String code = "123456";
 		emailCodeStore.put(email, new EmailCode(code, LocalDateTime.now().plusMinutes(5)));
 
-		
-		// 실제 메일 발송을 다시 사용할 때는 주석 풀고, code를 랜덤 생성으로 바꾸기!, 그리고 api도 application.properties에 넣기
+		// 실제 메일 발송을 다시 사용할 때는 아래 코드를 켜고, 위의 code를 랜덤 생성으로 바꾸면 됩니다.
 		// String code = String.valueOf(secureRandom.nextInt(900000) + 100000);
 		// emailCodeStore.put(email, new EmailCode(code, LocalDateTime.now().plusMinutes(5)));
 		// try {
@@ -176,6 +179,14 @@ public class AuthService {
 		// 	log.error("Failed to send verification email to {}", email, e);
 		// 	throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "인증 메일 발송에 실패했습니다.");
 		// }
+	}
+
+	public void sendSignupEmailCode(String email) {
+		if (authDao.existsByEmail(email) > 0) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 있는 아이디 입니다.");
+		}
+
+		sendEmailCode(email);
 	}
 
 	public void verifyEmailCode(String email, String code) {

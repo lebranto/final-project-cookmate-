@@ -48,6 +48,8 @@
         JOIN AUTHORITY UA
             ON U.USER_NO = UA.USER_NO
         WHERE UPPER(U.USER_EMAIL) = UPPER(#{userEmail})
+        AND U.USER_STATUS IN ('N', 'W')
+		AND U.WITHDRAW = 'N'
     </select>
 
     <select id="findUserByProvider" resultMap="UserResult">
@@ -62,6 +64,8 @@
             ON U.USER_NO = UI.USER_NO
         WHERE UI.PROVIDER = #{provider}
           AND UI.PROVIDER_USER_ID = #{providerId}
+          AND U.USER_STATUS IN ('N', 'W')
+		  AND U.WITHDRAW = 'N'
     </select>
 
     <select id="findUserByUserId" resultMap="UserResult">
@@ -73,6 +77,8 @@
         JOIN AUTHORITY UA
             ON U.USER_NO = UA.USER_NO
         WHERE U.USER_NO = #{userId}
+          AND U.USER_STATUS IN ('N', 'W')
+		  AND U.WITHDRAW = 'N'
     </select>
 
     <select id="existsByEmail" resultType="int">
@@ -129,7 +135,7 @@
             #{introduce},
             #{address},
             0,
-            'Y',
+            'N',
             'N',
             NULL
         )
@@ -185,7 +191,7 @@
             #{introduce},
             #{address},
             0,
-            'Y',
+            'N',
             'N',
             NULL
         )
