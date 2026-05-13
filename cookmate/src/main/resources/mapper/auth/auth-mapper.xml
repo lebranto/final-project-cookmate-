@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="auth">
+
+    <resultMap id="UserResult" type="com.kh.cookmate.security.model.dto.AuthDto$User" autoMapping="true">
+        <id property="userNo" column="userNo"/>
+        <collection property="roles" ofType="java.lang.String">
+            <result column="authority"/>
+        </collection>
+    </resultMap>
+
+    <sql id="NormalizedAuthority">
+        CASE UA.AUTHORITY
+            WHEN 'USER_ROLE' THEN 'ROLE_USER'
+            WHEN 'ADMIN_ROLE' THEN 'ROLE_ADMIN'
+            ELSE UA.AUTHORITY
+        END AS authority
+    </sql>
+
+    <sql id="UserColumns">
+        U.USER_NO AS userNo,
+        U.USER_EMAIL AS userEmail,
+        UC.USER_PW AS userPw,
+        U.NICKNAME AS nickname,
+        U.PROFILE_IMAGE_URL AS profileImageUrl,
+        U.INTRODUCE AS introduce,
+        U.ADDRESS AS address,
+        <include refid="NormalizedAuthority"/>
+    </sql>
+
+    <select id="findUserByEmail" resultMap="UserResult">
+        SELECT
+            <include refid="UserColumns"/>
+        FROM USER U
+        LEFT JOIN USER_CREDENTIALS UC
+            ON U.USER_NO = UC.USER_NO
+        JOIN AUTHORITY UA
+            ON U.USER_NO = UA.USER_NO
+        WHERE UPPER(U.USER_EMAIL) = UPPER(#{email})
+    </select>
+
+    <select id="findByEmail" resultMap="UserResult">
+        SELECT
+            <include refid="UserColumns"/>
+        FROM USER U
+        JOIN USER_CREDENTIALS UC
+            ON U.USER_NO = UC.USER_NO
+        JOIN AUTHORITY UA
+            ON U.USER_NO = UA.USER_NO
+        WHERE UPPER(U.USER_EMAIL) = UPPER(#{userEmail})
+        AND U.USER_STATUS IN ('N', 'W')
+		AND U.WITHDRAW = 'N'
+    </select>
+
+    <select id="findUserByProvider" resultMap="UserResult">
+        SELECT
+            <include refid="UserColumns"/>
+        FROM USER U
+        LEFT JOIN USER_CREDENTIALS UC
+            ON U.USER_NO = UC.USER_NO
+        LEFT JOIN AUTHORITY UA
+            ON U.USER_NO = UA.USER_NO
+        JOIN USER_IDENTITIES UI
+            ON U.USER_NO = UI.USER_NO
+        WHERE UI.PROVIDER = #{provider}
+          AND UI.PROVIDER_USER_ID = #{providerId}
+          AND U.USER_STATUS IN ('N', 'W')
+		  AND U.WITHDRAW = 'N'
+    </select>
+
+    <select id="findUserByUserId" resultMap="UserResult">
+        SELECT
+            <include refid="UserColumns"/>
+        FROM USER U
+        LEFT JOIN USER_CREDENTIALS UC
+            ON U.USER_NO = UC.USER_NO
+        JOIN AUTHORITY UA
+            ON U.USER_NO = UA.USER_NO
+        WHERE U.USER_NO = #{userId}
+          AND U.USER_STATUS IN ('N', 'W')
+		  AND U.WITHDRAW = 'N'
+    </select>
+
+    <select id="existsByEmail" resultType="int">
+        SELECT COUNT(*)
+        FROM USER
+        WHERE UPPER(USER_EMAIL) = UPPER(#{userEmail})
+    </select>
+
+    <select id="getKakaoAccessToken" resultType="string">
+        SELECT ACCESS_TOKEN
+        FROM USER_IDENTITIES
+        WHERE USER_NO = #{userId}
+          AND PROVIDER = 'kakao'
+        LIMIT 1
+    </select>
+
+    <update id="updateLastLogin">
+        UPDATE USER
+        SET LAST_LOGIN = NOW()
+        WHERE USER_NO = #{userNo}
+    </update>
+
+    <update id="updatePasswordByEmail"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$PasswordResetRequest">
+        UPDATE USER_CREDENTIALS UC
+        JOIN USER U
+            ON UC.USER_NO = U.USER_NO
+        SET UC.USER_PW = #{newPassword}
+        WHERE UPPER(U.USER_EMAIL) = UPPER(#{email})
+    </update>
+
+    <insert id="insertUser"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$User"
+            useGeneratedKeys="true"
+            keyProperty="userNo"
+            keyColumn="USER_NO">
+        INSERT INTO USER (
+            USER_EMAIL,
+            NICKNAME,
+            PROFILE_IMAGE_URL,
+            USER_ENROLL_DATE,
+            INTRODUCE,
+            ADDRESS,
+            WARNING,
+            USER_STATUS,
+            WITHDRAW,
+            LAST_LOGIN
+        )
+        VALUES (
+            #{userEmail},
+            #{nickname},
+            #{profileImageUrl},
+            NOW(),
+            #{introduce},
+            #{address},
+            0,
+            'N',
+            'N',
+            NULL
+        )
+    </insert>
+
+    <insert id="insertCred"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$UserCredential">
+        INSERT INTO USER_CREDENTIALS (
+            USER_NO,
+            USER_PW
+        )
+        VALUES (
+            #{userNo},
+            #{userPw}
+        )
+    </insert>
+
+    <insert id="insertUserRole"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$UserAuthority">
+        INSERT INTO AUTHORITY (
+            USER_NO,
+            AUTHORITY
+        )
+        VALUES
+        <foreach collection="roles" item="role" separator=",">
+            (
+                #{userNo},
+                #{role}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertUser2"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$SignupRequest"
+            useGeneratedKeys="true"
+            keyProperty="userNo"
+            keyColumn="USER_NO">
+        INSERT INTO USER (
+            USER_EMAIL,
+            NICKNAME,
+            USER_ENROLL_DATE,
+            INTRODUCE,
+            ADDRESS,
+            WARNING,
+            USER_STATUS,
+            WITHDRAW,
+            LAST_LOGIN
+        )
+        VALUES (
+            #{userEmail},
+            #{nickname},
+            NOW(),
+            #{introduce},
+            #{address},
+            0,
+            'N',
+            'N',
+            NULL
+        )
+    </insert>
+
+    <insert id="insertUserCredentials"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$SignupRequest">
+        INSERT INTO USER_CREDENTIALS (
+            USER_NO,
+            USER_PW
+        )
+        VALUES (
+            #{userNo},
+            #{userPw}
+        )
+    </insert>
+
+    <insert id="insertAuthority"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$SignupRequest">
+        INSERT INTO AUTHORITY (
+            USER_NO,
+            AUTHORITY
+        )
+        VALUES (
+            #{userNo},
+            'ROLE_USER'
+        )
+    </insert>
+
+    <insert id="insertAllergies"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$SignupRequest">
+        INSERT INTO ALLERGY (
+            USER_NO,
+            ALLERGY_NAME
+        )
+        VALUES
+        <foreach collection="allergies" item="allergy" separator=",">
+            (
+                #{userNo},
+                #{allergy}
+            )
+        </foreach>
+    </insert>
+
+    <insert id="insertUserIdentities"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$UserIdentities"
+            useGeneratedKeys="true"
+            keyProperty="id"
+            keyColumn="ID">
+        INSERT INTO USER_IDENTITIES (
+            USER_NO,
+            PROVIDER,
+            PROVIDER_USER_ID,
+            ACCESS_TOKEN
+        )
+        VALUES (
+            #{userNo},
+            #{provider},
+            #{providerUserNo},
+            #{accessToken}
+        )
+    </insert>
+
+    <update id="updateUserIdentities"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$UserIdentities">
+        UPDATE USER_IDENTITIES
+        SET ACCESS_TOKEN = #{accessToken}
+        WHERE PROVIDER = #{provider}
+          AND PROVIDER_USER_ID = #{providerUserNo}
+    </update>
+
+</mapper>

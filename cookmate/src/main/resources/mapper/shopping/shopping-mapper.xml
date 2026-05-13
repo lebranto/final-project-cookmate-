@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="shoppingmapper">
+    <select id="selectShoppingNoByUserAndBoard" parameterType="map" resultType="int">
+        SELECT SHOPPING_NO
+        FROM SHOPPING_LIST
+        WHERE USER_NO = #{userNo}
+          AND BOARD_NO = #{boardNo}
+        LIMIT 1
+    </select>
+
+    <insert id="insertShoppingList"
+            parameterType="com.kh.cookmate.shopping.model.vo.ShoppingList"
+            useGeneratedKeys="true"
+            keyProperty="shoppingNo"
+            keyColumn="SHOPPING_NO">
+        INSERT INTO SHOPPING_LIST (
+            USER_NO,
+            BOARD_NO,
+            SHOPPING_TITLE,
+            IMAGE_URL
+        )
+        VALUES (
+            #{userNo},
+            #{boardNo},
+            (
+                SELECT b.BOARD_TITLE
+                FROM BOARD b
+                WHERE b.BOARD_NO = #{boardNo}
+                  AND b.BOARD_DELETE = 'N'
+            ),
+            (
+                SELECT b.IMAGE_URL
+                FROM BOARD b
+                WHERE b.BOARD_NO = #{boardNo}
+                  AND b.BOARD_DELETE = 'N'
+            )
+        )
+    </insert>
+
+    <insert id="insertShoppingItemsFromRecipe" parameterType="int">
+        INSERT INTO SHOPPING_ITEM (
+            SHOPPING_NO,
+            SET_NAME,
+            INGREDIENT_NAME,
+            QUANTITY,
+            UNIT,
+            ITEM_STATUS,
+            ITEM_ORDER
+        )
+        SELECT
+            #{_parameter},
+            COALESCE(NULLIF(s.SET_NAME, ''), '재료'),
+            i.INGREDIENT_NAME,
+            i.QUANTITY,
+            i.UNIT,
+            'NEED',
+            i.INGREDIENT_NO
+        FROM SHOPPING_LIST sl
+        JOIN INGREDIENT_SET s ON s.BOARD_NO = sl.BOARD_NO
+        JOIN INGREDIENT i ON i.SET_NO = s.SET_NO
+        WHERE sl.SHOPPING_NO = #{_parameter}
+    </insert>
+
+    <select id="selectShoppingLists"
+            parameterType="int"
+            resultType="com.kh.cookmate.shopping.dto.ShoppingDto$ListItem">
+        SELECT
+            sl.SHOPPING_NO,
+            sl.BOARD_NO,
+            sl.SHOPPING_TITLE,
+            sl.IMAGE_URL,
+            DATE_FORMAT(sl.SHOPPING_DATE, '%Y.%m.%d') AS SHOPPING_DATE,
+            COUNT(si.ITEM_NO) AS TOTAL_COUNT,
+            COALESCE(SUM(CASE WHEN si.ITEM_STATUS IN ('BOUGHT', 'OWNED') THEN 1 ELSE 0 END), 0) AS COMPLETED_COUNT
+        FROM SHOPPING_LIST sl
+        LEFT JOIN SHOPPING_ITEM si ON si.SHOPPING_NO = sl.SHOPPING_NO
+        WHERE sl.USER_NO = #{_parameter}
+        GROUP BY
+            sl.SHOPPING_NO,
+            sl.BOARD_NO,
+            sl.SHOPPING_TITLE,
+            sl.IMAGE_URL,
+            sl.SHOPPING_DATE
+        ORDER BY sl.SHOPPING_DATE DESC, sl.SHOPPING_NO DESC
+    </select>
+
+    <delete id="deleteShoppingList" parameterType="map">
+        DELETE FROM SHOPPING_LIST
+        WHERE SHOPPING_NO = #{shoppingNo}
+          AND USER_NO = #{userNo}
+    </delete>
+
+    <delete id="deleteShoppingItems" parameterType="map">
+        DELETE FROM SHOPPING_ITEM
+        WHERE SHOPPING_NO IN (
+            SELECT SHOPPING_NO
+            FROM SHOPPING_LIST
+            WHERE SHOPPING_NO = #{shoppingNo}
+              AND USER_NO = #{userNo}
+        )
+    </delete>
+
+    <select id="selectShoppingDetail"
+            parameterType="map"
+            resultType="com.kh.cookmate.shopping.dto.ShoppingDto$Detail">
+        SELECT
+            sl.SHOPPING_NO,
+            sl.USER_NO,
+            sl.BOARD_NO,
+            sl.SHOPPING_TITLE,
+            sl.IMAGE_URL,
+            DATE_FORMAT(sl.SHOPPING_DATE, '%Y.%m.%d') AS SHOPPING_DATE,
+            t.COOK_TIME,
+            t.DIFFICULT,
+            t.CALORY
+        FROM SHOPPING_LIST sl
+        JOIN BOARD b ON b.BOARD_NO = sl.BOARD_NO
+        LEFT JOIN TAG t ON t.TYPE_NO = b.TYPE_NO
+        WHERE sl.SHOPPING_NO = #{shoppingNo}
+          AND sl.USER_NO = #{userNo}
+    </select>
+
+    <select id="selectShoppingItems"
+            parameterType="map"
+            resultType="com.kh.cookmate.shopping.dto.ShoppingDto$DetailItem">
+        SELECT
+            si.ITEM_NO,
+            si.SHOPPING_NO,
+            si.SET_NAME,
+            si.INGREDIENT_NAME,
+            si.QUANTITY,
+            si.UNIT,
+            si.ITEM_STATUS,
+            si.ITEM_ORDER
+        FROM SHOPPING_ITEM si
+        JOIN SHOPPING_LIST sl ON sl.SHOPPING_NO = si.SHOPPING_NO
+        WHERE si.SHOPPING_NO = #{shoppingNo}
+          AND sl.USER_NO = #{userNo}
+        ORDER BY si.SET_NAME, si.ITEM_ORDER, si.ITEM_NO
+    </select>
+
+    <update id="updateShoppingItemStatus" parameterType="map">
+        UPDATE SHOPPING_ITEM si
+        JOIN SHOPPING_LIST sl ON sl.SHOPPING_NO = si.SHOPPING_NO
+        SET si.ITEM_STATUS = #{itemStatus}
+        WHERE si.SHOPPING_NO = #{shoppingNo}
+          AND si.ITEM_NO = #{itemNo}
+          AND sl.USER_NO = #{userNo}
+    </update>
+
+    <update id="updateAllShoppingItemStatus" parameterType="map">
+        UPDATE SHOPPING_ITEM si
+        JOIN SHOPPING_LIST sl ON sl.SHOPPING_NO = si.SHOPPING_NO
+        SET si.ITEM_STATUS = #{itemStatus}
+        WHERE si.SHOPPING_NO = #{shoppingNo}
+          AND sl.USER_NO = #{userNo}
+    </update>
+</mapper>

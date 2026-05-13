@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 
 
 @Slf4j
@@ -43,6 +44,14 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter{
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
+		
+
+	    if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+	        filterChain.doFilter(request, response);
+	        return;
+	    }
+		
+		
 		// 1) 요청 헤더에서 인증토큰 추출
 		
 		try {
@@ -69,7 +78,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter{
 				 = new UsernamePasswordAuthenticationToken(userId,null,u.getRoles()
 						                                                .stream()
 						                                                .map(s -> new SimpleGrantedAuthority(s))
-						                                                .toList());
+					                                                .toList());
 				
 				// 6) 스레드 로컬에 토큰 저장
 				SecurityContextHolder.getContext().setAuthentication(authToken);

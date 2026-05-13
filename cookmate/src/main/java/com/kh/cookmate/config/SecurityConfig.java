@@ -75,14 +75,15 @@ public class SecurityConfig {
 	}
 	
 	// CORS설정정보를 가진 빈객체
+	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration config = new CorsConfiguration();
 		
 		// 허용 Origin 설정 
 		config.setAllowedOrigins(List.of("http://localhost:3000"));
 		
-		// 허용 메서드 설정
-		config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE"));
+		// 허용 메서드 설정, OPTIONS 추가 된것
+		config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
 
 		// 허용 헤더 설정
 		config.setAllowedHeaders(List.of("*"));

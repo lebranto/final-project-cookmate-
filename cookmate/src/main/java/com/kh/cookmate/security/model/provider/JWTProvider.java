@@ -24,7 +24,7 @@ public class JWTProvider {
 			String secretBase64,
 			@Value("${jwt.refresh-secret}")
 			String refreshSecretBase64
-			) { //토큰 서명에 사하는 key값들 초기화
+			) { 
 
 			byte[] keyBytes =Decoders.BASE64.decode(secretBase64);
 			this.key = Keys.hmacShaKeyFor(keyBytes);
@@ -38,18 +38,12 @@ public class JWTProvider {
 		return Jwts.builder()
 				.setSubject(String.valueOf(id)) //페이로드에 저장할 값.(사용자 id)
 				.setIssuedAt(now) // 언제 발급 됐냐.
-				//.setExpiration(new Date(now.getTime()+ (1000L * 60 * minutes))) // 만료시간
-				.setExpiration(new Date(now.getTime()+ (1000L * 10)))
+				.setExpiration(new Date(now.getTime()+ (1000L * 60 * minutes)))
 				.signWith(key, SignatureAlgorithm.HS256)
 				.compact();
 	}	
 		
 	
-	/*
-	 * Refresh Token
-	 *  - accessToken을 새로 갱신받기 위한 용도의 토큰
-	 *  - accessToken보다 훨씬 긴 유효시간을 가지고 있다. 
-	 * */	
 	public String createRefreshToken(Long id, int i) {
 		Date now = new Date();
 		
