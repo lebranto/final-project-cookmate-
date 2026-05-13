@@ -546,19 +546,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 function resolveRecipeImageUrl(imageUrl?: string | null) {
-  if (!imageUrl) return "";
-
-  try {
-    const url = new URL(imageUrl);
-    if (url.hostname.includes(".s3.") && url.hostname.endsWith("amazonaws.com")) {
-      const key = url.pathname.replace(/^\/+/, "");
-      return `http://localhost:8081/api/files/images?key=${encodeURIComponent(key)}`;
-    }
-  } catch {
-    return imageUrl;
-  }
-
-  return imageUrl;
+  return imageUrl || "";
 }
 
 function getYoutubeVideoId(url?: string | null) {
