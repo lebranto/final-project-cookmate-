@@ -7,6 +7,9 @@ import styles from "./CommonLayout.module.css";
 type UserRole = "ROLE_USER" | "ROLE_ADMIN";
 
 type StoredUser = {
+  userEmail?: string;
+  nickname?: string;
+  profileImageUrl?: string;
   role?: string;
   roles?: string[];
   authorities?: Array<string | { authority?: string }>;
@@ -76,6 +79,32 @@ function getStoredRoles(): UserRole[] {
   return Array.from(roles);
 }
 
+function getStoredUser(): StoredUser | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  for (const key of STORAGE_USER_KEYS) {
+    const value = window.localStorage.getItem(key);
+
+    if (!value) {
+      continue;
+    }
+
+    try {
+      const user = JSON.parse(value) as StoredUser;
+
+      if (user && typeof user === "object") {
+        return user;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 function hasAccessToken(): boolean {
   if (typeof window === "undefined") {
     return false;
@@ -94,6 +123,7 @@ export default function GlobalHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -124,10 +154,36 @@ export default function GlobalHeader() {
   }, [canOpenAdminPage, canOpenMyPage, isLoggedIn]);
 
   useEffect(() => {
+    const fetchAuthUser = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const user = (await response.json()) as StoredUser;
+        window.localStorage.setItem("authUser", JSON.stringify(user));
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("사용자 정보 조회 실패:", error);
+      }
+    };
+
     const syncAuthState = () => {
       const nextRoles = getStoredRoles();
+      const nextUser = getStoredUser();
+      const nextIsLoggedIn = hasAccessToken() || nextRoles.length > 0;
+
       setRoles(nextRoles);
-      setIsLoggedIn(hasAccessToken() || nextRoles.length > 0);
+      setCurrentUser(nextUser);
+      setIsLoggedIn(nextIsLoggedIn);
+
+      if (nextIsLoggedIn && !nextUser) {
+        void fetchAuthUser();
+      }
     };
 
     syncAuthState();
@@ -212,6 +268,28 @@ export default function GlobalHeader() {
 
           {isLoggedIn ? (
             <>
+              <button
+                type="button"
+                className={styles.ghUserSummary}
+                onClick={() => router.push("/mypage")}
+              >
+                {currentUser?.profileImageUrl ? (
+                  <span
+                    aria-hidden="true"
+                    className={styles.ghUserAvatar}
+                    style={{ backgroundImage: `url(${currentUser.profileImageUrl})` }}
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className={styles.ghUserAvatar}
+                    style={{ backgroundImage: "url(/default-profile.png)" }}
+                  />
+                )}
+                <span className={styles.ghUserName}>
+                  {currentUser?.nickname ?? currentUser?.userEmail ?? "사용자"}
+                </span>
+              </button>
               {canOpenMyPage && (
                 <button
                   type="button"

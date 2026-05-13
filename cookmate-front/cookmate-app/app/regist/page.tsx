@@ -391,7 +391,7 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
         <input
           className={styles.formInput}
           type="text"
-          placeholder="사용할 닉네임을 입력하세요"
+          placeholder="사용할 닉네임을 입력하세요 (8자이내)"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
         />

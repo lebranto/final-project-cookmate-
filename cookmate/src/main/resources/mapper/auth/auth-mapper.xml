@@ -56,7 +56,7 @@
         FROM USER U
         LEFT JOIN USER_CREDENTIALS UC
             ON U.USER_NO = UC.USER_NO
-        JOIN AUTHORITY UA
+        LEFT JOIN AUTHORITY UA
             ON U.USER_NO = UA.USER_NO
         JOIN USER_IDENTITIES UI
             ON U.USER_NO = UI.USER_NO
@@ -85,12 +85,23 @@
         SELECT ACCESS_TOKEN
         FROM USER_IDENTITIES
         WHERE USER_NO = #{userId}
+          AND PROVIDER = 'kakao'
+        LIMIT 1
     </select>
 
     <update id="updateLastLogin">
         UPDATE USER
         SET LAST_LOGIN = NOW()
         WHERE USER_NO = #{userNo}
+    </update>
+
+    <update id="updatePasswordByEmail"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$PasswordResetRequest">
+        UPDATE USER_CREDENTIALS UC
+        JOIN USER U
+            ON UC.USER_NO = U.USER_NO
+        SET UC.USER_PW = #{newPassword}
+        WHERE UPPER(U.USER_EMAIL) = UPPER(#{email})
     </update>
 
     <insert id="insertUser"
