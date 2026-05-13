@@ -19,8 +19,8 @@ s3 = boto3.client(
 BUCKET_NAME = os.environ["BUCKET_NAME"]
 PUBLIC_BASE_URL = os.environ.get(
     "PUBLIC_BASE_URL",
-    f"https://{BUCKET_NAME}.s3.ap-northeast-2.amazonaws.com"
-)
+    f"https://{BUCKET_NAME}.s3.{REGION}.amazonaws.com"
+).strip().split()[0]
 
 ALLOWED_DIRS = {
     "recipes/covers",

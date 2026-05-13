@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/app/lib/api";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
@@ -22,6 +22,67 @@ interface ShoppingListResponse {
 }
 
 const cardClasses = [styles.c1, styles.c2, styles.c3, styles.c4];
+const KAKAO_MAP_APP_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY;
+
+interface KakaoPlace {
+  id: string;
+  place_name: string;
+  distance: string;
+  road_address_name: string;
+  address_name: string;
+  place_url: string;
+  x: string;
+  y: string;
+}
+
+interface KakaoLatLng {
+  getLat(): number;
+  getLng(): number;
+}
+
+interface KakaoMapInstance {
+  relayout(): void;
+  setCenter(latLng: KakaoLatLng): void;
+}
+
+interface KakaoMarker {
+  setMap(map: KakaoMapInstance | null): void;
+}
+
+interface KakaoInfoWindow {
+  close(): void;
+  open(map: KakaoMapInstance, marker: KakaoMarker): void;
+}
+
+declare global {
+  interface Window {
+    kakao?: {
+      maps: {
+        load(callback: () => void): void;
+        LatLng: new (lat: number, lng: number) => KakaoLatLng;
+        Map: new (
+          container: HTMLElement,
+          options: { center: KakaoLatLng; level: number }
+        ) => KakaoMapInstance;
+        Marker: new (options: { map: KakaoMapInstance; position: KakaoLatLng }) => KakaoMarker;
+        InfoWindow: new (options: { content: string; removable?: boolean }) => KakaoInfoWindow;
+        services: {
+          Places: new () => {
+            keywordSearch(
+              keyword: string,
+              callback: (data: KakaoPlace[], status: string) => void,
+              options: { x: number; y: number; radius: number; size: number }
+            ): void;
+          };
+          Status: {
+            OK: string;
+            ZERO_RESULT: string;
+          };
+        };
+      };
+    };
+  }
+}
 
 export default function ShopListPage() {
   const router = useRouter();
@@ -203,37 +264,287 @@ function ShoppingCard({
 }
 
 function NearbyMarketCard() {
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<KakaoMapInstance | null>(null);
+  const markerByPlaceIdRef = useRef(new Map<string, KakaoMarker>());
+  const infoWindowByPlaceIdRef = useRef(new Map<string, KakaoInfoWindow>());
+  const positionByPlaceIdRef = useRef(new Map<string, KakaoLatLng>());
+  const currentInfoWindowRef = useRef<KakaoInfoWindow | null>(null);
+  const [places, setPlaces] = useState<KakaoPlace[]>([]);
+  const [mapMessage, setMapMessage] = useState(
+    KAKAO_MAP_APP_KEY ? "주변 마트를 불러오는 중입니다." : "카카오맵 JavaScript 키를 설정해 주세요."
+  );
+
+  const openPlaceInfo = useCallback((placeId: string) => {
+    const map = mapInstanceRef.current;
+    const marker = markerByPlaceIdRef.current.get(placeId);
+    const infoWindow = infoWindowByPlaceIdRef.current.get(placeId);
+    const position = positionByPlaceIdRef.current.get(placeId);
+
+    if (!map || !marker || !infoWindow || !position) return;
+
+    currentInfoWindowRef.current?.close();
+    map.setCenter(position);
+    infoWindow.open(map, marker);
+    currentInfoWindowRef.current = infoWindow;
+  }, []);
+
+  useEffect(() => {
+    const appKey = KAKAO_MAP_APP_KEY;
+    const currentOrigin = window.location.origin;
+
+    if (!appKey) {
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      const timer = window.setTimeout(() => {
+        setMapMessage("현재 위치를 사용할 수 없습니다.");
+      }, 0);
+      return () => window.clearTimeout(timer);
+    }
+
+    let ignore = false;
+
+    const finishKakaoLoad = (resolve: () => void, reject: (error: Error) => void) => {
+      if (!window.kakao?.maps) {
+        reject(new Error(`Kakao map SDK is unavailable: ${currentOrigin}`));
+        return;
+      }
+
+      window.kakao.maps.load(resolve);
+    };
+
+    const loadKakaoMap = () =>
+      new Promise<void>((resolve, reject) => {
+        if (window.kakao?.maps) {
+          window.kakao.maps.load(resolve);
+          return;
+        }
+
+        const existingScript = document.querySelector<HTMLScriptElement>(
+          "script[data-kakao-map-sdk='true']"
+        );
+
+        if (existingScript) {
+          if (existingScript.dataset.loaded === "true") {
+            finishKakaoLoad(resolve, reject);
+            return;
+          }
+
+          existingScript.addEventListener(
+            "load",
+            () => {
+              existingScript.dataset.loaded = "true";
+              finishKakaoLoad(resolve, reject);
+            },
+            { once: true }
+          );
+          existingScript.addEventListener("error", reject, { once: true });
+          return;
+        }
+
+        const script = document.createElement("script");
+        const sdkUrl = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(
+          appKey
+        )}&libraries=services&autoload=false`;
+        script.src = sdkUrl;
+        script.async = true;
+        script.dataset.kakaoMapSdk = "true";
+        script.addEventListener(
+          "load",
+          () => {
+            script.dataset.loaded = "true";
+            finishKakaoLoad(resolve, reject);
+          },
+          { once: true }
+        );
+        script.addEventListener(
+          "error",
+          () => reject(new Error(`Kakao map SDK load failed: ${currentOrigin} / ${sdkUrl}`)),
+          { once: true }
+        );
+        document.head.appendChild(script);
+      });
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          await loadKakaoMap();
+          if (ignore || !mapRef.current || !window.kakao?.maps) return;
+
+          const { latitude, longitude } = position.coords;
+          const center = new window.kakao.maps.LatLng(latitude, longitude);
+          const map = new window.kakao.maps.Map(mapRef.current, {
+            center,
+            level: 5,
+          });
+          mapInstanceRef.current = map;
+
+          window.setTimeout(() => {
+            map.relayout();
+            map.setCenter(center);
+          }, 100);
+
+          new window.kakao.maps.Marker({ map, position: center });
+
+          const placesService = new window.kakao.maps.services.Places();
+          placesService.keywordSearch(
+            "마트",
+            (data, status) => {
+              if (ignore || !window.kakao?.maps) return;
+
+              if (status === window.kakao.maps.services.Status.OK) {
+                const nextPlaces = data.slice(0, 4);
+                markerByPlaceIdRef.current.clear();
+                infoWindowByPlaceIdRef.current.clear();
+                positionByPlaceIdRef.current.clear();
+                currentInfoWindowRef.current = null;
+                setPlaces(nextPlaces);
+                setMapMessage("");
+
+                nextPlaces.forEach((place) => {
+                  const position = new window.kakao!.maps.LatLng(Number(place.y), Number(place.x));
+                  const marker = new window.kakao!.maps.Marker({
+                    map,
+                    position,
+                  });
+                  const placeName = escapeHtml(place.place_name);
+                  const distance = escapeHtml(formatDistance(place.distance));
+                  const placeUrl = escapeHtml(place.place_url);
+                  const infoWindow = new window.kakao!.maps.InfoWindow({
+                    content: `
+                      <div class="${styles.mapInfoWindow}">
+                        <strong>${placeName}</strong>
+                        <span>${distance}</span>
+                        <a href="${placeUrl}" target="_blank" rel="noopener noreferrer">지도 보기</a>
+                      </div>
+                    `,
+                    removable: true,
+                  });
+
+                  markerByPlaceIdRef.current.set(place.id, marker);
+                  infoWindowByPlaceIdRef.current.set(place.id, infoWindow);
+                  positionByPlaceIdRef.current.set(place.id, position);
+                });
+                return;
+              }
+
+              if (status === window.kakao.maps.services.Status.ZERO_RESULT) {
+                setPlaces([]);
+                setMapMessage("주변 마트를 찾지 못했습니다.");
+                return;
+              }
+
+              setPlaces([]);
+              setMapMessage("주변 마트 검색에 실패했습니다.");
+            },
+            {
+              x: longitude,
+              y: latitude,
+              radius: 2500,
+              size: 4,
+            }
+          );
+
+          map.setCenter(center);
+        } catch (error) {
+          console.error("카카오맵 로드 실패:", error);
+          if (!ignore) {
+            setMapMessage(`카카오 개발자 콘솔에 ${currentOrigin} 도메인을 등록해 주세요.`);
+          }
+        }
+      },
+      () => {
+        if (!ignore) setMapMessage("위치 권한을 허용하면 주변 마트를 볼 수 있습니다.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 300000,
+      }
+    );
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   return (
     <section className={styles.mapCard}>
       <div className={styles.mapCardTitle}>
         주변 마트 <span>카카오맵 API</span>
       </div>
       <div className={styles.mapPlaceholder}>
-        <div className={styles.mapPinIcon}>📍</div>
-        <div className={styles.mapTip}>현재 위치 기반 주변 마트</div>
+        <div className={styles.mapCanvas} ref={mapRef} />
+        {mapMessage && (
+          <div className={styles.mapOverlay}>
+            <div className={styles.mapPinIcon}>📍</div>
+            <div className={styles.mapTip}>{mapMessage}</div>
+          </div>
+        )}
       </div>
       <div className={styles.storeList}>
-        <StoreRow name="이마트 서울역점" distance="도보 5분 · 350m" open />
-        <StoreRow name="홈플러스 익스프레스" distance="도보 10분 · 720m" open />
-        <StoreRow name="GS더프레시" distance="도보 17분 · 1.2km" open />
-        <StoreRow name="롯데마트" distance="차량 5분 · 2.1km" />
+        {places.length > 0 ? (
+          places.map((place) => (
+            <StoreRow
+              key={place.id}
+              name={place.place_name}
+              distance={formatDistance(place.distance)}
+              url={place.place_url}
+              onSelect={() => openPlaceInfo(place.id)}
+            />
+          ))
+        ) : (
+          <div className={styles.storeEmpty}>검색된 마트가 없습니다.</div>
+        )}
       </div>
     </section>
   );
 }
 
-function StoreRow({ name, distance, open }: { name: string; distance: string; open?: boolean }) {
+function StoreRow({
+  name,
+  distance,
+  url,
+  onSelect,
+}: {
+  name: string;
+  distance: string;
+  url: string;
+  onSelect: () => void;
+}) {
   return (
     <div className={styles.storeRow}>
-      <div>
+      <button type="button" className={styles.storeSelect} onClick={onSelect}>
         <div className={styles.storeName}>{name}</div>
         <div className={styles.storeDist}>{distance}</div>
-      </div>
-      <div className={open ? styles.storeOpen : styles.storeClosed}>
-        {open ? "영업중" : "영업종료"}
-      </div>
+      </button>
+      <a className={styles.storeOpen} href={url} target="_blank" rel="noopener noreferrer">
+        지도 보기
+      </a>
     </div>
   );
+}
+
+function formatDistance(distance: string) {
+  const meters = Number(distance);
+  if (!Number.isFinite(meters)) return "거리 정보 없음";
+  if (meters >= 1000) return `${(meters / 1000).toFixed(1)}km`;
+  return `${meters}m`;
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => {
+    const entities: Record<string, string> = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    };
+    return entities[char];
+  });
 }
 
 function resolveRecipeImageUrl(imageUrl?: string | null) {
