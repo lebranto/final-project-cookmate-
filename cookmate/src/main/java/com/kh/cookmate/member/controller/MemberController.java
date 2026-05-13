@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.cookmate.member.dto.InquiryDto;
 import com.kh.cookmate.member.dto.MemberDto;
+import com.kh.cookmate.member.dto.MemberUpdateDto;
 import com.kh.cookmate.member.dto.RecipeDto;
 import com.kh.cookmate.member.service.MemberService;
 
@@ -165,78 +166,77 @@ public class MemberController {
         }
     }
     
-    
-    //회원 정보 수정 (프로필,닉네임, 소개글, 알레르기,비밀번호)
-    @PatchMapping("/profile")
-    public ResponseEntity<String> updateProfile(@RequestBody MemberDto memberDto) {
-        log.info("회원 정보 수정 요청: {}", memberDto);
-        int result = memberService.updateProfile(memberDto);
-        
-        if (result > 0) {
-            return ResponseEntity.ok("회원 정보가 수정되었습니다.");
-        } else {
-            return ResponseEntity.badRequest().body("수정에 실패했습니다.");
-        }
-    }
-
     //회원 탈퇴 (소프트 딜리트)
     @PostMapping("/withdraw")
     public ResponseEntity<String> withdrawMember(@RequestParam long userNo) {
-        log.info("회원 탈퇴 요청 - 유저번호: {}", userNo);
-        int result = memberService.withdrawMember(userNo);
-        
-        if (result > 0) {
-            return ResponseEntity.ok("탈퇴 처리가 완료되었습니다.");
-        } else {
-            return ResponseEntity.badRequest().body("탈퇴 처리에 실패했습니다.");
-        }
+    	log.info("회원 탈퇴 요청 - 유저번호: {}", userNo);
+    	int result = memberService.withdrawMember(userNo);
+    	
+    	if (result > 0) {
+    		return ResponseEntity.ok("탈퇴 처리가 완료되었습니다.");
+    	} else {
+    		return ResponseEntity.badRequest().body("탈퇴 처리에 실패했습니다.");
+    	}
     }
     
-    //프로필 정보 및 알레르기 조회
     @GetMapping("/profile/{userNo}")
     public ResponseEntity<Map<String, Object>> getProfileDetail(@PathVariable long userNo) {
-        log.info("프로필 및 알레르기 조회 요청 - 유저번호: {}", userNo);
+        log.info("프로필 조회 요청 - 유저번호: {}", userNo);
         
-        //회원 조회 서비스 호출
         MemberDto member = memberService.selectUserByNo(userNo); 
-        //알레르기 조회 서비스 호출
         List<String> allergies = memberService.selectUserAllergies(userNo);
         
-        if(member != null) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("userNo", member.getUserNo());
-            response.put("userEmail", member.getUserEmail());
-            response.put("nickname", member.getNickname());
-            response.put("introduce", member.getIntroduce());
-            response.put("profileImageUrl", member.getProfileImageUrl());
-            response.put("allergies", allergies); // 알레르기 배열 포함
-            return ResponseEntity.ok(response);
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        // Map에 담아 반환 (이미 만들어두신 구조 유지)
+        Map<String, Object> response = new HashMap<>();
+        response.put("userNo", member.getUserNo());
+        response.put("userEmail", member.getUserEmail());
+        response.put("nickname", member.getNickname());
+        response.put("introduce", member.getIntroduce());
+        response.put("profileImageUrl", member.getProfileImageUrl());
+        response.put("allergies", allergies); 
+        
+        return ResponseEntity.ok(response);
     }
 
+    /**
+     * 2. 회원 정보 통합 수정 (프로필 + 비밀번호 + 알레르기)
+     * POST /users/profile/update
+     */
     @PostMapping("/profile/update")
-    public ResponseEntity<String> updateProfileWithAllergies(@RequestBody Map<String, Object> payload) {
-        log.info("프로필 및 알레르기 수정 요청 (JSON): {}", payload);
+    public ResponseEntity<String> updateProfile(@RequestBody MemberUpdateDto updateDto) {
+        log.info("회원 통합 수정 요청: {}", updateDto);
+        
         try {
-            // 프론트엔드에서 보낸 JSON 데이터를 그대로 서비스 단으로 넘김
-            memberService.updateProfileWithAllergies(payload);
+            memberService.updateProfile(updateDto);
             return ResponseEntity.ok("회원 정보가 성공적으로 수정되었습니다.");
         } catch (Exception e) {
             log.error("프로필 수정 중 오류 발생", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("수정 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body("수정 중 오류가 발생했습니다.");
         }
     }
     
-    //회원 정보 수정 - 현재 비밀번호 확인
+    /**
+     * 3. 현재 비밀번호 확인 (수정 전 검증용)
+     * POST /users/profile/verify-password
+     */
     @PostMapping("/profile/verify-password")
     public ResponseEntity<Map<String, Boolean>> verifyPassword(@RequestBody Map<String, Object> payload) {
-        long userNo = Long.parseLong(payload.get("userNo").toString());
-        String password = (String) payload.get("password"); // 프론트에서 보낸 평문 비밀번호
+        // null 체크 및 형변환 예외 방지
+        Object userNoObj = payload.get("userNo");
+        String password = (String) payload.get("password");
 
-        log.info("비밀번호 검증 요청 - 유저번호: {}, 입력비번: {}", userNo, password);
+        if (userNoObj == null || password == null) {
+            return ResponseEntity.badRequest().build();
+        }
 
-        // 서비스에서 비밀번호 일치 여부 확인
+        long userNo = Long.parseLong(userNoObj.toString());
+        log.info("비밀번호 검증 요청 - 유저번호: {}", userNo);
+
         boolean isValid = memberService.verifyPassword(userNo, password);
 
         Map<String, Boolean> response = new HashMap<>();

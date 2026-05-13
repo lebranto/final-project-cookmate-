@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import api from '@/lib/axios';
 import styles from './mypage.module.css';
+import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 
-// 프로필과 통계를 모두 합친 인터페이스
 interface UserData {
   nickname: string;
   userEmail: string;
@@ -19,16 +19,25 @@ interface UserData {
 export default function MyPageLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   
-  // 🌟 통합된 유저 데이터 상태
+  const [isMounted, setIsMounted] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loginUserNo = 1; 
+  const { userInfo, isLoggedIn } = useUserInfoActions();
+  const loginUserNo = userInfo?.userNo;
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted || !loginUserNo) {
+      if (isMounted && !loginUserNo) setLoading(false);
+      return;
+    }
+
     const fetchMyPageData = async () => {
       try {
-        // 🌟 Promise.all을 사용해 프로필 정보와 통계 숫자를 동시에 가져옵니다!
         const [profileRes, statsRes] = await Promise.all([
           api.get(`/users/profile/${loginUserNo}`),
           api.get('/users/stats', { params: { userNo: loginUserNo } })
@@ -52,14 +61,24 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
     };
 
     fetchMyPageData();
-  }, []);
+  }, [loginUserNo, isMounted]);
 
   const menuItems = [
-    { name: '내가 만든 레시피', href: '/mypage/recipes', icon: '📋' },
-    { name: '스크랩 목록', href: '/mypage/scraps', icon: '🤍' },
-    { name: '문의 내역', href: '/mypage/inquiries', icon: '💬' },
-    { name: '회원 정보 수정', href: '/mypage/profile', icon: '✏️' },
+    { name: '내가 만든 레시피', href: '/mypage/recipes' },
+    { name: '스크랩 목록', href: '/mypage/scraps' },
+    { name: '문의 내역', href: '/mypage/inquiries' },
+    { name: '회원 정보 수정', href: '/mypage/profile' },
   ];
+
+  if (!isMounted) return null;
+
+  if (!isLoggedIn || !loginUserNo) {
+    return (
+      <div style={{ padding: '100px', textAlign: 'center', width: '100%', fontSize: '18px', color: '#666' }}>
+        로그인이 필요한 서비스입니다.
+      </div>
+    );
+  }
 
   return (
     <div className={styles.layout}>
@@ -67,7 +86,6 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
         <aside className={styles.sidebar}>
           <div className={styles.profile}>
             
-            {/* 🌟 1. 프로필 이미지 렌더링 (꽃 사진이 나오도록!) */}
             <div className={styles.avatar}>
               {userData?.profileImageUrl ? (
                 <img 
@@ -75,10 +93,13 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
                   alt="프로필" 
                   style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                 /> 
-              ) : '🧑‍🍳'}
+              ) : (
+                <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#666', fontWeight: 'bold' }}>
+                  {userData?.nickname ? userData.nickname.charAt(0) : 'U'}
+                </div>
+              )}
             </div>
             
-            {/* 🌟 2. 닉네임과 이메일 렌더링 */}
             <div className={styles.profileName}>
               {loading ? '로딩 중...' : userData?.nickname || '사용자'}
             </div>
@@ -86,7 +107,6 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
               {loading ? '---' : userData?.userEmail}
             </div>
             
-            {/* 🌟 3. 통계 숫자 렌더링 (기존처럼 잘 나옴!) */}
             <div className={styles.stats}>
               <div className={styles.stat}>
                 <div className={styles.statVal}>{loading ? '-' : userData?.recipeCount}</div>
@@ -111,7 +131,6 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
                 href={item.href}
                 className={`${styles.navItem} ${pathname.includes(item.href) ? styles.active : ''}`}
               >
-                <span className={styles.navIcon}>{item.icon}</span>
                 {item.name}
               </Link>
             ))}
@@ -120,7 +139,6 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
               href="/mypage/withdraw" 
               className={`${styles.navItem} ${styles.danger} ${pathname === '/mypage/withdraw' ? styles.dangerActive : ''}`}
             >
-              <span className={styles.navIcon}>🚪</span>
               탈퇴
             </Link>
           </nav>
