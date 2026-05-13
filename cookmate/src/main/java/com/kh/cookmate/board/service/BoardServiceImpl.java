@@ -72,6 +72,7 @@ public class BoardServiceImpl implements BoardService {
                 // SET_NO 필요하므로 묶음은 단건 INSERT
                 IngredientSet set = new IngredientSet();
                 set.setBoardNo(board.getBoardNo());
+                set.setSetName(setDto.getSetName());
                 boardDao.insertIngredientSet(set);
 
                 // 재료는 한번에 INSERT
@@ -178,6 +179,7 @@ public class BoardServiceImpl implements BoardService {
                 if (setDto.isNew()) {
                     IngredientSet newSet = new IngredientSet();
                     newSet.setBoardNo(boardNo);
+                    newSet.setSetName(setDto.getSetName());
                     boardDao.insertIngredientSet(newSet); 
 
                     // 생성된 setNo로 재료 INSERT

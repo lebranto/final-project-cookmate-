@@ -6,6 +6,8 @@ import java.util.Map;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.kh.cookmate.shopping.dto.ShoppingDto.Detail;
+import com.kh.cookmate.shopping.dto.ShoppingDto.DetailItem;
 import com.kh.cookmate.shopping.dto.ShoppingDto.ListItem;
 import com.kh.cookmate.shopping.model.vo.ShoppingList;
 
@@ -34,6 +36,26 @@ public class ShoppingDaoImpl implements ShoppingDao {
     @Override
     public List<ListItem> selectShoppingLists(int userNo) {
         return session.selectList("shoppingmapper.selectShoppingLists", userNo);
+    }
+
+    @Override
+    public Detail selectShoppingDetail(Map<String, Object> params) {
+        return session.selectOne("shoppingmapper.selectShoppingDetail", params);
+    }
+
+    @Override
+    public List<DetailItem> selectShoppingItems(Map<String, Object> params) {
+        return session.selectList("shoppingmapper.selectShoppingItems", params);
+    }
+
+    @Override
+    public int updateShoppingItemStatus(Map<String, Object> params) {
+        return session.update("shoppingmapper.updateShoppingItemStatus", params);
+    }
+
+    @Override
+    public int updateAllShoppingItemStatus(Map<String, Object> params) {
+        return session.update("shoppingmapper.updateAllShoppingItemStatus", params);
     }
 
     @Override

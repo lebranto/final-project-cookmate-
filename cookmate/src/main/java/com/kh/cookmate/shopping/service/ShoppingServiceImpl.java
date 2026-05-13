@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kh.cookmate.shopping.dao.ShoppingDao;
 import com.kh.cookmate.shopping.dto.ShoppingDto.CreateRequest;
 import com.kh.cookmate.shopping.dto.ShoppingDto.CreateResponse;
+import com.kh.cookmate.shopping.dto.ShoppingDto.Detail;
 import com.kh.cookmate.shopping.dto.ShoppingDto.ListResponse;
 import com.kh.cookmate.shopping.model.vo.ShoppingList;
 
@@ -50,5 +51,36 @@ public class ShoppingServiceImpl implements ShoppingService {
         Map<String, Object> params = Map.of("shoppingNo", shoppingNo, "userNo", userNo);
         shoppingDao.deleteShoppingItems(params);
         return shoppingDao.deleteShoppingList(params);
+    }
+
+    @Override
+    public Detail getShoppingDetail(int userNo, int shoppingNo) {
+        Map<String, Object> params = Map.of("shoppingNo", shoppingNo, "userNo", userNo);
+        Detail detail = shoppingDao.selectShoppingDetail(params);
+        if (detail == null) return null;
+
+        detail.setItems(shoppingDao.selectShoppingItems(params));
+        return detail;
+    }
+
+    @Override
+    @Transactional
+    public int updateShoppingItemStatus(int userNo, int shoppingNo, int itemNo, String itemStatus) {
+        return shoppingDao.updateShoppingItemStatus(Map.of(
+                "userNo", userNo,
+                "shoppingNo", shoppingNo,
+                "itemNo", itemNo,
+                "itemStatus", itemStatus
+        ));
+    }
+
+    @Override
+    @Transactional
+    public int updateAllShoppingItemStatus(int userNo, int shoppingNo, String itemStatus) {
+        return shoppingDao.updateAllShoppingItemStatus(Map.of(
+                "userNo", userNo,
+                "shoppingNo", shoppingNo,
+                "itemStatus", itemStatus
+        ));
     }
 }

@@ -6,4 +6,5 @@ import lombok.Data;
 public class IngredientSet {
 	private int setNo;
     private int boardNo;
+    private String setName;
 }

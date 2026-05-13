@@ -119,6 +119,7 @@ public class PublicApiServiceImpl implements PublicApiService {
         if (partsDtls != null && !partsDtls.trim().isEmpty()) {
             IngredientSet set = new IngredientSet();
             set.setBoardNo(board.getBoardNo());
+            set.setSetName("재료");
             boardDao.insertIngredientSet(set);
 
             // 쉼표로 분리해서 재료 저장
@@ -186,6 +187,7 @@ public class PublicApiServiceImpl implements PublicApiService {
             // 재료 묶음 생성
             IngredientSet set = new IngredientSet();
             set.setBoardNo(boardNo);
+            set.setSetName("재료");
             boardDao.insertIngredientSet(set);
 
             // 쉼표로 분리해서 재료 저장
