@@ -4,8 +4,144 @@
 <mapper namespace="member">
 
     <select id="selectUserByNo" parameterType="long" resultType="Member">
-        SELECT * FROM USER WHERE USER_NO = #{userNo}
+        SELECT 
+            U.*, 
+            C.USER_PW 
+        FROM USER U
+        LEFT JOIN USER_CREDENTIALS C ON U.USER_NO = C.USER_NO
+        WHERE U.USER_NO = #{userNo}
     </select>
+
+    <select id="getMemberStats" parameterType="long" resultType="MemberDto">
+        SELECT 
+            (SELECT COUNT(*) FROM BOARD WHERE USER_NO = #{userNo} AND BOARD_DELETE = 'N') as recipeCount,
+            (SELECT COUNT(*) FROM SCRAP WHERE USER_NO = #{userNo}) as scrapCount,
+            (SELECT COUNT(*) FROM INQUIRY WHERE USER_NO = #{userNo}) as inquiryCount
+        FROM DUAL
+    </select>
+
+    <select id="selectUserAllergies" parameterType="long" resultType="string">
+        SELECT ALLERGY_NAME 
+        FROM ALLERGY 
+        WHERE USER_NO = #{userNo}
+    </select>
+
+    <select id="selectPassword" resultType="string" parameterType="long">
+        SELECT USER_PW 
+        FROM USER_CREDENTIALS 
+        WHERE USER_NO = #{userNo}
+    </select>
+
+
+    <update id="updateMemberProfile" parameterType="MemberUpdateDto">
+        UPDATE USER
+        <set>
+            <if test="nickname != null">NICKNAME = #{nickname},</if>
+            <if test="introduce != null">INTRODUCE = #{introduce},</if>
+            <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl}</if>
+        </set>
+        WHERE USER_NO = #{userNo}
+    </update>
+
+    <update id="updateMemberPassword" parameterType="map">
+        UPDATE USER_CREDENTIALS
+        SET USER_PW = #{encodedPw}
+        WHERE USER_NO = #{userNo}
+    </update>
+
+    <delete id="deleteMemberAllergies" parameterType="long">
+        DELETE FROM ALLERGY WHERE USER_NO = #{userNo}
+    </delete>
+
+    <insert id="insertMemberAllergy" parameterType="map">
+        INSERT INTO ALLERGY (ALLERGY_NAME, USER_NO)
+        VALUES (#{allergyName}, #{userNo})
+    </insert>
+
+
+    <update id="withdrawMember" parameterType="long">
+        UPDATE USER 
+        SET WITHDRAW = 'Y' 
+        WHERE USER_NO = #{userNo}
+    </update>
+
+
+    <select id="selectMyRecipes" parameterType="map" resultType="RecipeDto">
+    SELECT 
+        B.BOARD_NO as boardNo,
+        B.BOARD_TITLE as title,
+        B.IMAGE_URL as imageUrl, T.TYPE_NAME as category,
+        T.COOK_TIME as cookTime,
+        B.OPEN as open,
+        B.LIKES_COUNT as likesCount,
+        B.BOARD_POSTDATE as boardPostdate
+    FROM BOARD B
+    JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
+    WHERE B.USER_NO = #{userNo} AND B.BOARD_DELETE = 'N'
+    </select>
+
+<select id="selectMyScraps" parameterType="map" resultType="RecipeDto">
+    SELECT 
+        B.BOARD_NO as boardNo,
+        B.BOARD_TITLE as title,
+        B.IMAGE_URL as imageUrl, T.TYPE_NAME as category,
+        T.COOK_TIME as cookTime,
+        B.LIKES_COUNT as likesCount,
+        M.NICKNAME as authorNickname
+    FROM SCRAP S
+    JOIN BOARD B ON S.BOARD_NO = B.BOARD_NO
+    JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
+    JOIN USER M ON B.USER_NO = M.USER_NO
+    WHERE S.USER_NO = #{userNo} AND B.BOARD_DELETE = 'N'
+    </select>
+
+    <select id="selectMyInquiries" parameterType="long" resultType="InquiryDto">
+        SELECT 
+            INQUIRY_NO as inquiryNo,
+            INQUIRY_TITLE as title,
+            INQUIRY_CONTENT as content,
+            INQUIRY_POSTDATE as createDate,
+            INQUIRY_STATUS as status, 
+            TYPE_NAME as typeName
+        FROM INQUIRY
+        WHERE USER_NO = #{userNo}
+        ORDER BY INQUIRY_POSTDATE DESC
+    </select>
+
+
+    <select id="selectInquiryDetail" parameterType="long" resultType="InquiryDto">
+        SELECT 
+            INQUIRY_NO as inquiryNo,
+            USER_NO as userNo,
+            INQUIRY_TITLE as title,
+            INQUIRY_CONTENT as content,
+            INQUIRY_POSTDATE as createDate,
+            TYPE_NAME as typeName,
+            INQUIRY_STATUS as status,
+            ANSWER as answer,
+            ANSWER_DATE as answerDate
+        FROM INQUIRY
+        WHERE INQUIRY_NO = #{inquiryNo}
+    </select>
+
+    <insert id="insertInquiry" parameterType="InquiryDto">
+        INSERT INTO INQUIRY (
+            USER_NO, INQUIRY_TITLE, INQUIRY_CONTENT, TYPE_NAME, INQUIRY_STATUS, INQUIRY_POSTDATE
+        ) VALUES (
+            #{userNo}, #{title}, #{content}, #{typeName}, 'N', NOW()
+        )
+    </insert>
+
+    <update id="updateInquiry" parameterType="InquiryDto">
+        UPDATE INQUIRY
+        SET INQUIRY_TITLE = #{title}, INQUIRY_CONTENT = #{content}, TYPE_NAME = #{typeName}
+        WHERE INQUIRY_NO = #{inquiryNo}
+    </update>
+
+    <delete id="deleteInquiry" parameterType="long">
+        DELETE FROM INQUIRY WHERE INQUIRY_NO = #{inquiryNo}
+    </delete>
+
 
     <select id="selectChefRanking" parameterType="map" resultType="MemberDto">
         SELECT 
@@ -48,122 +184,6 @@
         WHERE USER_NO = #{chefNo} AND WITHDRAW = 'N'
     </select>
 
-    <select id="checkFollow" parameterType="map" resultType="int">
-        SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
-    </select>
-
-    <insert id="insertFollow" parameterType="map">
-        INSERT INTO FOLLOWING (USER_NO, FOLLOWING_ID, CREATE_AT) VALUES (#{loginUserNo}, #{targetEmail}, NOW())
-    </insert>
-
-    <delete id="deleteFollow" parameterType="map">
-        DELETE FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
-    </delete>
-	
-	<select id="selectMyRecipes" parameterType="map" resultType="RecipeDto">
-        SELECT 
-            B.BOARD_NO as boardNo,
-            B.BOARD_TITLE as title,
-            
-            T.TYPE_NAME as category,
-            T.COOK_TIME as cookTime,
-            
-            B.OPEN as open,
-            B.LIKES_COUNT as likesCount,
-            B.BOARD_POSTDATE as boardPostdate,
-            
-            CASE 
-                WHEN T.TYPE_NAME = '한식' THEN 'thumb-green'
-                WHEN T.TYPE_NAME = '양식' THEN 'thumb-salmon'
-                WHEN T.TYPE_NAME = '일식' THEN 'thumb-blue'
-                WHEN T.TYPE_NAME = '분식' THEN 'thumb-peach'
-                ELSE 'thumb-mint'
-            END as thumbClass
-        FROM BOARD B
-        JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
-        WHERE B.USER_NO = #{userNo}
-          AND B.BOARD_DELETE = 'N'
-        <if test="category != null and category != '전체'">
-          AND T.TYPE_NAME = #{category}
-        </if>
-        ORDER BY B.BOARD_POSTDATE DESC
-    </select>
-
-    <select id="selectMyScraps" parameterType="map" resultType="RecipeDto">
-        SELECT 
-            B.BOARD_NO as boardNo,
-            B.BOARD_TITLE as title,
-            
-            T.TYPE_NAME as category,
-            T.COOK_TIME as cookTime,
-            
-            B.LIKES_COUNT as likesCount,
-            M.NICKNAME as authorNickname,
-            
-            CASE 
-                WHEN T.TYPE_NAME = '한식' THEN 'thumb-green'
-                WHEN T.TYPE_NAME = '양식' THEN 'thumb-salmon'
-                ELSE 'thumb-peach'
-            END as thumbClass
-        FROM SCRAP S
-        JOIN BOARD B ON S.BOARD_NO = B.BOARD_NO
-        JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
-        JOIN USER M ON B.USER_NO = M.USER_NO
-        WHERE S.USER_NO = #{userNo}
-          AND B.BOARD_DELETE = 'N'
-        <if test="category != null and category != '전체'">
-          AND T.TYPE_NAME = #{category}
-        </if>
-        ORDER BY S.SCRAP_DATE DESC
-    </select>
-
-    <select id="selectMyInquiries" parameterType="long" resultType="InquiryDto">
-        SELECT 
-            INQUIRY_NO as inquiryNo,
-            INQUIRY_TITLE as title,
-            INQUIRY_CONTENT as content,
-            INQUIRY_POSTDATE as createDate,
-            INQUIRY_STATUS as status, 
-            TYPE_NAME as typeName
-        FROM INQUIRY
-        WHERE USER_NO = #{userNo}
-        ORDER BY INQUIRY_POSTDATE DESC
-    </select>
-
-    <update id="updateMember" parameterType="MemberDto">
-        UPDATE USER
-        <set>
-            <if test="nickname != null">NICKNAME = #{nickname},</if>
-            <if test="introduce != null">INTRODUCE = #{introduce},</if>
-            <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl},</if>
-            <if test="userPw != null">USER_PW = #{userPw}</if>
-        </set>
-        WHERE USER_NO = #{userNo}
-    </update>
-
-    <delete id="deleteUserAllergies" parameterType="long">
-        DELETE FROM ALLERGY WHERE USER_NO = #{userNo}
-    </delete>
-
-    <insert id="insertUserAllergy" parameterType="map">
-        INSERT INTO ALLERGY (ALLERGY_NAME, USER_NO)
-        VALUES (#{allergyName}, #{userNo})
-    </insert>
-
-    <update id="withdrawMember" parameterType="long">
-        UPDATE USER 
-        SET WITHDRAW = 'Y' 
-        WHERE USER_NO = #{userNo}
-    </update>
-
-    <select id="getMemberStats" parameterType="long" resultType="MemberDto">
-        SELECT 
-            (SELECT COUNT(*) FROM BOARD WHERE USER_NO = #{userNo} AND BOARD_DELETE = 'N') as recipeCount,
-            (SELECT COUNT(*) FROM SCRAP WHERE USER_NO = #{userNo}) as scrapCount,
-            (SELECT COUNT(*) FROM INQUIRY WHERE USER_NO = #{userNo}) as inquiryCount
-        FROM DUAL
-    </select>
-
     <select id="selectChefRecipeComments" parameterType="long" resultType="map">
         SELECT 
             c.COMMENT_NO as commentNo,
@@ -180,63 +200,18 @@
           AND c.COMMENT_DELETE = 'N'
         ORDER BY c.COMMENT_POSTDATE DESC
     </select>
-    
-    <select id="selectInquiryDetail" parameterType="long" resultType="InquiryDto">
-        SELECT 
-            INQUIRY_NO as inquiryNo,
-            USER_NO as userNo,
-            INQUIRY_TITLE as title,
-            INQUIRY_CONTENT as content,
-            INQUIRY_POSTDATE as createDate,
-            TYPE_NAME as typeName,
-            INQUIRY_STATUS as status,
-            ANSWER as answer,
-            ANSWER_DATE as answerDate
-        FROM INQUIRY
-        WHERE INQUIRY_NO = #{inquiryNo}
+
+
+    <select id="checkFollow" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
     </select>
 
-    <insert id="insertInquiry" parameterType="InquiryDto">
-        INSERT INTO INQUIRY (
-            USER_NO, 
-            INQUIRY_TITLE, 
-            INQUIRY_CONTENT, 
-            TYPE_NAME,
-            INQUIRY_STATUS, 
-            INQUIRY_POSTDATE
-        ) VALUES (
-            #{userNo}, 
-            #{title}, 
-            #{content}, 
-            #{typeName}, 
-            'N',  NOW()
-        )
+    <insert id="insertFollow" parameterType="map">
+        INSERT INTO FOLLOWING (USER_NO, FOLLOWING_ID, CREATE_AT) VALUES (#{loginUserNo}, #{targetEmail}, NOW())
     </insert>
 
-    <update id="updateInquiry" parameterType="InquiryDto">
-        UPDATE INQUIRY
-        SET 
-            INQUIRY_TITLE = #{title},
-            INQUIRY_CONTENT = #{content},
-            TYPE_NAME = #{typeName}
-        WHERE INQUIRY_NO = #{inquiryNo}
-    </update>
-
-    <delete id="deleteInquiry" parameterType="long">
-        DELETE FROM INQUIRY 
-        WHERE INQUIRY_NO = #{inquiryNo}
+    <delete id="deleteFollow" parameterType="map">
+        DELETE FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
     </delete>
-    
-    <select id="selectUserAllergies" parameterType="long" resultType="string">
-        SELECT ALLERGY_NAME 
-        FROM ALLERGY 
-        WHERE USER_NO = #{userNo}
-    </select>
-	
-	<select id="selectPassword" resultType="string" parameterType="long">
-        SELECT USER_PW 
-        FROM USER 
-        WHERE USER_NO = #{userNo}
-    </select>
     
 </mapper>

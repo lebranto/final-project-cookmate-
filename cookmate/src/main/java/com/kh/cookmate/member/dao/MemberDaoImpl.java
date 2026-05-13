@@ -1,5 +1,6 @@
 package com.kh.cookmate.member.dao;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kh.cookmate.member.dto.InquiryDto;
 import com.kh.cookmate.member.dto.MemberDto;
+import com.kh.cookmate.member.dto.MemberUpdateDto;
 import com.kh.cookmate.member.dto.RecipeDto;
 import com.kh.cookmate.member.vo.Member;
 
@@ -42,21 +44,6 @@ public class MemberDaoImpl implements MemberDao {
     @Override
     public List<InquiryDto> selectMyInquiries(long userNo) {
         return session.selectList("member.selectMyInquiries", userNo);
-    }
-
-    @Override
-    public int updateMember(MemberDto memberDto) {
-        return session.update("member.updateMember", memberDto);
-    }
-
-    @Override
-    public int deleteUserAllergies(long userNo) {
-        return session.delete("member.deleteUserAllergies", userNo);
-    }
-
-    @Override
-    public int insertUserAllergy(Map<String, Object> params) {
-        return session.insert("member.insertUserAllergy", params);
     }
 
     @Override
@@ -123,4 +110,32 @@ public class MemberDaoImpl implements MemberDao {
     public String selectPassword(long userNo) {
         return session.selectOne("member.selectPassword", userNo);
     }
+
+	@Override
+	public int updateMemberProfile(MemberUpdateDto updateDto) {
+	    return session.update("member.updateMemberProfile", updateDto);
+	}
+
+	@Override
+	public void updateMemberPassword(long userNo, String encodedPw) {
+	    Map<String, Object> map = new HashMap<>();
+	    map.put("userNo", userNo);
+	    map.put("encodedPw", encodedPw);
+	    
+	    session.update("member.updateMemberPassword", map);
+	}
+
+	@Override
+	public void deleteMemberAllergies(long userNo) {
+	    session.delete("member.deleteMemberAllergies", userNo);
+	}
+
+	@Override
+	public void insertMemberAllergy(long userNo, String allergyName) {
+	    Map<String, Object> map = new HashMap<>();
+	    map.put("userNo", userNo);
+	    map.put("allergyName", allergyName);
+	    
+	    session.insert("member.insertMemberAllergy", map);
+	}
 }

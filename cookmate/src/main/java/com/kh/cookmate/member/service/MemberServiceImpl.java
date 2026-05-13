@@ -11,13 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kh.cookmate.member.dao.MemberDao;
 import com.kh.cookmate.member.dto.InquiryDto;
 import com.kh.cookmate.member.dto.MemberDto;
+import com.kh.cookmate.member.dto.MemberUpdateDto;
 import com.kh.cookmate.member.dto.RecipeDto;
 import com.kh.cookmate.member.vo.Member;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MemberServiceImpl implements MemberService {
 
     private final MemberDao memberDao; 
@@ -81,22 +84,6 @@ public class MemberServiceImpl implements MemberService {
         return memberDao.selectMyInquiries(userNo); 
     }
 
-    @Override
-    @Transactional 
-    public int updateProfile(MemberDto memberDto) {
-        int result = memberDao.updateMember(memberDto);
-        
-        if (result > 0 && memberDto.getAllergies() != null) {
-            memberDao.deleteUserAllergies(memberDto.getUserNo());
-            for (String allergyName : memberDto.getAllergies()) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("userNo", memberDto.getUserNo());
-                map.put("allergyName", allergyName);
-                memberDao.insertUserAllergy(map);
-            }
-        }
-        return result;
-    }
 
     @Override
     public int withdrawMember(long userNo) {
@@ -136,31 +123,27 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    @Transactional
-    public void updateProfileWithAllergies(Map<String, Object> payload) {
-    	long userNo = Long.parseLong(payload.get("userNo").toString());
-        
-        MemberDto memberDto = new MemberDto(); 
-        memberDto.setUserNo(userNo);
-        memberDto.setNickname((String) payload.get("nickname"));
-        memberDto.setIntroduce((String) payload.get("introduce"));
-        memberDto.setProfileImageUrl((String) payload.get("profileImageUrl"));
-        
-        String newPassword = (String) payload.get("newPassword");
-        if (newPassword != null && !newPassword.trim().isEmpty()) {
-            memberDto.setUserPw(passwordEncoder.encode(newPassword));
+    @Transactional // 🌟 중요: 전체 수정을 하나의 트랜잭션으로 관리
+    public void updateProfile(MemberUpdateDto updateDto) {
+        // 1. 기본 프로필 정보 업데이트 (MEMBER 테이블)
+        int profileResult = memberDao.updateMemberProfile(updateDto);
+        if (profileResult == 0) throw new RuntimeException("프로필 수정 실패");
+
+        // 2. 새 비밀번호가 있는 경우에만 처리 (USER_CREDENTIALS 테이블)
+        if (updateDto.getNewPassword() != null && !updateDto.getNewPassword().isEmpty()) {
+            String encodedPw = passwordEncoder.encode(updateDto.getNewPassword());
+            memberDao.updateMemberPassword(updateDto.getUserNo(), encodedPw);
+            log.info("유저번호 {}의 비밀번호가 변경되었습니다.", updateDto.getUserNo());
         }
+
+        // 3. 알레르기 정보 업데이트 (USER_ALLERGIES 테이블 등)
+        // 기존 알레르기 싹 지우고 새로 입력하는 방식이 가장 안전합니다.
+        memberDao.deleteMemberAllergies(updateDto.getUserNo());
         
-        memberDao.updateMember(memberDto); 
-        
-        memberDao.deleteUserAllergies(userNo);
-        List<String> allergies = (List<String>) payload.get("allergies");
+        List<String> allergies = updateDto.getAllergies();
         if (allergies != null && !allergies.isEmpty()) {
             for (String allergyName : allergies) {
-                Map<String, Object> param = new HashMap<>();
-                param.put("userNo", userNo);
-                param.put("allergyName", allergyName);
-                memberDao.insertUserAllergy(param);
+            	memberDao.insertMemberAllergy(updateDto.getUserNo(), allergyName);
             }
         }
     }
