@@ -66,6 +66,11 @@ function LoginForm(): JSX.Element {
     });
 
     if (!response.ok) {
+      if (response.status === 403) {
+        alert("로그인 할 수 없는 계정입니다.");
+        return;
+      }
+
       alert("아이디 또는 비밀번호가 올바르지 않습니다.");
       return;
     }

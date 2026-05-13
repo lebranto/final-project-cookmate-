@@ -106,17 +106,24 @@ function getStoredUser(): StoredUser | null {
 }
 
 function hasAccessToken(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return Boolean(
-    getCookieValue(ACCESS_TOKEN_KEY) || window.localStorage.getItem(ACCESS_TOKEN_KEY),
-  );
+  return Boolean(getCookieValue(ACCESS_TOKEN_KEY));
 }
 
 function removeCookie(name: string) {
   document.cookie = `${name}=; Max-Age=0; path=/`;
+}
+
+function clearStoredAuth() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
+  window.localStorage.removeItem("role");
+  STORAGE_USER_KEYS.forEach((key) => window.localStorage.removeItem(key));
+  removeCookie(ACCESS_TOKEN_KEY);
+  removeCookie("refreshToken");
+  removeCookie(ROLE_COOKIE_KEY);
 }
 
 export default function GlobalHeader() {
@@ -134,7 +141,7 @@ export default function GlobalHeader() {
 
   const mobileMenuItems = useMemo(() => {
     const baseItems = [
-      { label: "레시피", path: "/boards" },
+      { label: "레시피", path: "/recipes" },
       { label: "AI추천", path: "/ai" },
       { label: "장보기", path: "/shop" },
       { label: "셰프", path: "/chef" },
@@ -161,6 +168,10 @@ export default function GlobalHeader() {
         });
 
         if (!response.ok) {
+          clearStoredAuth();
+          setRoles([]);
+          setCurrentUser(null);
+          setIsLoggedIn(false);
           return;
         }
 
@@ -173,15 +184,24 @@ export default function GlobalHeader() {
     };
 
     const syncAuthState = () => {
+      const nextHasToken = hasAccessToken();
+
+      if (!nextHasToken) {
+        clearStoredAuth();
+        setRoles([]);
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+        return;
+      }
+
       const nextRoles = getStoredRoles();
       const nextUser = getStoredUser();
-      const nextIsLoggedIn = hasAccessToken() || nextRoles.length > 0;
 
       setRoles(nextRoles);
       setCurrentUser(nextUser);
-      setIsLoggedIn(nextIsLoggedIn);
+      setIsLoggedIn(true);
 
-      if (nextIsLoggedIn && !nextUser) {
+      if (!nextUser) {
         void fetchAuthUser();
       }
     };
@@ -227,6 +247,7 @@ export default function GlobalHeader() {
 
       setIsLoggedIn(false);
       setRoles([]);
+      setCurrentUser(null);
       setMenuOpen(false);
       router.push("/");
       router.refresh();
@@ -249,7 +270,7 @@ export default function GlobalHeader() {
         </div>
 
         <nav className={styles.ghNav}>
-          <button type="button" onClick={() => router.push("/boards")}>레시피</button>
+          <button type="button">레시피</button>
           <button type="button">AI추천</button>
           <button type="button">장보기</button>
         </nav>
@@ -268,11 +289,7 @@ export default function GlobalHeader() {
 
           {isLoggedIn ? (
             <>
-              <button
-                type="button"
-                className={styles.ghUserSummary}
-                onClick={() => router.push("/mypage")}
-              >
+              <div className={styles.ghUserSummary}>
                 {currentUser?.profileImageUrl ? (
                   <span
                     aria-hidden="true"
@@ -280,7 +297,7 @@ export default function GlobalHeader() {
                     style={{ backgroundImage: `url(${currentUser.profileImageUrl})` }}
                   />
                 ) : (
-                  <span
+                 <span
                     aria-hidden="true"
                     className={styles.ghUserAvatar}
                     style={{ backgroundImage: "url(/default-profile.png)" }}
@@ -289,7 +306,7 @@ export default function GlobalHeader() {
                 <span className={styles.ghUserName}>
                   {currentUser?.nickname ?? currentUser?.userEmail ?? "사용자"}
                 </span>
-              </button>
+              </div>
               {canOpenMyPage && (
                 <button
                   type="button"
