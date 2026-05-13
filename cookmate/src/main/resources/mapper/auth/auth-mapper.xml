@@ -135,7 +135,7 @@
             #{introduce},
             #{address},
             0,
-            'Y',
+            'N',
             'N',
             NULL
         )
@@ -191,7 +191,7 @@
             #{introduce},
             #{address},
             0,
-            'Y',
+            'N',
             'N',
             NULL
         )
