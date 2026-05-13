@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="notice">
+
+    <resultMap id="NoticeResult" type="com.kh.cookmate.notice.model.dto.NoticeDto$Notice">
+        <id property="noticeNo" column="NOTICE_NO"/>
+        <result property="userNo" column="USER_NO"/>
+        <result property="noticeTitle" column="NOTICE_TITLE"/>
+        <result property="noticeContent" column="NOTICE_CONTENT"/>
+        <result property="noticeModifiedDate" column="NOTICE_MODIFIEDDATE"/>
+        <result property="startDate" column="START_DATE"/>
+        <result property="endDate" column="END_DATE"/>
+        <result property="noticeStatus" column="NOTICE_STATUS"/>
+        <result property="noticeDelete" column="NOTICE_DELETE"/>
+        <result property="typeName" column="TYPE_NAME"/>
+        <result property="progressStatus" column="PROGRESS_STATUS"/>
+    </resultMap>
+
+    <sql id="publicNoticeWhere">
+        WHERE NOTICE_STATUS = 'Y'
+        <if test="keyword != null and keyword != ''">
+          AND (
+            NOTICE_TITLE LIKE CONCAT('%', #{keyword}, '%')
+            OR NOTICE_CONTENT LIKE CONCAT('%', #{keyword}, '%')
+          )
+        </if>
+        <if test="typeName != null and typeName != ''">
+          AND TYPE_NAME = #{typeName}
+        </if>
+        <if test="progressStatus == '진행전'">
+          AND START_DATE IS NOT NULL
+          AND START_DATE <![CDATA[>]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR)
+        </if>
+        <if test="progressStatus == '진행중'">
+          AND (START_DATE IS NULL OR START_DATE <![CDATA[<=]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR))
+          AND (END_DATE IS NULL OR END_DATE <![CDATA[>=]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR))
+        </if>
+        <if test="progressStatus == '종료'">
+          AND END_DATE IS NOT NULL
+          AND END_DATE <![CDATA[<]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR)
+        </if>
+    </sql>
+
+    <select id="selectNoticeCount" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM NOTICE
+        <include refid="publicNoticeWhere"/>
+    </select>
+
+    <select id="selectNoticeList" parameterType="map" resultMap="NoticeResult">
+        SELECT
+            NOTICE_NO,
+            USER_NO,
+            NOTICE_TITLE,
+            NOTICE_CONTENT,
+            NOTICE_MODIFIEDDATE,
+            START_DATE,
+            END_DATE,
+            NOTICE_STATUS,
+            NOTICE_DELETE,
+            TYPE_NAME,
+            CASE
+              WHEN START_DATE IS NOT NULL AND START_DATE <![CDATA[>]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR) THEN '진행전'
+              WHEN END_DATE IS NOT NULL AND END_DATE <![CDATA[<]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR) THEN '종료'
+              ELSE '진행중'
+            END AS PROGRESS_STATUS
+        FROM NOTICE
+        <include refid="publicNoticeWhere"/>
+        ORDER BY NOTICE_MODIFIEDDATE DESC, NOTICE_NO DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <sql id="noticeColumns">
+        NOTICE_NO,
+        USER_NO,
+        NOTICE_TITLE,
+        NOTICE_CONTENT,
+        NOTICE_MODIFIEDDATE,
+        START_DATE,
+        END_DATE,
+        NOTICE_STATUS,
+        NOTICE_DELETE,
+        TYPE_NAME,
+        CASE
+          WHEN START_DATE IS NOT NULL AND START_DATE <![CDATA[>]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR) THEN '진행전'
+          WHEN END_DATE IS NOT NULL AND END_DATE <![CDATA[<]]> DATE_ADD(UTC_TIMESTAMP(), INTERVAL 9 HOUR) THEN '종료'
+          ELSE '진행중'
+        END AS PROGRESS_STATUS
+    </sql>
+
+    <select id="selectNoticeDetail" parameterType="long" resultMap="NoticeResult">
+        SELECT
+            <include refid="noticeColumns"/>
+        FROM NOTICE
+        WHERE NOTICE_STATUS = 'Y'
+          AND NOTICE_NO = #{noticeNo}
+    </select>
+
+    <select id="selectPreviousNotice" parameterType="com.kh.cookmate.notice.model.dto.NoticeDto$Notice" resultMap="NoticeResult">
+        SELECT
+            <include refid="noticeColumns"/>
+        FROM NOTICE
+        WHERE NOTICE_STATUS = 'Y'
+          AND (
+            NOTICE_MODIFIEDDATE <![CDATA[>]]> #{noticeModifiedDate}
+            OR (
+              NOTICE_MODIFIEDDATE = #{noticeModifiedDate}
+              AND NOTICE_NO <![CDATA[>]]> #{noticeNo}
+            )
+          )
+        ORDER BY NOTICE_MODIFIEDDATE ASC, NOTICE_NO ASC
+        LIMIT 1
+    </select>
+
+    <select id="selectNextNotice" parameterType="com.kh.cookmate.notice.model.dto.NoticeDto$Notice" resultMap="NoticeResult">
+        SELECT
+            <include refid="noticeColumns"/>
+        FROM NOTICE
+        WHERE NOTICE_STATUS = 'Y'
+          AND (
+            NOTICE_MODIFIEDDATE <![CDATA[<]]> #{noticeModifiedDate}
+            OR (
+              NOTICE_MODIFIEDDATE = #{noticeModifiedDate}
+              AND NOTICE_NO <![CDATA[<]]> #{noticeNo}
+            )
+          )
+        ORDER BY NOTICE_MODIFIEDDATE DESC, NOTICE_NO DESC
+        LIMIT 1
+    </select>
+
+</mapper>
