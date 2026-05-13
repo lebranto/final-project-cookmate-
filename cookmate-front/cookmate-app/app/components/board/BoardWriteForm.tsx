@@ -40,6 +40,17 @@ interface BoardWriteFormProps {
   boardNo?: number;
 }
 
+interface FormErrors {
+  cover?: string;
+  boardTitle?: string;
+  typeName?: string;
+  difficult?: string;
+  cookTime?: string;
+  calory?: string;
+  ingredients?: string;
+  cookSteps?: string;
+}
+
 const CATEGORIES = ["한식", "중식", "일식", "양식", "셀러드", "디저트"];
 const DIFFICULTIES = ["쉬움", "보통", "어려움"];
 const COOK_TIMES = ["10분 이하", "10~20분", "20~30분", "30~45분", "45~60분", "1시간 이상"];
@@ -69,6 +80,8 @@ const createStep = (): CookStepForm => ({
   imageFile: null,
   imagePreview: "",
 });
+
+const hasErrors = (errors: FormErrors) => Object.values(errors).some(Boolean);
 
 const toImageUrl = (imageUrl?: string | null) => {
   return imageUrl || "";
@@ -201,6 +214,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
   const [saving, setSaving] = useState(false);
   const [loadingInitialData, setLoadingInitialData] = useState(isEditMode);
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
 
   const youtubeId = useMemo(() => extractYoutubeId(appliedYoutubeUrl), [appliedYoutubeUrl]);
 
@@ -296,6 +310,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
 
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
+    setFieldErrors((errors) => ({ ...errors, cover: undefined }));
   };
 
   const removeCover = () => {
@@ -319,6 +334,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
   };
 
   const updateGroup = (groupId: string, value: string) => {
+    setFieldErrors((errors) => ({ ...errors, ingredients: undefined }));
     setIngredientGroups((groups) =>
       groups.map((group) => (group.id === groupId ? { ...group, setName: value } : group))
     );
@@ -338,6 +354,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
     key: keyof Omit<IngredientRow, "id" | "ingredientNo">,
     value: string
   ) => {
+    setFieldErrors((errors) => ({ ...errors, ingredients: undefined }));
     setIngredientGroups((groups) =>
       groups.map((group) =>
         group.id !== groupId
@@ -398,31 +415,39 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
   };
 
   const validateForm = () => {
-    if (!coverFile && !coverPreview) return "대표 사진을 등록해 주세요.";
-    if (!boardTitle.trim()) return "레시피 이름을 입력해 주세요.";
-    if (!typeName) return "요리 종류를 선택해 주세요.";
-    if (!difficult) return "난이도를 선택해 주세요.";
-    if (!cookTime) return "요리 시간을 선택해 주세요.";
-    if (!calory) return "칼로리 구간을 선택해 주세요.";
+    const errors: FormErrors = {};
+
+    if (!coverFile && !coverPreview) errors.cover = "대표 사진을 등록해 주세요.";
+    if (!boardTitle.trim()) errors.boardTitle = "레시피 이름을 입력해 주세요.";
+    if (!typeName) errors.typeName = "요리 종류를 선택해 주세요.";
+    if (!difficult) errors.difficult = "난이도를 선택해 주세요.";
+    if (!cookTime) errors.cookTime = "요리 시간을 선택해 주세요.";
+    if (!calory) errors.calory = "칼로리 구간을 선택해 주세요.";
     if (
       !ingredientGroups.some((group) =>
         group.ingredients.some((ingredient) => ingredient.ingredientName.trim())
       )
     ) {
-      return "재료를 하나 이상 입력해 주세요.";
+      errors.ingredients = "재료를 하나 이상 입력해 주세요.";
     }
-    if (!cookSteps.some((step) => step.cookContent.trim())) return "요리 순서를 하나 이상 입력해 주세요.";
-    return "";
+    if (!cookSteps.some((step) => step.cookContent.trim())) {
+      errors.cookSteps = "요리 순서를 하나 이상 입력해 주세요.";
+    }
+
+    return errors;
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const validationMessage = validateForm();
-    if (validationMessage) {
-      setMessage(validationMessage);
+    const validationErrors = validateForm();
+    if (hasErrors(validationErrors)) {
+      setFieldErrors(validationErrors);
+      setMessage("필수 입력 항목을 확인해 주세요.");
       return;
     }
+
+    setFieldErrors({});
 
     if (!isLoggedIn || !userInfo) {
       setMessage(`로그인 후 레시피를 ${isEditMode ? "수정" : "작성"}할 수 있습니다.`);
@@ -498,28 +523,34 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
         </div>
 
         {coverPreview ? (
-          <div className={styles.coverPreviewWrap}>
+          <div className={`${styles.coverPreviewWrap} ${fieldErrors.cover ? styles.invalidBox : ""}`}>
             <img src={coverPreview} alt="대표 사진 미리보기" className={styles.coverPreview} />
             <button type="button" className={styles.removeFloating} onClick={removeCover}>
               ×
             </button>
           </div>
         ) : (
-          <label className={styles.coverUpload}>
+          <label className={`${styles.coverUpload} ${fieldErrors.cover ? styles.invalidBox : ""}`}>
             <input type="file" accept="image/*" onChange={handleCoverChange} />
             <span className={styles.uploadIcon}>+</span>
             <span>클릭하여 대표 사진 업로드</span>
           </label>
         )}
+        {fieldErrors.cover && <p className={styles.fieldError}>{fieldErrors.cover}</p>}
 
         <div className={styles.fieldStack}>
           <label className={styles.field}>
             <span>레시피 이름</span>
             <input
+              className={fieldErrors.boardTitle ? styles.invalidInput : ""}
               value={boardTitle}
-              onChange={(event) => setBoardTitle(event.target.value)}
+              onChange={(event) => {
+                setBoardTitle(event.target.value);
+                setFieldErrors((errors) => ({ ...errors, boardTitle: undefined }));
+              }}
               placeholder="예: 무조건 맛있는 김치찌개"
             />
+            {fieldErrors.boardTitle && <small className={styles.fieldError}>{fieldErrors.boardTitle}</small>}
           </label>
 
           <label className={styles.field}>
@@ -573,7 +604,14 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
         <div className={styles.metaGrid}>
           <label className={styles.field}>
             <span>요리 종류</span>
-            <select value={typeName} onChange={(event) => setTypeName(event.target.value)}>
+            <select
+              className={fieldErrors.typeName ? styles.invalidInput : ""}
+              value={typeName}
+              onChange={(event) => {
+                setTypeName(event.target.value);
+                setFieldErrors((errors) => ({ ...errors, typeName: undefined }));
+              }}
+            >
               <option value="">선택</option>
               {CATEGORIES.map((category) => (
                 <option key={category} value={category}>
@@ -581,11 +619,19 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
                 </option>
               ))}
             </select>
+            {fieldErrors.typeName && <small className={styles.fieldError}>{fieldErrors.typeName}</small>}
           </label>
 
           <label className={styles.field}>
             <span>난이도</span>
-            <select value={difficult} onChange={(event) => setDifficult(event.target.value)}>
+            <select
+              className={fieldErrors.difficult ? styles.invalidInput : ""}
+              value={difficult}
+              onChange={(event) => {
+                setDifficult(event.target.value);
+                setFieldErrors((errors) => ({ ...errors, difficult: undefined }));
+              }}
+            >
               <option value="">선택</option>
               {DIFFICULTIES.map((item) => (
                 <option key={item} value={item}>
@@ -593,11 +639,19 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
                 </option>
               ))}
             </select>
+            {fieldErrors.difficult && <small className={styles.fieldError}>{fieldErrors.difficult}</small>}
           </label>
 
           <label className={styles.field}>
             <span>요리 시간</span>
-            <select value={cookTime} onChange={(event) => setCookTime(event.target.value)}>
+            <select
+              className={fieldErrors.cookTime ? styles.invalidInput : ""}
+              value={cookTime}
+              onChange={(event) => {
+                setCookTime(event.target.value);
+                setFieldErrors((errors) => ({ ...errors, cookTime: undefined }));
+              }}
+            >
               <option value="">선택</option>
               {COOK_TIMES.map((item) => (
                 <option key={item} value={item}>
@@ -605,22 +659,27 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
                 </option>
               ))}
             </select>
+            {fieldErrors.cookTime && <small className={styles.fieldError}>{fieldErrors.cookTime}</small>}
           </label>
         </div>
 
-        <div className={styles.caloryGrid}>
+        <div className={`${styles.caloryGrid} ${fieldErrors.calory ? styles.invalidChoiceGroup : ""}`}>
           {(["저칼로리", "보통", "고칼로리"] as Calory[]).map((item) => (
             <label key={item} className={styles.caloryOption}>
               <input
                 type="radio"
                 name="calory"
                 checked={calory === item}
-                onChange={() => setCalory(item)}
+                onChange={() => {
+                  setCalory(item);
+                  setFieldErrors((errors) => ({ ...errors, calory: undefined }));
+                }}
               />
               <span>{item}</span>
             </label>
           ))}
         </div>
+        {fieldErrors.calory && <p className={styles.fieldError}>{fieldErrors.calory}</p>}
       </section>
 
       <section className={styles.card}>
@@ -629,7 +688,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
           <span className={styles.required}>필수</span>
         </div>
 
-        <div className={styles.groupList}>
+        <div className={`${styles.groupList} ${fieldErrors.ingredients ? styles.invalidSection : ""}`}>
           {ingredientGroups.map((group) => (
             <div className={styles.ingredientGroup} key={group.id}>
               <div className={styles.groupHeader}>
@@ -689,6 +748,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
         <button type="button" className={styles.addButton} onClick={addGroup}>
           + 재료 묶음 추가
         </button>
+        {fieldErrors.ingredients && <p className={styles.fieldError}>{fieldErrors.ingredients}</p>}
       </section>
 
       <section className={styles.card}>
@@ -697,7 +757,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
           <span className={styles.required}>필수</span>
         </div>
 
-        <div className={styles.stepList}>
+        <div className={`${styles.stepList} ${fieldErrors.cookSteps ? styles.invalidSection : ""}`}>
           {cookSteps.map((step, index) => (
             <div className={styles.stepCard} key={step.id}>
               <div className={styles.stepHeader}>
@@ -716,13 +776,17 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
 
               <div className={styles.stepBody}>
                 <textarea
+                  className={fieldErrors.cookSteps ? styles.invalidInput : ""}
                   value={step.cookContent}
                   onChange={(event) =>
-                    setCookSteps((steps) =>
-                      steps.map((item) =>
-                        item.id === step.id ? { ...item, cookContent: event.target.value } : item
-                      )
-                    )
+                    {
+                      setCookSteps((steps) =>
+                        steps.map((item) =>
+                          item.id === step.id ? { ...item, cookContent: event.target.value } : item
+                        )
+                      );
+                      setFieldErrors((errors) => ({ ...errors, cookSteps: undefined }));
+                    }
                   }
                   rows={3}
                   placeholder="재료 손질부터 조리 과정까지 순서대로 적어주세요."
@@ -753,6 +817,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
         <button type="button" className={styles.addButton} onClick={() => setCookSteps((steps) => [...steps, createStep()])}>
           + 요리 순서 추가
         </button>
+        {fieldErrors.cookSteps && <p className={styles.fieldError}>{fieldErrors.cookSteps}</p>}
       </section>
 
       <section className={styles.card}>
