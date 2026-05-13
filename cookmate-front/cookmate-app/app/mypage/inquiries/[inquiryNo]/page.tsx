@@ -5,56 +5,82 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/axios';
 import styles from './view.module.css';
+import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 
-// 백엔드 InquiryDto 구조와 일치하는 인터페이스
 interface InquiryDetail {
   inquiryNo: number;
   userNo: number;
   title: string;
   content: string;
   createDate: string;
-  typeName: string; // '계정', '레시피', '기타'
-  status: string; // 'Y' (답변완료), 'N' (답변대기)
-  answer?: string; // 관리자 답변 (null 가능)
-  answerDate?: string; // 답변일 (null 가능)
+  typeName: string; 
+  status: string; 
+  answer?: string; 
+  answerDate?: string; 
 }
 
 export default function InquiryDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const inquiryNo = params.inquiryNo;
+  const inquiryNo = params.id || params.inquiryNo;
+
+  // 🌟 [핵심] 하이드레이션 에러 방지용 상태
+  const [isMounted, setIsMounted] = useState(false);
 
   const [inquiry, setInquiry] = useState<InquiryDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 컴포넌트 마운트 시 문의 상세 데이터 호출
+  // 🌟 훅을 사용하여 로그인 유저 정보 가져오기
+  const { userInfo, isLoggedIn } = useUserInfoActions();
+  const loginUserNo = userInfo?.userNo;
+
+  // 1. 마운트 상태 체크
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // 2. 데이터 호출 및 권한 검사
+  useEffect(() => {
+    // 마운트 전이거나 로그인 정보가 없으면 실행 안 함
+    if (!isMounted || !loginUserNo) {
+      if (isMounted && !loginUserNo) setLoading(false);
+      return;
+    }
+
     const fetchInquiryDetail = async () => {
       setLoading(true);
       try {
         const response = await api.get(`/users/inquiries/${inquiryNo}`);
         if (response.status === 200) {
-          setInquiry(response.data);
+          const data = response.data;
+
+          // 🚨 [보안] 작성자와 로그인 유저가 다르면 목록으로 튕겨냄
+          if (data.userNo !== loginUserNo) {
+            alert("본인의 문의 내역만 확인할 수 있습니다.");
+            router.push('/mypage/inquiries');
+            return;
+          }
+
+          setInquiry(data);
         }
       } catch (error) {
         console.error("문의 상세 불러오기 실패:", error);
         alert("문의 내역을 불러오는데 실패했습니다.");
-        router.push('/mypage/inquiries'); // 에러 시 목록으로 돌려보냄
+        router.push('/mypage/inquiries');
       } finally {
         setLoading(false);
       }
     };
 
-    if (inquiryNo) {
-      fetchInquiryDetail();
-    }
-  }, [inquiryNo, router]);
+    fetchInquiryDetail();
+  }, [inquiryNo, loginUserNo, isMounted, router]);
 
-  // 삭제 처리 핸들러
   const handleDelete = async () => {
     if (confirm('문의를 삭제하시겠습니까?\n삭제된 문의는 복구할 수 없습니다.')) {
       try {
-        const res = await api.delete(`/users/inquiries/${inquiryNo}`);
+        const res = await api.delete(`/users/inquiries/${inquiryNo}`, {
+          params: { userNo: loginUserNo } 
+        });
         if (res.status === 200) {
           alert('삭제되었습니다.');
           router.push('/mypage/inquiries');
@@ -66,8 +92,27 @@ export default function InquiryDetailPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: '100px', textAlign: 'center' }}>데이터를 불러오는 중입니다...</div>;
-  if (!inquiry) return <div style={{ padding: '100px', textAlign: 'center' }}>문의 내역을 찾을 수 없습니다.</div>;
+  // ==========================================
+  // 🌟 조건부 렌더링 가드 (Hydration Fix 순서)
+  // ==========================================
+
+  // 1. 서버/클라이언트 불일치 방지 (마운트 전 null 반환)
+  if (!isMounted) return null;
+
+  // 2. 로그인 여부 체크
+  if (!isLoggedIn || !loginUserNo) {
+    return <div style={{ padding: '100px', textAlign: 'center' }}>로그인이 필요한 서비스입니다.</div>;
+  }
+
+  // 3. 데이터 로딩 중
+  if (loading) {
+    return <div style={{ padding: '100px', textAlign: 'center' }}>데이터를 불러오는 중입니다...</div>;
+  }
+
+  // 4. 데이터 없음
+  if (!inquiry) {
+    return <div style={{ padding: '100px', textAlign: 'center' }}>문의 내역을 찾을 수 없습니다.</div>;
+  }
 
   const isAnswered = inquiry.status === 'Y';
 
@@ -78,7 +123,6 @@ export default function InquiryDetailPage() {
       </div>
 
       <div className={styles.card}>
-        {/* 헤더 섹션 */}
         <div className={styles.inquiryHeader}>
           <div className={styles.inquiryMeta}>
             <span className={`${styles.badge} ${inquiry.typeName === '계정' ? styles.badgeAccount : styles.badgeRecipe}`}>
@@ -87,17 +131,15 @@ export default function InquiryDetailPage() {
             <span className={`${styles.badge} ${isAnswered ? styles.badgeDone : styles.badgePending}`}>
               {isAnswered ? '답변 완료' : '답변 대기'}
             </span>
-            <span className={styles.inquiryDate}>{inquiry.createDate.split('T')[0]}</span>
+            <span className={styles.inquiryDate}>{inquiry.createDate?.split('T')[0]}</span>
           </div>
           <h1 className={styles.inquiryTitle}>{inquiry.title}</h1>
         </div>
 
-        {/* 질문 본문 */}
         <div className={styles.inquiryBody}>
           <div className={styles.inquiryContent}>{inquiry.content}</div>
         </div>
 
-        {/* 답변 섹션 */}
         <div className={styles.answerSection}>
           <div className={styles.answerLabel}>
             <span style={{ fontSize: '16px' }}>🛡️</span> 관리자 답변
@@ -114,12 +156,10 @@ export default function InquiryDetailPage() {
           )}
         </div>
 
-        {/* 푸터 액션 버튼 */}
         <div className={styles.actionFooter}>
           <Link href="/mypage/inquiries" className={`${styles.btn} ${styles.btnBack}`}>
             ← 목록으로
           </Link>
-          {/* 답변이 완료된 문의는 수정할 수 없도록 조건부 렌더링 */}
           {!isAnswered && (
             <button className={`${styles.btn} ${styles.btnEdit}`} onClick={() => router.push(`/mypage/inquiries/write?edit=${inquiry.inquiryNo}`)}>
               수정

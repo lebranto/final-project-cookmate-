@@ -2,24 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link'; // 🌟 이동을 위한 Link 컴포넌트 추가
 import api from '@/lib/axios';
 import styles from './detail.module.css';
+import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 
-// 1. 셰프 DTO 인터페이스 (가입일 추가)
 interface ChefDetail {
   userNo: number;
   userEmail: string;
   nickname: string;
   introduce: string;
   profileImageUrl?: string;
-  enrollDate: string; // 🌟 추가된 가입일
+  enrollDate: string; 
   recipeCount: number;
   followerCount: number;
   followingCount: number;
   following: boolean;
 }
 
-// 2. 댓글 인터페이스 (매퍼 반환값과 일치)
 interface RecipeComment {
   commentNo: number;
   commentContent: string;
@@ -30,7 +30,6 @@ interface RecipeComment {
   commenterProfileUrl?: string;
 }
 
-// 3. 레시피 인터페이스 (백엔드 RecipeDto 구조와 매칭)
 interface Recipe {
   boardNo: number;
   title: string;
@@ -39,31 +38,44 @@ interface Recipe {
   likesCount: number;
   thumbClass: string;
   boardPostdate: string;
+  imageUrl?: string; // 🌟 이미지 URL 필드 추가
+}
+
+// 🌟 공통 이미지 URL 처리 함수
+function resolveRecipeImageUrl(imageUrl?: string | null) {
+  return imageUrl || "";
 }
 
 export default function ChefDetailPage() {
   const params = useParams();
   const chefNo = params.chefNo;
   
+  // 🌟 하이드레이션 방지용 상태 추가
+  const [isMounted, setIsMounted] = useState(false);
+
   const [chef, setChef] = useState<ChefDetail | null>(null);
   const [comments, setComments] = useState<RecipeComment[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [activeTab, setActiveTab] = useState('recipe'); 
   const [loading, setLoading] = useState(true);
 
-    //
-  const loginUserNo = 1; // 임시 로그인 유저 번호
-  //
+  const { userInfo, isLoggedIn } = useUserInfoActions();
+  const loginUserNo = userInfo?.userNo;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   
   useEffect(() => {
+    if (!isMounted) return;
+
     const fetchChefData = async () => {
       setLoading(true);
       try {
-        // 🌟 셰프 정보와 댓글 목록을 Promise.all로 동시에 가져옵니다.
         const [chefRes, commentRes, recipeRes] = await Promise.all([
-          api.get(`/users/chef/${chefNo}`, { params: { loginUserNo: loginUserNo } }),
+          api.get(`/users/chef/${chefNo}`, { params: { loginUserNo: loginUserNo || "" } }),
           api.get(`/users/chef/${chefNo}/recipe-comments`),
-          api.get('/users/recipes', { params: { userNo: chefNo, category: '전체' } }) // 🌟 레시피 호출
+          api.get('/users/recipes', { params: { userNo: chefNo, category: '전체' } }) 
         ]);
         
         if (chefRes.status === 200) setChef(chefRes.data);
@@ -76,10 +88,14 @@ export default function ChefDetailPage() {
       }
     };
     fetchChefData();
-  }, [chefNo]);
+  }, [chefNo, loginUserNo, isMounted]);
 
-  // 팔로우 토글 핸들러
   const handleFollow = async () => {
+    if (!isLoggedIn || !loginUserNo) {
+      alert("로그인이 필요한 기능입니다.");
+      return;
+    }
+
     if (!chef) return;
     try {
       const res = await api.post('/users/follow', null, {
@@ -97,6 +113,7 @@ export default function ChefDetailPage() {
     }
   };
 
+  if (!isMounted) return null;
   if (loading) return <div style={{padding: '100px', textAlign: 'center'}}>셰프 정보를 불러오는 중...</div>;
   if (!chef) return <div style={{padding: '100px', textAlign: 'center'}}>존재하지 않는 셰프입니다.</div>;
 
@@ -105,23 +122,31 @@ export default function ChefDetailPage() {
       {/* 1. 프로필 상단 영역 */}
       <div className={styles.profileCard}>
         <div className={styles.avatar}>
-          {chef.profileImageUrl ? <img src={chef.profileImageUrl} alt="프로필" style={{width:'100%', height:'100%', borderRadius:'50%'}}/> : '🧑‍🍳'}
+          {/* 🌟 1. 사람 이모지 제거 & 프로필 없으면 닉네임 첫 글자 렌더링 */}
+          {chef.profileImageUrl ? (
+            <img src={chef.profileImageUrl} alt="프로필" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit: 'cover'}}/>
+          ) : (
+            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#666' }}>
+              {chef.nickname.charAt(0)}
+            </div>
+          )}
         </div>
         <div className={styles.profileInfo}>
           <div className={styles.nameRow}>
             <div className={styles.nameWrap}>
               <h1 className={styles.chefName}>{chef.nickname}</h1>
-              {/* 🌟 닉네임 아래로 가입일 출력 */}
               <span className={styles.chefMeta}>
                 @{chef.userEmail.split('@')[0]} · {chef.enrollDate} 가입
               </span>
             </div>
-            <button 
-              className={`${styles.btnFollow} ${chef.following ? styles.following : ''}`}
-              onClick={handleFollow}
-            >
-              {chef.following ? '✓ 팔로잉' : '+ 팔로우'}
-            </button>
+            {loginUserNo !== chef.userNo && (
+              <button 
+                className={`${styles.btnFollow} ${chef.following ? styles.following : ''}`}
+                onClick={handleFollow}
+              >
+                {chef.following ? '팔로잉' : '팔로우'}
+              </button>
+            )}
           </div>
           
           <div className={styles.bio}>
@@ -160,27 +185,41 @@ export default function ChefDetailPage() {
         <div className={styles.recipeGrid}>
           {recipes.length > 0 ? (
             recipes.map(recipe => (
-              <div key={recipe.boardNo} className={styles.recipeCard}>
-                {/* 썸네일 영역 (CSS 클래스명과 백엔드 데이터 연결) */}
-                <div className={`${styles.recipeThumb} ${styles[recipe.thumbClass] || styles.bgGreen}`}>
-                  {recipe.category === '한식' ? '🍲' : 
-                   recipe.category === '양식' ? '🍝' : 
-                   recipe.category === '일식' ? '🍣' : 
-                   recipe.category === '분식' ? '떡' : '🍳'}
-                </div>
-                
-                {/* 레시피 정보 영역 */}
-                <div className={styles.recipeInfo}>
-                  <div className={styles.recipeMeta}>
-                    <span>{recipe.boardPostdate.split('T')[0]}</span>
+              /* 🌟 2. 클릭 시 레시피 상세 페이지 이동 처리 */
+              <Link href={`/boards/${recipe.boardNo}`} key={recipe.boardNo} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className={styles.recipeCard}>
+                  
+                  {/* 🌟 3. 음식 이모지 제거 & 실제 이미지 or CookMate 바탕 적용 */}
+                  <div className={styles.recipeThumb} style={{ overflow: 'hidden' }}>
+                    {recipe.imageUrl ? (
+                      <img 
+                        src={resolveRecipeImageUrl(recipe.imageUrl)} 
+                        alt={recipe.title}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '100%', height: '100%', backgroundColor: '#c4dba4', color: '#1e381b',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: '900', fontSize: '1.2rem', letterSpacing: '1px'
+                      }}>
+                        CookMate
+                      </div>
+                    )}
                   </div>
-                  <div className={styles.recipeTitle}>{recipe.title}</div>
-                  <div className={styles.recipeFooter}>
-                    <span className={styles.recipeTag}>{recipe.category}</span>
-                    <span className={styles.recipeLikes}>❤️ {recipe.likesCount}</span>
+                  
+                  <div className={styles.recipeInfo}>
+                    <div className={styles.recipeMeta}>
+                      <span>{recipe.boardPostdate.split('T')[0]}</span>
+                    </div>
+                    <div className={styles.recipeTitle}>{recipe.title}</div>
+                    <div className={styles.recipeFooter}>
+                      <span className={styles.recipeTag}>{recipe.category}</span>
+                      <span className={styles.recipeLikes}>❤️ {recipe.likesCount}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))
           ) : (
             <div style={{gridColumn: '1/-1', padding: '40px', textAlign: 'center', color: '#888'}}>
@@ -190,7 +229,7 @@ export default function ChefDetailPage() {
         </div>
       )}
 
-      {/* 🌟 4. 댓글 목록 렌더링 영역 */}
+      {/* 4. 댓글 목록 렌더링 영역 */}
       {activeTab === 'comment' && (
         <div className={styles.commentList}>
           {comments.length > 0 ? (
@@ -198,7 +237,14 @@ export default function ChefDetailPage() {
               <div key={c.commentNo} className={styles.commentItem}>
                 <div className={styles.commentHeader}>
                   <div className={styles.commentAvatar}>
-                    {c.commenterProfileUrl ? <img src={c.commenterProfileUrl} alt="프로필"/> : '👤'}
+                    {/* 🌟 4. 댓글 프로필도 이모지 제거 & 닉네임 첫 글자 렌더링 */}
+                    {c.commenterProfileUrl ? (
+                      <img src={c.commenterProfileUrl} alt="프로필" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit: 'cover'}}/>
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#666' }}>
+                        {c.commenterNickname.charAt(0)}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <span className={styles.commenter}>{c.commenterNickname}</span>
@@ -206,8 +252,13 @@ export default function ChefDetailPage() {
                   </div>
                 </div>
                 <div className={styles.commentContent}>{c.commentContent}</div>
+                
+                {/* 🌟 5. 댓글의 원문(레시피) 클릭 시 바로가기 추가 */}
                 <div className={styles.commentTarget}>
-                  📌 원문: <strong>{c.boardTitle}</strong>
+                  📌 원문: 
+                  <Link href={`/boards/${c.boardNo}`} style={{ marginLeft: '4px', color: '#4a7c59', textDecoration: 'none' }}>
+                    <strong>{c.boardTitle}</strong>
+                  </Link>
                 </div>
               </div>
             ))

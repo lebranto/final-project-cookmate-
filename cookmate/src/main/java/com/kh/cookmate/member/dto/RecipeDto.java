@@ -15,5 +15,6 @@ public class RecipeDto {
     private char open;        
     private int likesCount;   
     private String authorNickname;
+    private String imageUrl;
     private String boardPostdate; 
 }
