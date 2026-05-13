@@ -89,7 +89,7 @@ export default function ShopListPage() {
             key={item.shoppingNo}
             item={item}
             toneClass={cardClasses[index % cardClasses.length]}
-            onOpen={() => alert("장보기 상세 페이지는 다음 단계에서 연결합니다.")}
+            onOpen={() => router.push(`/shop/${item.shoppingNo}`)}
             onDelete={() => handleDelete(item.shoppingNo)}
           />
         ))}

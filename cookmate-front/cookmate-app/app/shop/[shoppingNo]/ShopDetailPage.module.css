@@ -1,0 +1,433 @@
+.page {
+  min-height: 100vh;
+  padding: 28px clamp(18px, 6vw, 104px) 80px;
+  background: #fdfaf4;
+  color: #1a1208;
+}
+
+.stateBox {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fdfaf4;
+  color: #a89880;
+  font-size: 14px;
+}
+
+.breadcrumb {
+  max-width: 1152px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto 28px;
+  color: #a89880;
+  font-size: 12px;
+}
+
+.breadcrumb a {
+  color: #3d6b35;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.breadcrumb strong {
+  color: #1a1208;
+}
+
+.headerCard {
+  position: relative;
+  max-width: 1152px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  overflow: hidden;
+  margin: 0 auto 28px;
+  padding: 28px 36px;
+  border-radius: 12px;
+  background: #1e3a1e;
+}
+
+.headerCard::after {
+  content: "CookMate";
+  position: absolute;
+  right: 34px;
+  top: 50%;
+  color: rgba(255, 255, 255, 0.06);
+  font-size: 48px;
+  font-weight: 900;
+  transform: translateY(-50%);
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 20px;
+  z-index: 1;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.headerInfo {
+  flex: 1;
+  min-width: 0;
+  z-index: 1;
+}
+
+.headerLabel {
+  margin-bottom: 5px;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.headerInfo h1 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 800;
+}
+
+.headerMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 13px;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  z-index: 1;
+}
+
+.checkAllButton,
+.clearAllButton {
+  min-height: 40px;
+  border: 0;
+  border-radius: 50px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 20px;
+}
+
+.checkAllButton {
+  background: #fff;
+  color: #1e3a1e;
+}
+
+.clearAllButton {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.checkAllButton:disabled,
+.clearAllButton:disabled,
+.checkItem:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.progressCard {
+  max-width: 1152px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin: 0 auto 24px;
+  padding: 22px 28px;
+  border: 1px solid #e8ddd0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.progressFraction {
+  min-width: 84px;
+  color: #1e3a1e;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.progressFraction span {
+  color: #a89880;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.progressArea {
+  flex: 1;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  color: #a89880;
+  font-size: 12px;
+}
+
+.progressLabel strong {
+  color: #3d6b35;
+}
+
+.progressBarBg {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #e8ddd0;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #7bae6e, #1e3a1e);
+  transition: width 0.2s ease;
+}
+
+.progressState {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 10px;
+  color: #a89880;
+  font-size: 12px;
+}
+
+.progressState span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.doneDot,
+.ownedDot,
+.needDot {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border-radius: 3px;
+}
+
+.doneDot {
+  background: #3d6b35;
+}
+
+.ownedDot {
+  background: #e8ddd0;
+}
+
+.needDot {
+  border: 1.5px solid #e8ddd0;
+}
+
+.guideBanner {
+  max-width: 1152px;
+  margin: 0 auto 28px;
+  padding: 12px 18px;
+  border-left: 3px solid #3d6b35;
+  border-radius: 0 8px 8px 0;
+  background: #f2f8ee;
+  color: #6b5e4e;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.ingredientColumns {
+  max-width: 1152px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 0 auto;
+}
+
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid #1e3a1e;
+  color: #1a1208;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.groupTitle span {
+  color: #a89880;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.checkItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+  padding: 14px 16px;
+  border: 1.5px solid transparent;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.checkItem:hover:not(:disabled) {
+  border-color: #7bae6e;
+}
+
+.done {
+  border-color: #e8f2e3;
+  background: #f2f8ee;
+}
+
+.owned {
+  background: #fdfaf4;
+  opacity: 0.6;
+}
+
+.checkBox {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid #e8ddd0;
+  border-radius: 7px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.done .checkBox {
+  border-color: #3d6b35;
+  background: #3d6b35;
+}
+
+.owned .checkBox {
+  border-color: #e8ddd0;
+  background: #e8ddd0;
+  color: #a89880;
+  font-size: 11px;
+}
+
+.checkName {
+  flex: 1;
+  min-width: 0;
+  color: #1a1208;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.done .checkName,
+.owned .checkName {
+  color: #a89880;
+  text-decoration: line-through;
+}
+
+.checkAmount {
+  flex-shrink: 0;
+  border: 1px solid #e8ddd0;
+  border-radius: 20px;
+  background: #fdfaf4;
+  color: #a89880;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.done .checkAmount {
+  border-color: #e8f2e3;
+  background: #e8f2e3;
+  color: #3d6b35;
+}
+
+.ownedButton {
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #e8ddd0;
+  color: #a89880;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.ownedButton:hover,
+.owned .ownedButton {
+  background: #fdf0e6;
+  color: #e07a3a;
+}
+
+.bottomLinks {
+  max-width: 1152px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 36px auto 0;
+}
+
+.bottomLinks a {
+  color: #3d6b35;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.bottomLinks a:hover {
+  opacity: 0.7;
+}
+
+@media (max-width: 860px) {
+  .headerCard,
+  .progressCard {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ingredientColumns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 20px 16px 72px;
+  }
+
+  .headerCard,
+  .progressCard {
+    padding: 20px;
+  }
+
+  .checkItem {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .checkName {
+    flex-basis: calc(100% - 44px);
+  }
+}

@@ -42,7 +42,7 @@ export async function uploadImageWithPresignedUrl(file: File, dir: string) {
     throw new Error("이미지 업로드에 실패했습니다.");
   }
 
-  return presigned.fileUrl;
+  return normalizeImageUrl(presigned.fileUrl);
 }
 
 async function readErrorMessage(response: Response) {
@@ -56,4 +56,10 @@ async function readErrorMessage(response: Response) {
   }
 
   return "";
+}
+
+function normalizeImageUrl(fileUrl: string) {
+  return fileUrl
+    .replace(/\s+AWS_REGION_NAME=[^/]+(?=\/)/, "")
+    .replace(/\s+/g, "");
 }

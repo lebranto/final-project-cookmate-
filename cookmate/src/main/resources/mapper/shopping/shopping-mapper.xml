@@ -52,7 +52,7 @@
         )
         SELECT
             #{_parameter},
-            '재료',
+            COALESCE(NULLIF(s.SET_NAME, ''), '재료'),
             i.INGREDIENT_NAME,
             i.QUANTITY,
             i.UNIT,
@@ -102,4 +102,60 @@
               AND USER_NO = #{userNo}
         )
     </delete>
+
+    <select id="selectShoppingDetail"
+            parameterType="map"
+            resultType="com.kh.cookmate.shopping.dto.ShoppingDto$Detail">
+        SELECT
+            sl.SHOPPING_NO,
+            sl.USER_NO,
+            sl.BOARD_NO,
+            sl.SHOPPING_TITLE,
+            sl.IMAGE_URL,
+            DATE_FORMAT(sl.SHOPPING_DATE, '%Y.%m.%d') AS SHOPPING_DATE,
+            t.COOK_TIME,
+            t.DIFFICULT,
+            t.CALORY
+        FROM SHOPPING_LIST sl
+        JOIN BOARD b ON b.BOARD_NO = sl.BOARD_NO
+        LEFT JOIN TAG t ON t.TYPE_NO = b.TYPE_NO
+        WHERE sl.SHOPPING_NO = #{shoppingNo}
+          AND sl.USER_NO = #{userNo}
+    </select>
+
+    <select id="selectShoppingItems"
+            parameterType="map"
+            resultType="com.kh.cookmate.shopping.dto.ShoppingDto$DetailItem">
+        SELECT
+            si.ITEM_NO,
+            si.SHOPPING_NO,
+            si.SET_NAME,
+            si.INGREDIENT_NAME,
+            si.QUANTITY,
+            si.UNIT,
+            si.ITEM_STATUS,
+            si.ITEM_ORDER
+        FROM SHOPPING_ITEM si
+        JOIN SHOPPING_LIST sl ON sl.SHOPPING_NO = si.SHOPPING_NO
+        WHERE si.SHOPPING_NO = #{shoppingNo}
+          AND sl.USER_NO = #{userNo}
+        ORDER BY si.SET_NAME, si.ITEM_ORDER, si.ITEM_NO
+    </select>
+
+    <update id="updateShoppingItemStatus" parameterType="map">
+        UPDATE SHOPPING_ITEM si
+        JOIN SHOPPING_LIST sl ON sl.SHOPPING_NO = si.SHOPPING_NO
+        SET si.ITEM_STATUS = #{itemStatus}
+        WHERE si.SHOPPING_NO = #{shoppingNo}
+          AND si.ITEM_NO = #{itemNo}
+          AND sl.USER_NO = #{userNo}
+    </update>
+
+    <update id="updateAllShoppingItemStatus" parameterType="map">
+        UPDATE SHOPPING_ITEM si
+        JOIN SHOPPING_LIST sl ON sl.SHOPPING_NO = si.SHOPPING_NO
+        SET si.ITEM_STATUS = #{itemStatus}
+        WHERE si.SHOPPING_NO = #{shoppingNo}
+          AND sl.USER_NO = #{userNo}
+    </update>
 </mapper>

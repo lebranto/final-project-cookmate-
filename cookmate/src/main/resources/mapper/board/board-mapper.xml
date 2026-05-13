@@ -232,13 +232,14 @@
     <!-- 재료 묶음 등록 -->
     <insert id="insertIngredientSet" parameterType="IngredientSet"
             useGeneratedKeys="true" keyProperty="setNo">
-        INSERT INTO INGREDIENT_SET (BOARD_NO) VALUES (#{boardNo})
+        INSERT INTO INGREDIENT_SET (BOARD_NO, SET_NAME)
+        VALUES (#{boardNo}, COALESCE(NULLIF(#{setName}, ''), '재료'))
     </insert>
 
     <!-- 재료 묶음 상세 조회 (ResultMap용) -->
     <select id="selectIngredientSetDetail" parameterType="int"
             resultMap="ingredientSetDetailMap">
-        SELECT SET_NO FROM INGREDIENT_SET WHERE BOARD_NO = #{boardNo}
+        SELECT SET_NO, SET_NAME FROM INGREDIENT_SET WHERE BOARD_NO = #{boardNo}
     </select>
 
     <!-- 재료 묶음 삭제 -->

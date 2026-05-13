@@ -38,7 +38,7 @@ interface SearchResponse {
 }
 
 const USER_CATEGORIES = ["한식", "중식", "일식", "양식", "샐러드", "디저트"];
-const OFFICIAL_CATEGORIES = ["국·찌개", "반찬", "밥", "면·만두", "구이", "찜·조림", "기타"];
+const OFFICIAL_CATEGORIES = ["국·찌개", "반찬", "밥", "면·만두", "구이", "찜·조림", "후식","기타"];
 const COOK_TIMES = ["15분 이내", "30분 이내", "1시간 이내"];
 const DIFFICULTIES = ["쉬움", "보통", "어려움"];
 const KEYWORDS = ["김치찌개", "된장찌개", "파스타", "샐러드", "계란요리"];
