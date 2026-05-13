@@ -1,0 +1,264 @@
+.container {
+  min-height: 100vh;
+  background: #f5f3ef;
+  padding: 34px 40px;
+}
+
+.content {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.pageTitleBox {
+  margin-bottom: 22px;
+}
+
+.pageTitle {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1d1d1d;
+  margin-bottom: 8px;
+}
+
+.pageDescription {
+  font-size: 15px;
+  color: #7a7a7a;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e7e3dc;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.searchBox {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd8cf;
+  border-radius: 10px;
+  padding: 0 14px;
+  height: 46px;
+  background: #fff;
+}
+
+.searchIcon {
+  margin-right: 8px;
+  font-size: 14px;
+  color: #999;
+}
+
+.searchBox input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  background: transparent;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+}
+
+.filters select {
+  height: 46px;
+  border-radius: 10px;
+  border: 1px solid #ddd8cf;
+  padding: 0 14px;
+  background: #fff;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead tr {
+  background: #f8f6f2;
+}
+
+.table th {
+  text-align: left;
+  padding: 14px 12px;
+  font-size: 13px;
+  color: #7d7d7d;
+  font-weight: 600;
+  border-bottom: 1px solid #ece8e1;
+}
+
+.table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f0ece6;
+  font-size: 14px;
+  color: #333;
+}
+
+.checkboxCol {
+  width: 40px;
+}
+
+.number {
+  color: #74839b;
+}
+
+.recipeTitle {
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.categoryBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef1ea;
+  color: #556b4d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.activeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e7f4e8;
+  color: #4f8a57;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hiddenBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  color: #777;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.empty {
+  text-align: center;
+  color: #8a8a8a;
+  padding: 34px 12px !important;
+}
+
+.reportBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #fdeaea;
+  color: #cf4b4b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reportText {
+  color: #d63f3f;
+  font-weight: 700;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewButton {
+  border: 1px solid #d8d8d8;
+  background: white;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hideButton {
+  border: none;
+  background: #d8870b;
+  color: white;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hideButton:disabled {
+  background: #b8b8b8;
+  cursor: not-allowed;
+}
+
+.restoreButton {
+  border: none;
+  background: #2f6f44;
+  color: white;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.deleteButton {
+  border: none;
+  background: #d64545;
+  color: white;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.footer {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: #7c7c7c;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+}
+
+.activePage {
+  background: #244b2e !important;
+  color: white !important;
+  border-color: #244b2e !important;
+}
