@@ -461,6 +461,48 @@
 		UPDATE COMMENT SET COMMENT_DELETE = 'Y'
 		WHERE COMMENT_NO = #{commentNo}
 	</update>
+
+	<select id="selectCommentUserNo" parameterType="int" resultType="int">
+		SELECT USER_NO
+		FROM COMMENT
+		WHERE COMMENT_NO = #{commentNo}
+		  AND COMMENT_DELETE = 'N'
+	</select>
+
+	<select id="selectCommentBoardNo" parameterType="int" resultType="int">
+		SELECT BOARD_NO
+		FROM COMMENT
+		WHERE COMMENT_NO = #{commentNo}
+		  AND COMMENT_DELETE = 'N'
+	</select>
+
+	<select id="selectCommentReportCount" parameterType="map" resultType="int">
+		SELECT COUNT(*)
+		FROM REPORT
+		WHERE USER_NO = #{userNo}
+		  AND COMMENT_NO = #{commentNo}
+	</select>
+
+	<insert id="insertCommentReport" parameterType="map">
+		INSERT INTO REPORT (
+			USER_NO,
+			REPORTEE_NO,
+			COMMENT_NO,
+			BOARD_NO,
+			REPORT_DATE,
+			REPORT_REASON,
+			REPORT_TYPE
+		)
+		VALUES (
+			#{userNo},
+			#{reporteeNo},
+			#{commentNo},
+			#{boardNo},
+			NOW(),
+			#{reportReason},
+			#{reportType}
+		)
+	</insert>
 	
 	
 	<!-- 공식 레시피 목록 조회 (마이그레이션용) -->

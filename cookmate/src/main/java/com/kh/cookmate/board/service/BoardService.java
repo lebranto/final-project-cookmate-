@@ -9,6 +9,7 @@ import com.kh.cookmate.board.dto.BoardDto.BoardSearchResponse;
 import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
+import com.kh.cookmate.board.dto.ReportDto.CommentReportRequest;
 
 public interface BoardService{
 
@@ -33,6 +34,8 @@ public interface BoardService{
 	List<CommentDetail> getCommentList(int boardNo);
 
 	int deleteComment(int commentNo);
+
+	int reportComment(int commentNo, CommentReportRequest request);
 
 
 }
