@@ -1,0 +1,474 @@
+CookMate 이미지 업로드 구조 전환 정리
+====================================
+
+작성일: 2026-05-13
+
+
+1. 변경 목적
+-----------
+
+기존 구조는 Spring Boot 서버가 이미지를 받아 S3에 업로드하는 방식이었다.
+
+기존 흐름:
+
+React
+ -> Spring Boot
+ -> S3
+ -> DB에 이미지 URL 저장
+
+이 구조에서는 Spring Boot 서버의 .env 파일에 AWS_ACCESS_KEY_ID,
+AWS_SECRET_ACCESS_KEY 같은 AWS 키가 필요했다.
+
+변경 후 구조는 이미지 파일 처리를 Spring Boot에서 분리하고,
+API Gateway + Lambda + S3로 처리한다.
+
+변경 후 흐름:
+
+React
+ -> API Gateway
+ -> Lambda
+ -> S3 presigned URL 발급
+
+React
+ -> 발급받은 uploadUrl로 S3에 직접 PUT 업로드
+
+React
+ -> Spring Boot에 레시피 저장 요청
+ -> Spring Boot는 이미지 URL만 DB에 저장
+
+이제 Spring Boot는 이미지 파일을 직접 받지 않고, AWS 키도 필요 없다.
+
+
+2. AWS 구성 요소
+----------------
+
+사용한 AWS 구성:
+
+1. S3 Bucket
+   - 이름: cookmate-images
+   - 역할: 이미지 파일 저장
+
+2. Lambda
+   - 함수 이름: cookmate-image-presign
+   - 런타임: Python 3.12
+   - 역할: S3 업로드용 presigned URL 발급
+
+3. API Gateway
+   - API 이름: cookmate-image-api
+   - API 유형: HTTP API
+   - 역할: 프론트에서 Lambda를 호출하는 HTTP 엔드포인트 제공
+
+
+3. API Gateway 경로
+-------------------
+
+생성한 경로:
+
+POST /images/presigned-url
+OPTIONS /images/presigned-url
+
+통합 대상:
+
+cookmate-image-presign
+
+스테이지:
+
+$default
+
+자동 배포:
+
+enabled
+
+Invoke URL 예시:
+
+https://4uqbxpxrbk.execute-api.ap-northeast-2.amazonaws.com
+
+실제 호출 URL:
+
+https://4uqbxpxrbk.execute-api.ap-northeast-2.amazonaws.com/images/presigned-url
+
+
+4. API Gateway CORS 설정
+------------------------
+
+API Gateway CORS는 presigned URL을 발급받는 요청에 필요하다.
+
+설정값:
+
+Access-Control-Allow-Origin:
+http://localhost:3000
+
+Access-Control-Allow-Methods:
+POST
+OPTIONS
+
+Access-Control-Allow-Headers:
+Content-Type
+
+Access-Control-Allow-Credentials:
+false
+
+배포 환경에서는 localhost 외에 실제 프론트 도메인을 추가해야 한다.
+
+
+5. S3 CORS 설정
+---------------
+
+S3 CORS는 프론트가 presigned URL로 S3에 직접 PUT 업로드할 때 필요하다.
+
+S3 버킷의 Permissions > CORS에 아래 설정을 추가한다.
+
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["PUT", "GET"],
+    "AllowedOrigins": ["http://localhost:3000"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3000
+  }
+]
+
+배포 환경에서는 실제 프론트 도메인을 AllowedOrigins에 추가해야 한다.
+
+
+6. Lambda 환경 변수
+-------------------
+
+Lambda 함수 cookmate-image-presign에 설정한 환경 변수:
+
+BUCKET_NAME=cookmate-images
+PUBLIC_BASE_URL=https://cookmate-images.s3.ap-northeast-2.amazonaws.com
+AWS_REGION_NAME=ap-northeast-2
+
+PUBLIC_BASE_URL은 프론트와 DB에 저장될 이미지 URL의 base URL이다.
+
+나중에 CloudFront를 붙이면 다음처럼 변경한다.
+
+PUBLIC_BASE_URL=https://xxxxx.cloudfront.net
+
+
+7. Lambda IAM 권한
+------------------
+
+Lambda 실행 역할:
+
+cookmate-image-presign-role-lf5uxq9x
+
+추가한 inline policy 예시:
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCookmateImageUpload",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::cookmate-images/*"
+    }
+  ]
+}
+
+정책 이름 예시:
+
+cookmate-s3-putobject-policy
+
+주의:
+정책 이름에는 한글, 공백, 괄호, 슬래시, 콜론 등을 넣으면 안 된다.
+영문, 숫자, +=,.@_- 만 사용할 수 있다.
+
+
+8. Lambda 역할
+--------------
+
+현재 Lambda는 이미지를 직접 저장하는 함수가 아니다.
+
+현재 Lambda 역할:
+
+1. 프론트에서 dir, contentType, fileName을 받는다.
+2. 파일명을 날짜/시간 + 랜덤 문자열로 새로 만든다.
+3. S3 presigned PUT URL을 생성한다.
+4. uploadUrl, fileKey, fileUrl을 프론트에 반환한다.
+
+예시 응답:
+
+{
+  "uploadUrl": "https://...",
+  "fileKey": "recipes/covers/20260513004803612_6d57b6af0c68.jpg",
+  "fileUrl": "https://cookmate-images.s3.ap-northeast-2.amazonaws.com/recipes/covers/20260513004803612_6d57b6af0c68.jpg"
+}
+
+
+9. presigned URL 방식을 쓰는 이유
+---------------------------------
+
+Lambda가 직접 이미지 파일을 받아서 S3에 넣는 방식도 가능하다.
+
+직접 업로드 방식:
+
+React
+ -> API Gateway
+ -> Lambda
+ -> S3
+
+하지만 이 방식은 이미지 파일이 API Gateway와 Lambda를 모두 지나간다.
+파일 크기가 커질수록 API Gateway payload 제한, Lambda 메모리,
+실행 시간, 비용의 영향을 받기 쉽다.
+
+현재 사용하는 presigned URL 방식:
+
+React
+ -> API Gateway
+ -> Lambda
+ -> presigned URL 발급
+
+React
+ -> S3에 직접 PUT 업로드
+
+이 방식에서는 Lambda가 이미지 파일 자체를 처리하지 않는다.
+Lambda는 작은 JSON 요청만 받고, 짧은 시간 동안만 유효한 업로드 URL을
+발급한다. 실제 파일 업로드는 S3가 직접 받는다.
+
+장점:
+
+1. Lambda가 가벼워진다.
+   이미지 파일을 메모리에 들고 있지 않아도 된다.
+
+2. API Gateway의 파일 크기 제한 영향을 줄일 수 있다.
+   큰 파일이 API Gateway를 통과하지 않는다.
+
+3. 속도와 비용에 유리하다.
+   파일이 중간 서버를 거치지 않고 S3로 바로 올라간다.
+
+4. 보안도 유지된다.
+   presigned URL은 특정 S3 key에 대해서만, 짧은 시간 동안만 유효하다.
+
+5. Spring Boot에 AWS 키가 필요 없다.
+   Spring Boot는 이미지 URL만 DB에 저장한다.
+
+정리:
+
+Lambda = 업로드 허가증 발급
+Frontend = 허가증으로 S3에 직접 업로드
+S3 = 실제 파일 저장
+
+
+10. 이미지 작성/수정 흐름
+-----------------------
+
+작성:
+
+1. 프론트가 API Gateway에 presigned URL 요청
+2. Lambda가 새 파일명과 uploadUrl 발급
+3. 프론트가 uploadUrl로 S3에 PUT 업로드
+4. 프론트가 Spring Boot에 레시피 저장 요청
+5. Spring Boot가 imageUrl, cookImage 등을 DB에 저장
+
+수정:
+
+기존 이미지를 직접 수정하거나 덮어쓰지 않는다.
+
+수정 흐름:
+
+1. 새 이미지 선택
+2. 새 presigned URL 발급
+3. 새 이미지 S3 업로드
+4. Spring Boot에 수정 요청
+5. DB의 이미지 URL을 새 fileUrl로 교체
+
+삭제:
+
+현재는 S3 이미지 삭제 기능을 만들지 않았다.
+
+필요하면 나중에 Lambda에 DELETE /images 같은 경로를 추가해서
+s3.delete_object를 수행하게 만들 수 있다.
+
+
+11. Postman 테스트 순서
+----------------------
+
+1단계: presigned URL 발급
+
+Method:
+POST
+
+URL:
+https://4uqbxpxrbk.execute-api.ap-northeast-2.amazonaws.com/images/presigned-url
+
+Headers:
+Content-Type: application/json
+
+Body:
+
+{
+  "dir": "recipes/covers",
+  "contentType": "image/jpeg",
+  "fileName": "test.jpg"
+}
+
+정상 응답:
+
+{
+  "uploadUrl": "...",
+  "fileKey": "...",
+  "fileUrl": "..."
+}
+
+
+2단계: S3 업로드
+
+Method:
+PUT
+
+URL:
+1단계 응답의 uploadUrl 전체
+
+Headers:
+Content-Type: image/jpeg
+
+Body:
+binary 선택 후 jpg 이미지 파일 첨부
+
+정상 응답:
+200 OK
+
+주의:
+presigned URL은 기본 5분만 유효하다.
+만료되면 Request has expired 오류가 난다.
+그 경우 presigned URL을 새로 발급받아야 한다.
+
+
+12. 발생했던 오류와 원인
+------------------------
+
+1. Request has expired
+
+원인:
+presigned URL 유효시간 300초가 지남.
+
+해결:
+API Gateway에 다시 POST 요청해서 새 uploadUrl 발급.
+
+
+2. region 'ap-northeast-2' is wrong; expecting 'us-east-1'
+
+원인:
+S3 client region 또는 bucket 환경변수 설정이 맞지 않음.
+uploadUrl에 잘못된 bucket 이름이 들어갔음.
+
+해결:
+Lambda 환경변수와 boto3 client region을 ap-northeast-2로 명시.
+
+
+3. not authorized to perform: s3:PutObject
+
+원인:
+Lambda 실행 역할에 S3 PutObject 권한이 없음.
+
+해결:
+Lambda IAM role에 s3:PutObject 권한 추가.
+
+
+4. 브라우저에서 fileUrl 열 때 AccessDenied
+
+원인:
+S3 객체 업로드는 성공했지만, GET 공개 읽기 권한이 없음.
+
+해결 방법:
+개발 중 빠른 확인은 S3 public read 허용.
+서비스 배포 시에는 CloudFront 연결을 추천.
+
+
+13. 프론트 변경 내용
+--------------------
+
+추가한 파일:
+
+cookmate-front/cookmate-app/app/lib/imageUpload.ts
+
+역할:
+
+1. API Gateway에 presigned URL 요청
+2. 받은 uploadUrl로 S3 PUT 업로드
+3. fileUrl 반환
+
+추가한 환경변수 파일:
+
+cookmate-front/cookmate-app/.env.local
+
+내용:
+
+NEXT_PUBLIC_IMAGE_API_URL=https://4uqbxpxrbk.execute-api.ap-northeast-2.amazonaws.com
+
+주의:
+Next.js dev 서버는 .env.local 변경 후 재시작해야 반영된다.
+
+
+14. Spring Boot 정리 내용
+-------------------------
+
+Spring Boot에서는 이미지 업로드를 더 이상 담당하지 않는다.
+
+삭제한 파일:
+
+cookmate/src/main/java/com/kh/cookmate/config/S3Config.java
+cookmate/src/main/java/com/kh/cookmate/common/controller/FileController.java
+cookmate/src/main/java/com/kh/cookmate/common/dto/FileUploadDto.java
+cookmate/src/main/java/com/kh/cookmate/common/service/S3UploadService.java
+
+pom.xml에서 제거한 의존성:
+
+software.amazon.awssdk:s3
+
+application.properties에서 제거한 설정:
+
+aws.s3.bucket
+aws.s3.region
+aws.s3.base-url
+aws.credentials.access-key
+aws.credentials.secret-key
+app.api.base-url
+
+결과:
+
+Spring Boot .env에는 더 이상 AWS_ACCESS_KEY_ID,
+AWS_SECRET_ACCESS_KEY가 필요 없다.
+
+
+15. 현재 남은 주의사항
+---------------------
+
+1. S3 fileUrl을 브라우저에서 직접 보려면 public read 또는 CloudFront 설정이 필요하다.
+
+2. 현재는 DB에 fileUrl 전체를 저장한다.
+   나중에 CloudFront로 전환할 계획이면 fileKey 저장 방식도 고려할 수 있다.
+
+3. 이미지 삭제 기능은 아직 없다.
+   레시피 수정 시 새 이미지를 업로드하고 DB URL만 교체한다.
+
+4. Lambda presigned URL 만료시간은 300초이다.
+   실제 서비스에서는 짧은 만료시간이 안전하다.
+   테스트 중에는 필요하면 늘릴 수 있다.
+
+
+16. 최종 구조 요약
+------------------
+
+이미지 업로드:
+
+React
+ -> API Gateway
+ -> Lambda
+ -> presigned URL 발급
+ -> React가 S3에 직접 PUT 업로드
+
+레시피 저장:
+
+React
+ -> Spring Boot
+ -> MySQL DB에 imageUrl 저장
+
+Spring Boot:
+
+이미지 파일 처리 안 함.
+S3 접근 안 함.
+AWS 키 필요 없음.

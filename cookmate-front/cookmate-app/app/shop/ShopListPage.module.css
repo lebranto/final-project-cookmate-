@@ -1,0 +1,450 @@
+.page {
+  min-height: 100vh;
+  padding: 40px clamp(18px, 5vw, 80px) 80px;
+  background: #fdfaf4;
+  color: #1a1208;
+}
+
+.pageHeader {
+  margin: 0 auto 32px;
+  max-width: 1280px;
+}
+
+.pageTitle {
+  margin: 0 0 6px;
+  color: #1a1208;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.pageSub {
+  margin: 0;
+  color: #a89880;
+  font-size: 14px;
+}
+
+.howBanner {
+  max-width: 1280px;
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  margin: 0 auto 32px;
+  padding: 22px 28px;
+  border: 1px solid #e8ddd0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.howTitle {
+  flex-shrink: 0;
+  color: #1a1208;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.howSteps {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+}
+
+.howStep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #6b5e4e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.howStepNum {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #1e3a1e;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.twoCol {
+  max-width: 1280px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
+  align-items: flex-start;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #1a1208;
+  font-size: 15px;
+}
+
+.sectionTitle span {
+  color: #a89880;
+  font-size: 12px;
+}
+
+.recipeCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.recipeShopCard {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e8ddd0;
+  border-radius: 12px;
+  background: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recipeShopCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 2px 16px rgba(30, 58, 30, 0.08);
+}
+
+.allDone {
+  border-color: #7bae6e;
+  background: #f2f8ee;
+}
+
+.cardOpenArea {
+  width: 100%;
+  display: block;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.rscImg {
+  position: relative;
+  width: 100%;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #1e3a1e;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.rscImg img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.doneOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 58, 30, 0.5);
+  color: #fff;
+  font-size: 40px;
+  font-weight: 800;
+}
+
+.rscBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.58);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+}
+
+.rscBadgeDone {
+  background: #1e3a1e;
+}
+
+.rscBody {
+  padding: 16px;
+}
+
+.rscTitle {
+  margin: 0 0 4px;
+  overflow: hidden;
+  color: #1a1208;
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rscAdded {
+  margin-bottom: 12px;
+  color: #a89880;
+  font-size: 11px;
+}
+
+.rscBarWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rscBarBg {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e8ddd0;
+}
+
+.rscBarFill {
+  height: 100%;
+  border-radius: 4px;
+  background: #3d6b35;
+}
+
+.rscBarPct {
+  color: #3d6b35;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.mutedPct {
+  color: #a89880;
+}
+
+.rscFooter {
+  display: flex;
+  gap: 6px;
+  padding: 0 16px 16px;
+}
+
+.rscBtnMain {
+  flex: 1;
+  border: 0;
+  border-radius: 8px;
+  background: #1e3a1e;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px;
+}
+
+.rscBtnDel {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 8px;
+  background: #e8ddd0;
+  color: #a89880;
+  cursor: pointer;
+  font: inherit;
+  font-size: 18px;
+}
+
+.rscBtnDel:hover {
+  background: #ffebee;
+  color: #e53935;
+}
+
+.addCard {
+  min-height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  border: 2px dashed #e8ddd0;
+  border-radius: 12px;
+  background: transparent;
+  color: #a89880;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.addCard:hover {
+  border-color: #7bae6e;
+  background: #f2f8ee;
+}
+
+.addIcon {
+  color: #a89880;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.mapCard {
+  position: sticky;
+  top: 84px;
+  overflow: hidden;
+  border: 1px solid #e8ddd0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.mapCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 18px 12px;
+  color: #1a1208;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.mapCardTitle span {
+  color: #a89880;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.mapPlaceholder {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+}
+
+.mapPinIcon {
+  font-size: 32px;
+}
+
+.mapTip,
+.storeDist {
+  color: #a89880;
+  font-size: 12px;
+}
+
+.storeList {
+  border-top: 1px solid #e8ddd0;
+}
+
+.storeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #f0eae0;
+}
+
+.storeRow:last-child {
+  border-bottom: 0;
+}
+
+.storeName {
+  color: #1a1208;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.storeDist {
+  margin-top: 1px;
+  font-size: 11px;
+}
+
+.storeOpen {
+  color: #3d6b35;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.storeClosed {
+  color: #e53935;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.messageBox {
+  padding: 36px 20px;
+  border: 1px solid #e8ddd0;
+  border-radius: 12px;
+  background: #fff;
+  color: #a89880;
+  font-size: 14px;
+  text-align: center;
+}
+
+.c1 {
+  background: linear-gradient(135deg, #c8e6c9, #a5d6a7);
+}
+
+.c2 {
+  background: linear-gradient(135deg, #ffccbc, #ffab91);
+}
+
+.c3 {
+  background: linear-gradient(135deg, #b3e5fc, #81d4fa);
+}
+
+.c4 {
+  background: linear-gradient(135deg, #f8bbd0, #f48fb1);
+}
+
+@media (max-width: 1100px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+
+  .colMap {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .howBanner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .howSteps {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .recipeCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 24px 16px 64px;
+  }
+
+  .howSteps,
+  .recipeCards {
+    grid-template-columns: 1fr;
+  }
+}
