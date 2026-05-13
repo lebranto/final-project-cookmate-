@@ -215,7 +215,7 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
     }
 
     try {
-    const response = await fetch("http://localhost:8081/api/auth/email/send", {
+    const response = await fetch("http://localhost:8081/api/auth/signup/email/send", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -226,6 +226,13 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
     });
 
     if (!response.ok) {
+      if (response.status === 409) {
+        setCodeSent(false);
+        setEmailVerified(false);
+        alert("이미 존재하는 아이디 입니다.");
+        return;
+      }
+
       alert("인증 코드 발송 실패");
       return;
     }
@@ -391,7 +398,7 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
         <input
           className={styles.formInput}
           type="text"
-          placeholder="사용할 닉네임을 입력하세요 (8자이내)"
+          placeholder="사용할 닉네임을 입력하세요"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
         />

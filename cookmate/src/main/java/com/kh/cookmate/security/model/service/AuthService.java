@@ -181,6 +181,14 @@ public class AuthService {
 		// }
 	}
 
+	public void sendSignupEmailCode(String email) {
+		if (authDao.existsByEmail(email) > 0) {
+			throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 있는 아이디 입니다.");
+		}
+
+		sendEmailCode(email);
+	}
+
 	public void verifyEmailCode(String email, String code) {
 		EmailCode savedCode = emailCodeStore.get(email);
 
