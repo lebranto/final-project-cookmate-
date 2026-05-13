@@ -12,7 +12,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +23,7 @@ import com.kh.cookmate.security.model.dto.AuthDto.AuthResult;
 import com.kh.cookmate.security.model.dto.AuthDto.EmailSendRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.EmailVerifyRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.LoginRequest;
+import com.kh.cookmate.security.model.dto.AuthDto.PasswordResetRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.SignupRequest;
 import com.kh.cookmate.security.model.dto.AuthDto.User;
 import com.kh.cookmate.security.model.provider.JWTProvider;
@@ -82,6 +82,12 @@ public class AuthController {
 	  @PostMapping("/email/verify")
 	  public ResponseEntity<Void> verifyEmailCode(@RequestBody EmailVerifyRequest req) {
 	      service.verifyEmailCode(req.getEmail(), req.getCode());
+	      return ResponseEntity.ok().build();
+	  }
+
+	  @PostMapping("/password/reset")
+	  public ResponseEntity<Void> resetPassword(@RequestBody PasswordResetRequest req) {
+	      service.resetPassword(req);
 	      return ResponseEntity.ok().build();
 	  }
 	  

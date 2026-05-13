@@ -95,6 +95,15 @@
         WHERE USER_NO = #{userNo}
     </update>
 
+    <update id="updatePasswordByEmail"
+            parameterType="com.kh.cookmate.security.model.dto.AuthDto$PasswordResetRequest">
+        UPDATE USER_CREDENTIALS UC
+        JOIN USER U
+            ON UC.USER_NO = U.USER_NO
+        SET UC.USER_PW = #{newPassword}
+        WHERE UPPER(U.USER_EMAIL) = UPPER(#{email})
+    </update>
+
     <insert id="insertUser"
             parameterType="com.kh.cookmate.security.model.dto.AuthDto$User"
             useGeneratedKeys="true"
