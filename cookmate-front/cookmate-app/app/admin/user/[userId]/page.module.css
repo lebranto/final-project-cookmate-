@@ -1,0 +1,538 @@
+/* ── 기본 레이아웃 ─────────────────────────── */
+.container {
+  background: #f5f3ee;
+  min-height: 100vh;
+  padding: 32px;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 16px;
+  color: #777;
+}
+
+/* ── 상단 헤더 ──────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.breadcrumb {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #888;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.suspendBtn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #e53e3e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.suspendBtn:hover { opacity: 0.85; }
+
+.withdrawBtn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  background: #2d2d2d;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.withdrawBtn:hover { opacity: 0.8; }
+
+/* ── 2컬럼 본문 ─────────────────────────────── */
+.body {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* ── 프로필 카드 (왼쪽) ─────────────────────── */
+.profileCard {
+  width: 260px;
+  flex-shrink: 0;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatarWrap {
+  margin-bottom: 14px;
+}
+
+.avatarImg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatarInitial {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #3a6e22;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileName {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.profileEmail {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+.badges {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.roleBadge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: #e8f5e1;
+  color: #2d5519;
+}
+
+.stateBadge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.statusNormal { background: #e8f5e1; color: #276749; }
+.statusBanned { background: #fee2e2; color: #c53030; }
+.statusWarning { background: #fef3c7; color: #92400e; }
+.statusWithdrawn { background: #e5e7eb; color: #374151; }
+
+.infoList {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  font-size: 13px;
+}
+
+.infoList dt {
+  color: #888;
+  white-space: nowrap;
+}
+
+.infoList dd {
+  color: #1a1a1a;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.reportCount {
+  color: #e53e3e !important;
+  font-weight: 700 !important;
+}
+
+/* ── 오른쪽 메인 ─────────────────────────────── */
+.main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── 통계 카드 ──────────────────────────────── */
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.statCardAlert {
+  border-color: #feb2b2;
+}
+
+.statNum {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.statNumAlert {
+  color: #e53e3e;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #555;
+}
+
+.statSub {
+  font-size: 11px;
+  color: #aaa;
+}
+
+/* ── 탭 ─────────────────────────────────────── */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  margin-bottom: 0;
+}
+
+.tab {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+
+.tab:hover { color: #1a1a1a; }
+
+.tabActive {
+  color: #3a6e22;
+  border-bottom-color: #3a6e22;
+  font-weight: 700;
+}
+
+/* ── 탭 테이블 ──────────────────────────────── */
+.tabContent {
+  background: #fff;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-top: none;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table thead tr {
+  background: #f9f8f6;
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+.table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  color: #1a1a1a;
+}
+
+.table tbody tr:last-child td { border-bottom: none; }
+.table tbody tr:hover { background: #fafaf8; }
+
+.empty {
+  text-align: center;
+  color: #aaa;
+  padding: 40px !important;
+}
+
+.done    { color: #276749; font-weight: 600; }
+.pending { color: #92400e; font-weight: 600; }
+
+/* ── 모달 공통 ──────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalBox {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 32px 28px;
+  width: 420px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.modalIcon {
+  font-size: 36px;
+  margin-bottom: 14px;
+}
+
+.modalIconWithdraw {
+  font-size: 36px;
+  color: #e53e3e;
+  margin-bottom: 14px;
+  background: #fee2e2;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.modalDesc {
+  font-size: 13px;
+  color: #777;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modalUserInfo {
+  width: 100%;
+  background: #f9f7f4;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modalUserInfo p {
+  font-size: 13px;
+  color: #444;
+  display: flex;
+  gap: 10px;
+}
+
+.modalUserInfo p span {
+  color: #999;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+.formLabel {
+  width: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.formSelect {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  margin-bottom: 14px;
+  appearance: auto;
+}
+
+.formTextarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 90px;
+  margin-bottom: 10px;
+}
+
+.formTextarea:focus,
+.formSelect:focus {
+  outline: none;
+  border-color: #3a6e22;
+}
+
+.mailNotice {
+  font-size: 12px;
+  color: #e53e3e;
+  margin-bottom: 20px;
+  align-self: flex-start;
+}
+
+.checkLabel {
+  width: 100%;
+  font-size: 13px;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+
+.irreversible {
+  font-size: 12px;
+  color: #e53e3e;
+  margin-bottom: 20px;
+  align-self: flex-start;
+}
+
+/* ── 모달 버튼 ──────────────────────────────── */
+.modalBtns {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.cancelBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.cancelBtn:hover { background: #f5f3ee; }
+
+.confirmRedBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #e53e3e;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s;
+}
+.confirmRedBtn:hover { opacity: 0.85; }
+.confirmRedBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── 페이지네이션 ────────────────────────────────────── */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 0 8px;
+}
+
+.pageBtn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #555;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: #3a6e22;
+  color: #3a6e22;
+}
+
+.pageBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pageBtnActive {
+  background: #3a6e22;
+  border-color: #3a6e22;
+  color: #fff;
+  font-weight: 700;
+}
+
+.pageBtnActive:hover {
+  background: #3a6e22 !important;
+  color: #fff !important;
+}
+
+/* ── 신고/처리 상태 배지 ─────────────────────────────── */
+.stateDone {
+  color: #276749;
+  font-weight: 600;
+}
+
+.statePending {
+  color: #92400e;
+  font-weight: 600;
+}

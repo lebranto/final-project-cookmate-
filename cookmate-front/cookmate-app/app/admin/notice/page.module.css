@@ -1,0 +1,519 @@
+.container {
+  min-height: 100vh;
+  background: #f5f3ef;
+  padding: 34px 40px;
+}
+
+.content {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.formContent {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.pageTitle {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin-bottom: 8px;
+}
+
+.pageDescription {
+  font-size: 15px;
+  color: #777;
+}
+
+.formHeader {
+  margin-bottom: 18px;
+}
+
+.formHeaderRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.breadcrumb {
+  font-size: 12px;
+  color: #8b8176;
+  margin-bottom: 8px;
+}
+
+.formTitle {
+  font-size: 30px;
+  font-weight: 700;
+  color: #1f1f1f;
+  margin-bottom: 8px;
+}
+
+.createButton {
+  border: none;
+  background: #234b2f;
+  color: white;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e8e3dc;
+  padding: 18px 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.searchBox {
+  flex: 1;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd7cf;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: white;
+}
+
+.searchIcon {
+  margin-right: 8px;
+  font-size: 14px;
+  color: #999;
+}
+
+.searchBox input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 14px;
+}
+
+.filters {
+  display: flex;
+  gap: 10px;
+}
+
+.filters select {
+  height: 46px;
+  border: 1px solid #ddd7cf;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead tr {
+  background: #f8f6f2;
+}
+
+.table th {
+  text-align: left;
+  padding: 14px 14px;
+  font-size: 13px;
+  color: #767676;
+  font-weight: 600;
+  border-bottom: 1px solid #ece8e1;
+}
+
+.table td {
+  padding: 16px 14px;
+  border-bottom: 1px solid #f0ece6;
+  font-size: 14px;
+  color: #333;
+}
+
+.number {
+  color: #7a8799;
+}
+
+.icon {
+  font-size: 16px;
+}
+
+.title {
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.activeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e6f4e8;
+  color: #478458;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.endBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #efefef;
+  color: #666;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.actionButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editButton {
+  border: 1px solid #d7d7d7;
+  background: white;
+  color: #444;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.deleteButton {
+  border: none;
+  background: #d8453a;
+  color: white;
+  border-radius: 7px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.footer {
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.totalText {
+  font-size: 13px;
+  color: #777;
+}
+
+.pagination {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination button {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.activePage {
+  background: #234b2f !important;
+  color: white;
+  border-color: #234b2f !important;
+}
+
+.noticeForm {
+  background: #ffffff;
+  border: 1px solid #e7e1d8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #eee8df;
+}
+
+.formRow label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #363636;
+}
+
+.formRow label span {
+  color: #d8453a;
+}
+
+.formRow input[type="text"],
+.formRow input[type="date"],
+.formRow input:not([type]),
+.formRow textarea {
+  width: 100%;
+  border: 1px solid #ddd7cf;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+.formRow textarea {
+  resize: vertical;
+  min-height: 170px;
+  line-height: 1.5;
+}
+
+.helperText {
+  grid-column: 2;
+  margin-top: -8px;
+  font-size: 12px;
+  color: #8b8b8b;
+}
+
+.radioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.radioGroup label,
+.inlineCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.dateGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dateGroup input[type="date"] {
+  width: 150px;
+}
+
+.previewBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 22px;
+  padding: 14px 16px;
+  border: 1px dashed #d9cbb8;
+  border-radius: 7px;
+  background: #fffaf4;
+}
+
+.previewBox span {
+  font-size: 18px;
+}
+
+.previewBox strong {
+  display: block;
+  font-size: 14px;
+  color: #2d2d2d;
+  margin-bottom: 3px;
+}
+
+.previewBox p {
+  font-size: 12px;
+  color: #8b8176;
+}
+
+.formActions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 22px;
+  border-top: 1px solid #eee8df;
+}
+
+.cancelButton {
+  border: 1px solid #ddd7cf;
+  background: #fff;
+  color: #444;
+  border-radius: 7px;
+  padding: 9px 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.topDeleteButton {
+  border: 1px solid #efc8c3;
+  background: #fff;
+  color: #d8453a;
+  border-radius: 7px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.emptyRow {
+  text-align: center;
+  color: #888;
+  padding: 34px 14px !important;
+}
+
+.submitButton {
+  border: none;
+  background: #d8870b;
+  color: #fff;
+  border-radius: 7px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.submitButton:disabled,
+.deleteConfirmButton:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.deleteModal {
+  width: min(420px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 8px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+}
+
+.modalIcon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffe8e8;
+  color: #d8453a;
+  font-size: 20px;
+}
+
+.deleteModal h2 {
+  font-size: 20px;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.deleteModal p {
+  font-size: 14px;
+  color: #777;
+}
+
+.deleteSummary {
+  text-align: left;
+  margin: 18px 0;
+  padding: 13px 15px;
+  background: #fbf7ef;
+  border: 1px solid #eadfce;
+  border-radius: 7px;
+}
+
+.deleteSummary span {
+  display: block;
+  font-size: 12px;
+  color: #8b8176;
+  margin-bottom: 4px;
+}
+
+.deleteSummary strong {
+  font-size: 14px;
+  color: #333;
+}
+
+.warningText {
+  color: #d8453a !important;
+  font-size: 13px !important;
+  margin-bottom: 18px;
+}
+
+.modalActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.deleteConfirmButton {
+  border: none;
+  background: #d8453a;
+  color: #fff;
+  border-radius: 7px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .headerRow,
+  .formHeaderRow,
+  .toolbar,
+  .footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filters {
+    flex-direction: column;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .helperText {
+    grid-column: 1;
+  }
+}
