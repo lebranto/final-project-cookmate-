@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "@/app/lib/api";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
-import { Board, Ingredient } from "@/app/type/board";
+import { Board } from "@/app/type/board";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
 import styles from "./BoardDetail.module.css";
@@ -22,9 +22,7 @@ export default function BoardDetail({ boardNo }: Props) {
   const [errorMessage, setErrorMessage] = useState("");
   const [isScrapped, setIsScrapped] = useState(false);
   const [followVersion, setFollowVersion] = useState(0);
-  const [checkedIngredients, setCheckedIngredients] = useState<Set<number>>(
-    new Set()
-  );
+  const [shoppingAdding, setShoppingAdding] = useState(false);
   const loadingRef = useRef(loading);
   const didInitialLoadRef = useRef(false);
   const { userInfo, isLoggedIn } = useUserInfoActions();
@@ -123,25 +121,6 @@ export default function BoardDetail({ boardNo }: Props) {
     }
   }, [board, boardNo, loading]);
 
-  const ingredients = useMemo(
-    () =>
-      board?.ingredientSets?.flatMap((set) =>
-        set.ingredients.map((ingredient) => ({
-          ...ingredient,
-          groupName: set.setName || "재료",
-        }))
-      ) ?? [],
-    [board]
-  );
-
-  const checkedItems = useMemo(
-    () =>
-      ingredients.filter((ingredient) =>
-        checkedIngredients.has(ingredient.ingredientNo)
-      ),
-    [checkedIngredients, ingredients]
-  );
-
   const isOwner = isLoggedIn && userInfo?.userNo === board?.userNo;
   const isOfficialPost = board?.isApiData === "Y" || board?.userNo === 0;
   const canFollowAuthor = isLoggedIn && !isOwner && !isOfficialPost;
@@ -170,18 +149,6 @@ export default function BoardDetail({ boardNo }: Props) {
 
     void fetchScrapStatus();
   }, [board, boardNo, isLoggedIn, userInfo]);
-
-  const toggleIngredient = (ingredientNo: number) => {
-    setCheckedIngredients((prev) => {
-      const next = new Set(prev);
-      if (next.has(ingredientNo)) {
-        next.delete(ingredientNo);
-      } else {
-        next.add(ingredientNo);
-      }
-      return next;
-    });
-  };
 
   const handleLikes = async () => {
     if (!isLoggedIn || !userInfo) {
@@ -246,14 +213,31 @@ export default function BoardDetail({ boardNo }: Props) {
     }
   };
 
-  const handleAddCart = () => {
-    if (checkedItems.length === 0) {
-      alert("추가할 재료를 선택해 주세요.");
+  const handleAddShoppingList = async () => {
+    if (!isLoggedIn || !userInfo) {
+      alert("로그인이 필요합니다.");
       return;
     }
 
-    alert(`${checkedItems.length}개 재료가 장보기 목록에 추가되었습니다.`);
-    setCheckedIngredients(new Set());
+    if (!board?.ingredientSets?.some((set) => set.ingredients?.length > 0)) {
+      alert("장보기에 추가할 재료가 없습니다.");
+      return;
+    }
+
+    try {
+      setShoppingAdding(true);
+      const res = await api.post<{ shoppingNo: number; created: boolean }>("/shopping-lists", {
+        userNo: userInfo.userNo,
+        boardNo,
+      });
+
+      alert(res.data.created ? "장보기 목록에 추가되었습니다." : "이미 장보기 목록에 추가된 레시피입니다.");
+    } catch (error) {
+      console.error("장보기 추가 실패:", error);
+      alert(getErrorMessage(error, "장보기 추가에 실패했습니다."));
+    } finally {
+      setShoppingAdding(false);
+    }
   };
 
   if (loading && !board) {
@@ -396,6 +380,43 @@ export default function BoardDetail({ boardNo }: Props) {
             </div>
           </section>
 
+          <section className={styles.sectionCard}>
+            <SectionTitle
+              title="재료"
+              action={
+                <button
+                  type="button"
+                  onClick={handleAddShoppingList}
+                  className={styles.cartButton}
+                  disabled={shoppingAdding}
+                >
+                  {shoppingAdding ? "추가 중" : "장보기 추가"}
+                </button>
+              }
+            />
+
+            <div className={styles.ingredientColumns}>
+              {board.ingredientSets?.map((set) => (
+                <div key={set.setNo} className={styles.ingredientGroup}>
+                  <div className={styles.groupTitle}>
+                    {set.setName || "재료"}
+                  </div>
+                  {set.ingredients?.map((ingredient) => (
+                    <div
+                      key={ingredient.ingredientNo}
+                      className={styles.ingredientRow}
+                    >
+                      <span className={styles.ingredientName}>{ingredient.ingredientName}</span>
+                      <span className={styles.ingredientAmount}>
+                        {[ingredient.quantity, ingredient.unit].filter(Boolean).join(" ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </section>
+          
           {board.url && (
             <section className={styles.sectionCard}>
               <SectionTitle title="동영상" />
@@ -419,43 +440,7 @@ export default function BoardDetail({ boardNo }: Props) {
               </a>
             </section>
           )}
-
-          <section className={styles.sectionCard}>
-            <SectionTitle
-              title="재료"
-              aside={`${checkedItems.length}개 선택`}
-              action={
-                <button
-                  type="button"
-                  onClick={handleAddCart}
-                  className={styles.cartButton}
-                >
-                  장보기 추가
-                </button>
-              }
-            />
-
-            <div className={styles.ingredientColumns}>
-              {board.ingredientSets?.map((set) => (
-                <div key={set.setNo} className={styles.ingredientGroup}>
-                  <div className={styles.groupTitle}>
-                    {set.setName || "재료"}
-                  </div>
-                  {set.ingredients?.map((ingredient) => (
-                    <IngredientRow
-                      key={ingredient.ingredientNo}
-                      ingredient={ingredient}
-                      checked={checkedIngredients.has(
-                        ingredient.ingredientNo
-                      )}
-                      onToggle={toggleIngredient}
-                    />
-                  ))}
-                </div>
-              ))}
-            </div>
-          </section>
-
+          
           <section className={styles.sectionCard}>
             <SectionTitle title="요리 순서" />
             <ol className={styles.stepList}>
@@ -522,35 +507,6 @@ function MetaPill({ label, value }: { label: string; value?: string }) {
   );
 }
 
-function IngredientRow({
-  ingredient,
-  checked,
-  onToggle,
-}: {
-  ingredient: Ingredient;
-  checked: boolean;
-  onToggle: (ingredientNo: number) => void;
-}) {
-  const amount = [ingredient.quantity, ingredient.unit].filter(Boolean).join(" ");
-
-  return (
-    <label
-      className={`${styles.ingredientRow} ${
-        checked ? styles.ingredientRowChecked : ""
-      }`}
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={() => onToggle(ingredient.ingredientNo)}
-        className={styles.ingredientCheck}
-      />
-      <span className={styles.ingredientName}>{ingredient.ingredientName}</span>
-      <span className={styles.ingredientAmount}>{amount}</span>
-    </label>
-  );
-}
-
 function Avatar({
   imageUrl,
   name,
@@ -590,19 +546,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 function resolveRecipeImageUrl(imageUrl?: string | null) {
-  if (!imageUrl) return "";
-
-  try {
-    const url = new URL(imageUrl);
-    if (url.hostname.includes(".s3.") && url.hostname.endsWith("amazonaws.com")) {
-      const key = url.pathname.replace(/^\/+/, "");
-      return `http://localhost:8081/api/files/images?key=${encodeURIComponent(key)}`;
-    }
-  } catch {
-    return imageUrl;
-  }
-
-  return imageUrl;
+  return imageUrl || "";
 }
 
 function getYoutubeVideoId(url?: string | null) {

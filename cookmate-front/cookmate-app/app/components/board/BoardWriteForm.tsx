@@ -4,6 +4,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import api from "@/app/lib/api";
+import { uploadImageWithPresignedUrl } from "@/app/lib/imageUpload";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
 import { Board } from "@/app/type/board";
 import styles from "./BoardWriteForm.module.css";
@@ -32,10 +33,6 @@ interface CookStepForm {
   cookImage?: string;
   imageFile: File | null;
   imagePreview: string;
-}
-
-interface UploadResponse {
-  fileUrl: string;
 }
 
 interface BoardWriteFormProps {
@@ -74,19 +71,7 @@ const createStep = (): CookStepForm => ({
 });
 
 const toImageUrl = (imageUrl?: string | null) => {
-  if (!imageUrl) return "";
-
-  try {
-    const url = new URL(imageUrl);
-    if (url.hostname.includes(".s3.") && url.hostname.endsWith("amazonaws.com")) {
-      const key = url.pathname.replace(/^\/+/, "");
-      return `http://localhost:8081/api/files/images?key=${encodeURIComponent(key)}`;
-    }
-  } catch {
-    return imageUrl;
-  }
-
-  return imageUrl;
+  return imageUrl || "";
 };
 
 const splitIntroduce = (value?: string | null) => {
@@ -409,12 +394,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
   };
 
   const uploadImage = async (file: File, dir: string) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("dir", dir);
-
-    const res = await api.post<UploadResponse>("/files/images", formData);
-    return res.data.fileUrl;
+    return uploadImageWithPresignedUrl(file, dir);
   };
 
   const validateForm = () => {

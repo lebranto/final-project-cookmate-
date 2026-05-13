@@ -270,14 +270,14 @@ export default function GlobalHeader() {
         </div>
 
         <nav className={styles.ghNav}>
-          <button type="button">레시피</button>
-          <button type="button">AI추천</button>
-          <button type="button">장보기</button>
+          <button type="button" onClick={() => router.push("/boards")}>레시피</button>
+          <button type="button" onClick={() => router.push("/ai")}>AI추천</button>
+          <button type="button" onClick={() => router.push("/shop")}>장보기</button>
         </nav>
 
         <div className={styles.ghActions}>
-          <button type="button" className={styles.ghNavBtn}>셰프</button>
-          <button type="button" className={styles.ghNavBtn}>공지사항</button>
+          <button type="button" className={styles.ghNavBtn} onClick={() => router.push("/chef")}>셰프</button>
+          <button type="button" className={styles.ghNavBtn} onClick={() => router.push("/notice")}>공지사항</button>
 
           <button type="button" className={styles.ghBell} aria-label="알림">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
