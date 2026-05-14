@@ -51,9 +51,9 @@ interface FormErrors {
   cookSteps?: string;
 }
 
-const CATEGORIES = ["한식", "중식", "일식", "양식", "셀러드", "디저트"];
+const CATEGORIES = ["한식", "중식", "일식", "양식", "셀러드", "수프","디저트"];
 const DIFFICULTIES = ["쉬움", "보통", "어려움"];
-const COOK_TIMES = ["10분 이하", "10~20분", "20~30분", "30~45분", "45~60분", "1시간 이상"];
+const COOK_TIMES = ["15분 이내", "30분 이내", "1시간 이내"];
 const CALORY_OPTIONS: { value: Exclude<Calory, "">; range: string }[] = [
   { value: "저칼로리", range: "~ 400kcal" },
   { value: "보통", range: "400~700kcal" },

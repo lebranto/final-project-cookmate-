@@ -15,7 +15,7 @@
   padding: 0 24px;
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 28px;
 }
 
 .ghLogo {
@@ -58,6 +58,14 @@
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.ghNav {
+  justify-content: flex-end;
+}
+
+.ghActions {
+  margin-left: auto;
 }
 
 .ghNav button,
@@ -421,11 +429,12 @@
 
   .adminSiteButton {
     width: 100%;
+  }
+
   .gfInner {
     width: calc(100% - 32px);
     flex-direction: column;
     align-items: flex-start;
     padding-bottom: 92px;
   }
-}
 }

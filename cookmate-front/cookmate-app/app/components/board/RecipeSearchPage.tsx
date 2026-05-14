@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import api from "@/app/lib/api";
@@ -37,7 +37,7 @@ interface SearchResponse {
   totalPages: number;
 }
 
-const USER_CATEGORIES = ["한식", "중식", "일식", "양식", "샐러드", "디저트"];
+const USER_CATEGORIES = ["한식", "중식", "일식", "양식", "샐러드", "수프", "디저트"];
 const OFFICIAL_CATEGORIES = ["국·찌개", "반찬", "밥", "면·만두", "구이", "찜·조림", "후식","기타"];
 const COOK_TIMES = ["15분 이내", "30분 이내", "1시간 이내"];
 const DIFFICULTIES = ["쉬움", "보통", "어려움"];
@@ -45,13 +45,17 @@ const KEYWORDS = ["김치찌개", "된장찌개", "파스타", "샐러드", "계
 const PAGE_SIZE = 12;
 
 export default function RecipeSearchPage() {
+  const searchParams = useSearchParams();
+  const initialKeyword = searchParams.get("keyword")?.trim() ?? "";
+  const initialCategory = searchParams.get("category")?.trim() ?? "";
+  const initialSort = parseSort(searchParams.get("sort"));
   const [source, setSource] = useState<Source>("user");
-  const [keyword, setKeyword] = useState("");
-  const [submittedKeyword, setSubmittedKeyword] = useState("");
-  const [category, setCategory] = useState("");
+  const [keyword, setKeyword] = useState(initialKeyword);
+  const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
+  const [category, setCategory] = useState(initialCategory);
   const [cookTime, setCookTime] = useState("");
   const [difficult, setDifficult] = useState("");
-  const [sort, setSort] = useState<Sort>("popular");
+  const [sort, setSort] = useState<Sort>(initialSort);
   const [page, setPage] = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
   const [data, setData] = useState<SearchResponse>({
@@ -550,4 +554,8 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
+}
+
+function parseSort(value: string | null): Sort {
+  return value === "latest" || value === "likes" || value === "cookTime" ? value : "popular";
 }

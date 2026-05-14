@@ -1,67 +1,61 @@
+"use client";
+
 import Link from "next/link";
+import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import api from "@/app/lib/api";
 import styles from "./page.module.css";
+
+interface MainRecipe {
+  boardNo: number;
+  boardTitle: string;
+  imageUrl: string;
+  likesCount: number;
+  typeName: string;
+  cookTime: string;
+}
+
+interface SearchResponse {
+  list: MainRecipe[];
+}
 
 const categories = [
   {
     name: "한식",
+    category: "한식",
     image: "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=500&q=80",
   },
   {
-    name: "파스타 · 양식",
+    name: "양식",
+    category: "양식",
     image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=500&q=80",
     wide: true,
   },
   {
     name: "일식",
+    category: "일식",
     image: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=500&q=80",
   },
   {
     name: "샐러드",
+    category: "샐러드",
     image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80",
   },
   {
     name: "수프",
+    category: "수프",
     image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=500&q=80",
   },
   {
     name: "브런치",
+    category: "",
     image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=500&q=80",
   },
   {
     name: "디저트 · 베이킹",
+    category: "디저트",
     image: "https://images.unsplash.com/photo-1596560548464-f010549b84d7?w=500&q=80",
     wide: true,
-  },
-];
-
-const recipes = [
-  {
-    title: "구수한 된장찌개",
-    category: "한식",
-    time: "30분",
-    likes: "4,821",
-    image: "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=500&q=80",
-  },
-  {
-    title: "크리미 까르보나라",
-    category: "양식",
-    time: "20분",
-    likes: "6,982",
-    image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=500&q=80",
-  },
-  {
-    title: "그린 퀴노아 볼",
-    category: "샐러드",
-    time: "10분",
-    likes: "2,184",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80",
-  },
-  {
-    title: "말차 크림 롤케이크",
-    category: "디저트",
-    time: "90분",
-    likes: "3,547",
-    image: "https://images.unsplash.com/photo-1596560548464-f010549b84d7?w=500&q=80",
   },
 ];
 
@@ -110,6 +104,43 @@ const chefs = [
 ];
 
 export default function Home() {
+  const router = useRouter();
+  const [keyword, setKeyword] = useState("");
+  const [latestRecipes, setLatestRecipes] = useState<MainRecipe[]>([]);
+  const [latestLoading, setLatestLoading] = useState(true);
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmed = keyword.trim();
+
+    router.push(trimmed ? `/boards?keyword=${encodeURIComponent(trimmed)}` : "/boards");
+  };
+
+  useEffect(() => {
+    const fetchLatestRecipes = async () => {
+      try {
+        setLatestLoading(true);
+        const res = await api.get<SearchResponse>("/boards/search", {
+          params: {
+            source: "user",
+            sort: "latest",
+            page: 1,
+            size: 4,
+          },
+        });
+
+        setLatestRecipes(res.data.list ?? []);
+      } catch (error) {
+        console.error("새로 올라온 레시피 조회 실패:", error);
+        setLatestRecipes([]);
+      } finally {
+        setLatestLoading(false);
+      }
+    };
+
+    void fetchLatestRecipes();
+  }, []);
+
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
@@ -134,10 +165,14 @@ export default function Home() {
       </section>
 
       <section className={styles.searchBand} aria-label="레시피 검색">
-        <div className={styles.searchBox}>
-          <input placeholder="어떤 요리가 먹고 싶으세요? 레시피명 또는 재료를 입력하세요" />
-          <button type="button">검색</button>
-        </div>
+        <form className={styles.searchBox} onSubmit={handleSearch}>
+          <input
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            placeholder="어떤 요리가 먹고 싶으세요? 레시피명 또는 재료를 입력하세요"
+          />
+          <button type="submit">검색</button>
+        </form>
       </section>
 
       <section className={styles.section}>
@@ -145,7 +180,7 @@ export default function Home() {
         <div className={styles.categoryGrid}>
           {categories.map((category) => (
             <Link
-              href="/boards"
+              href={category.category ? `/boards?category=${encodeURIComponent(category.category)}` : "/boards"}
               className={`${styles.categoryCard} ${category.wide ? styles.categoryWide : ""}`}
               key={category.name}
             >
@@ -159,25 +194,42 @@ export default function Home() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2>새로 올라온 레시피</h2>
-          <Link href="/boards">더보기</Link>
+          <Link href="/boards?sort=latest">더보기</Link>
         </div>
         <div className={styles.recipeGrid}>
-          {recipes.map((recipe) => (
-            <Link href="/boards" className={styles.recipeCard} key={recipe.title}>
-              <div className={styles.recipeImage}>
-                <img src={recipe.image} alt={recipe.title} />
-              </div>
-              <div className={styles.recipeBody}>
-                <div className={styles.recipeTags}>
-                  <span>{recipe.category}</span>
-                  <span>{recipe.time}</span>
+          {latestLoading
+            ? Array.from({ length: 4 }, (_, index) => (
+                <div className={`${styles.recipeCard} ${styles.recipeSkeleton}`} key={index}>
+                  <div className={styles.recipeImage} />
+                  <div className={styles.recipeBody}>
+                    <span />
+                    <h3 />
+                    <p />
+                  </div>
                 </div>
-                <h3>{recipe.title}</h3>
-                <p>{recipe.time} · 좋아요 {recipe.likes}</p>
-              </div>
-            </Link>
-          ))}
+              ))
+            : latestRecipes.map((recipe) => (
+                <Link href={`/boards/${recipe.boardNo}`} className={styles.recipeCard} key={recipe.boardNo}>
+                  <div className={styles.recipeImage}>
+                    {recipe.imageUrl ? (
+                      <img src={recipe.imageUrl} alt={recipe.boardTitle} />
+                    ) : (
+                      <span>CookMate</span>
+                    )}
+                  </div>
+                  <div className={styles.recipeBody}>
+                    <div className={styles.recipeTags}>
+                      {recipe.typeName && <span>{recipe.typeName}</span>}
+                    </div>
+                    <h3>{recipe.boardTitle}</h3>
+                    <p>{recipe.cookTime ? `${recipe.cookTime} · ` : ""}좋아요 {recipe.likesCount}</p>
+                  </div>
+                </Link>
+              ))}
         </div>
+        {!latestLoading && latestRecipes.length === 0 && (
+          <div className={styles.recipeEmpty}>새로 올라온 레시피가 없습니다.</div>
+        )}
       </section>
 
       <section className={styles.featured}>
@@ -267,7 +319,7 @@ export default function Home() {
           <h2>냉장고 재료로 만드는 오늘의 레시피</h2>
           <p>갖고 있는 재료를 입력하면 만들 수 있는 레시피를 추천하는 영역입니다.</p>
         </div>
-        <Link href="/ai">AI 추천 받으러 가기</Link>
+        <Link href="/find">AI 추천 받으러 가기</Link>
       </section>
 
     </main>

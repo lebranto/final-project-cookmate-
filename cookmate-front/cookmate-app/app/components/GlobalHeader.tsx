@@ -15,6 +15,14 @@ type StoredUser = {
   authorities?: Array<string | { authority?: string }>;
 };
 
+const HEADER_MENU_ITEMS = [
+  { label: "레시피", path: "/boards" },
+  { label: "AI추천", path: "/" },
+  { label: "장보기", path: "/shop" },
+  { label: "셰프", path: "/chef" },
+  { label: "공지사항", path: "/notice" },
+];
+
 const API_BASE_URL = "http://localhost:8081/api";
 const ACCESS_TOKEN_KEY = "accessToken";
 const ROLE_COOKIE_KEY = "userRoles";
@@ -140,20 +148,12 @@ export default function GlobalHeader() {
   const canOpenAdminPage = roles.includes("ROLE_ADMIN");
 
   const mobileMenuItems = useMemo(() => {
-    const baseItems = [
-      { label: "레시피", path: "/recipes" },
-      { label: "AI추천", path: "/ai" },
-      { label: "장보기", path: "/shop" },
-      { label: "셰프", path: "/chef" },
-      { label: "공지사항", path: "/notice" },
-    ];
-
     if (!isLoggedIn) {
-      return [...baseItems, { label: "로그인", path: "/login" }];
+      return [...HEADER_MENU_ITEMS, { label: "로그인", path: "/login" }];
     }
 
     return [
-      ...baseItems,
+      ...HEADER_MENU_ITEMS,
       ...(canOpenMyPage ? [{ label: "마이페이지", path: "/mypage" }] : []),
       ...(canOpenAdminPage ? [{ label: "관리자 페이지", path: "/admin" }] : []),
       { label: "로그아웃", path: "/logout" },
@@ -261,23 +261,18 @@ export default function GlobalHeader() {
           Cook<span>Mate</span>
         </button>
 
-        <div className={styles.ghSearch}>
-          <svg width="15" height="15" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <circle cx="9" cy="9" r="7" stroke="#aaa" strokeWidth="1.8" />
-            <line x1="14.5" y1="14.5" x2="19" y2="19" stroke="#aaa" strokeWidth="1.8" strokeLinecap="round" />
-          </svg>
-          <input placeholder="레시피 또는 재료 검색..." />
-        </div>
-
-        <nav className={styles.ghNav}>
-          <button type="button">레시피</button>
-          <button type="button">AI추천</button>
-          <button type="button">장보기</button>
-        </nav>
-
         <div className={styles.ghActions}>
-          <button type="button" className={styles.ghNavBtn}>셰프</button>
-          <button type="button" className={styles.ghNavBtn} onClick={() => router.push("/notice")}>공지사항</button>
+          <nav className={styles.ghNav}>
+            {HEADER_MENU_ITEMS.map((item) => (
+              <button
+                key={item.path}
+                type="button"
+                onClick={() => router.push(item.path)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
 
           <button type="button" className={styles.ghBell} aria-label="알림">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">

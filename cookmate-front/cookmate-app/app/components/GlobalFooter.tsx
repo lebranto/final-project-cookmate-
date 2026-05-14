@@ -13,7 +13,7 @@ export default function GlobalFooter() {
         </div>
         <nav className={styles.gfLinks} aria-label="푸터 메뉴">
           <Link href="/boards">레시피</Link>
-          <Link href="/ai">AI 추천</Link>
+          <Link href="/find">AI 추천</Link>
           <Link href="/shop">장보기</Link>
           <Link href="/chef">셰프</Link>
           <Link href="/notice">공지사항</Link>
