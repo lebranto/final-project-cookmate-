@@ -33,6 +33,8 @@ public interface BoardDao {
 
 	int countApiRecipes();
 
+	int countApiRecipeDuplicate(Map<String, Object> params);
+
 	BoardDetail getBoardDetail(int boardNo);
 
 	List<BoardSearchResult> searchBoards(BoardSearchRequest request);

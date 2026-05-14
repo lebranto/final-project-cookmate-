@@ -62,6 +62,12 @@ public class BoardDaoImpl implements BoardDao{
     }
 
 	@Override
+	public int countApiRecipeDuplicate(Map<String, Object> params) {
+		Integer count = session.selectOne("boardmapper.countApiRecipeDuplicate", params);
+		return count == null ? 0 : count;
+	}
+
+	@Override
 	public BoardDetail getBoardDetail(int boardNo) {
 		return session.selectOne("boardmapper.getBoardDetail", boardNo);
 	}

@@ -145,7 +145,7 @@ public class BoardServiceImpl implements BoardService {
 		}
 
 		BoardSearchRequest fallback = new BoardSearchRequest();
-		fallback.setSource("user");
+		fallback.setSource("all");
 		fallback.setSort("likes");
 		fallback.setPage(1);
 		fallback.setSize(safeSize);

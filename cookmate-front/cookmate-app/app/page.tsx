@@ -78,6 +78,7 @@ export default function Home() {
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [weeklyPopularRecipes, setWeeklyPopularRecipes] = useState<MainRecipe[]>([]);
   const [weeklyPopularLoading, setWeeklyPopularLoading] = useState(true);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -155,6 +156,21 @@ export default function Home() {
 
     void fetchWeeklyPopularRecipes();
   }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 420);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <main className={styles.page}>
@@ -379,6 +395,14 @@ export default function Home() {
         <Link href="/find">AI 추천 받으러 가기</Link>
       </section>
 
+      <button
+        type="button"
+        className={`${styles.scrollTopButton} ${showScrollTop ? styles.scrollTopVisible : ""}`}
+        onClick={scrollToTop}
+        aria-label="맨 위로 이동"
+      >
+        ↑
+      </button>
     </main>
   );
 }

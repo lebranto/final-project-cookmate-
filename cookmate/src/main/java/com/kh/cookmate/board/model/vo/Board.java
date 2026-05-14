@@ -21,5 +21,6 @@ public class Board {
     private char boardDelete;     // N: 정상, Y: 삭제
     private char open;            // N: 비공개, Y: 공개
 	private char isApiData;
+	private String apiRecipeId;
 	
 }

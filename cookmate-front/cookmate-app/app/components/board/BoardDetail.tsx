@@ -394,8 +394,8 @@ export default function BoardDetail({ boardNo }: Props) {
                 <div className={styles.authorInfo}>
                   <span className={styles.authorName}>{board.nickname}</span>
                   <span className={styles.authorSub}>
-                    레시피 {board.recipeCount ?? 0} · 팔로워{" "}
-                    {board.followerCount ?? 0}
+                    레시피 {board.recipeCount ?? 0}
+                    {!isOfficialPost && ` · 팔로워 ${board.followerCount ?? 0}`}
                   </span>
                 </div>
               </div>
