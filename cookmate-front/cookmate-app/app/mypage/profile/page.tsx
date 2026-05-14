@@ -174,7 +174,7 @@ export default function ProfileEditPage() {
 
       if (selectedFile) {
         try {
-          const uploadedUrl = await uploadImageWithPresignedUrl(selectedFile, "profiles");
+          const uploadedUrl = await uploadImageWithPresignedUrl(selectedFile, "users/profiles");
           finalImageUrl = uploadedUrl;
         } catch (uploadErr) {
           console.error("이미지 업로드 실패:", uploadErr);
