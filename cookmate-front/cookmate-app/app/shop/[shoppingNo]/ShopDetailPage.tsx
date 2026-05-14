@@ -33,6 +33,10 @@ interface ShoppingDetail {
   items: ShoppingDetailItem[];
 }
 
+interface ProfileResponse {
+  allergies?: string[];
+}
+
 export default function ShopDetailPage({ shoppingNo }: { shoppingNo: number }) {
   const router = useRouter();
   const { userInfo, isLoggedIn } = useUserInfoActions();
@@ -41,6 +45,7 @@ export default function ShopDetailPage({ shoppingNo }: { shoppingNo: number }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [savingItemNo, setSavingItemNo] = useState<number | null>(null);
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [userAllergies, setUserAllergies] = useState<string[]>([]);
 
   const fetchDetail = useCallback(async () => {
     if (!isLoggedIn || !userInfo) {
@@ -76,6 +81,24 @@ export default function ShopDetailPage({ shoppingNo }: { shoppingNo: number }) {
     return () => window.clearTimeout(timer);
   }, [fetchDetail, isLoggedIn, router]);
 
+  useEffect(() => {
+    if (!isLoggedIn || !userInfo) {
+      return;
+    }
+
+    const fetchUserAllergies = async () => {
+      try {
+        const res = await api.get<ProfileResponse>(`/users/profile/${userInfo.userNo}`);
+        setUserAllergies(res.data.allergies ?? []);
+      } catch (error) {
+        console.error("알레르기 정보 조회 실패:", error);
+        setUserAllergies([]);
+      }
+    };
+
+    void fetchUserAllergies();
+  }, [isLoggedIn, userInfo]);
+
   const stats = useMemo(() => {
     const items = detail?.items ?? [];
     const total = items.length;
@@ -98,6 +121,14 @@ export default function ShopDetailPage({ shoppingNo }: { shoppingNo: number }) {
 
     return Array.from(groups.entries()).map(([setName, items]) => ({ setName, items }));
   }, [detail]);
+  const effectiveAllergies = useMemo(
+    () => (isLoggedIn ? userAllergies : []),
+    [isLoggedIn, userAllergies]
+  );
+  const allergyMatches = useMemo(
+    () => findAllergyMatches(detail?.items ?? [], effectiveAllergies),
+    [detail, effectiveAllergies]
+  );
 
   const updateItemStatus = async (item: ShoppingDetailItem, itemStatus: ItemStatus) => {
     if (!userInfo) return;
@@ -238,6 +269,14 @@ export default function ShopDetailPage({ shoppingNo }: { shoppingNo: number }) {
         재료를 클릭하면 구매 완료 표시가 됩니다. 집에 이미 있는 재료는 &quot;이미 있어요&quot; 버튼을 누르면 별도로 처리됩니다.
       </section>
 
+      {allergyMatches.length > 0 && (
+        <section className={styles.allergyWarning}>
+          <strong>알레르기 주의</strong>
+          <span>장보기 재료 중 설정한 알레르기 재료가 포함될 수 있습니다.</span>
+          <em>{allergyMatches.join(", ")}</em>
+        </section>
+      )}
+
       <section className={styles.ingredientColumns}>
         {groupedItems.map((group) => (
           <div key={group.setName}>
@@ -310,4 +349,38 @@ function ShoppingIngredientItem({
       </span>
     </button>
   );
+}
+
+function findAllergyMatches(items: ShoppingDetailItem[], allergies: string[]) {
+  if (items.length === 0 || allergies.length === 0) return [];
+
+  const normalizedAllergies = allergies
+    .map((allergy) => allergy.trim())
+    .filter(Boolean);
+
+  if (normalizedAllergies.length === 0) return [];
+
+  const matched = new Set<string>();
+
+  items.forEach((item) => {
+    const ingredientName = normalizeForMatch(item.ingredientName);
+    if (!ingredientName) return;
+
+    normalizedAllergies.forEach((allergy) => {
+      const normalizedAllergy = normalizeForMatch(allergy);
+      if (
+        normalizedAllergy &&
+        (ingredientName.includes(normalizedAllergy) ||
+          normalizedAllergy.includes(ingredientName))
+      ) {
+        matched.add(allergy);
+      }
+    });
+  });
+
+  return Array.from(matched);
+}
+
+function normalizeForMatch(value?: string | null) {
+  return (value ?? "").replace(/\s/g, "").toLowerCase();
 }

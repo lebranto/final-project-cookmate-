@@ -248,6 +248,31 @@
   line-height: 1.7;
 }
 
+.allergyWarning {
+  max-width: 1152px;
+  display: grid;
+  gap: 4px;
+  margin: 0 auto 24px;
+  padding: 14px 18px;
+  border: 1px solid #f0c6a8;
+  border-radius: 8px;
+  background: #fff7ef;
+  color: #9a4a12;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.allergyWarning strong {
+  color: #80380d;
+  font-size: 14px;
+}
+
+.allergyWarning em {
+  color: #b34b0f;
+  font-style: normal;
+  font-weight: 800;
+}
+
 .ingredientColumns {
   max-width: 1152px;
   display: grid;

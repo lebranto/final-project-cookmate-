@@ -16,6 +16,10 @@ interface Props {
   boardNo: number;
 }
 
+interface ProfileResponse {
+  allergies?: string[];
+}
+
 export default function BoardDetail({ boardNo }: Props) {
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +27,7 @@ export default function BoardDetail({ boardNo }: Props) {
   const [isScrapped, setIsScrapped] = useState(false);
   const [followVersion, setFollowVersion] = useState(0);
   const [shoppingAdding, setShoppingAdding] = useState(false);
+  const [userAllergies, setUserAllergies] = useState<string[]>([]);
   const loadingRef = useRef(loading);
   const didInitialLoadRef = useRef(false);
   const { userInfo, isLoggedIn } = useUserInfoActions();
@@ -125,11 +130,37 @@ export default function BoardDetail({ boardNo }: Props) {
   const isOfficialPost = board?.isApiData === "Y" || board?.userNo === 0;
   const canFollowAuthor = isLoggedIn && !isOwner && !isOfficialPost;
   const youtubeVideoId = useMemo(() => getYoutubeVideoId(board?.url), [board?.url]);
+  const effectiveAllergies = useMemo(
+    () => (isLoggedIn ? userAllergies : []),
+    [isLoggedIn, userAllergies]
+  );
   const isFollowing = useMemo(() => {
     void followVersion;
     if (!isLoggedIn || !userInfo || !board) return false;
     return window.localStorage.getItem(getFollowStorageKey(userInfo.userNo, board.userNo)) === "Y";
   }, [board, followVersion, isLoggedIn, userInfo]);
+  const allergyMatches = useMemo(
+    () => findAllergyMatches(board, effectiveAllergies),
+    [board, effectiveAllergies]
+  );
+
+  useEffect(() => {
+    if (!isLoggedIn || !userInfo) {
+      return;
+    }
+
+    const fetchUserAllergies = async () => {
+      try {
+        const res = await api.get<ProfileResponse>(`/users/profile/${userInfo.userNo}`);
+        setUserAllergies(res.data.allergies ?? []);
+      } catch (error) {
+        console.error("알레르기 정보 조회 실패:", error);
+        setUserAllergies([]);
+      }
+    };
+
+    void fetchUserAllergies();
+  }, [isLoggedIn, userInfo]);
 
   useEffect(() => {
     if (!isLoggedIn || !userInfo || !board) {
@@ -222,6 +253,16 @@ export default function BoardDetail({ boardNo }: Props) {
     if (!board?.ingredientSets?.some((set) => set.ingredients?.length > 0)) {
       alert("장보기에 추가할 재료가 없습니다.");
       return;
+    }
+
+    if (allergyMatches.length > 0) {
+      const canContinue = confirm(
+        `이 레시피에는 설정한 알레르기 재료가 포함될 수 있습니다.\n\n포함 가능 재료: ${allergyMatches.join(
+          ", "
+        )}\n\n그래도 장보기에 추가할까요?`
+      );
+
+      if (!canContinue) return;
     }
 
     try {
@@ -395,6 +436,16 @@ export default function BoardDetail({ boardNo }: Props) {
               }
             />
 
+            {allergyMatches.length > 0 && (
+              <div className={styles.allergyWarning}>
+                <strong>알레르기 주의</strong>
+                <span>
+                  이 레시피에는 설정한 알레르기 재료가 포함될 수 있습니다.
+                </span>
+                <em>{allergyMatches.join(", ")}</em>
+              </div>
+            )}
+
             <div className={styles.ingredientColumns}>
               {board.ingredientSets?.map((set) => (
                 <div key={set.setNo} className={styles.ingredientGroup}>
@@ -547,6 +598,42 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
+}
+
+function findAllergyMatches(board: Board | null, allergies: string[]) {
+  if (!board || allergies.length === 0) return [];
+
+  const normalizedAllergies = allergies
+    .map((allergy) => allergy.trim())
+    .filter(Boolean);
+
+  if (normalizedAllergies.length === 0) return [];
+
+  const matched = new Set<string>();
+
+  board.ingredientSets?.forEach((set) => {
+    set.ingredients?.forEach((ingredient) => {
+      const ingredientName = normalizeForMatch(ingredient.ingredientName);
+      if (!ingredientName) return;
+
+      normalizedAllergies.forEach((allergy) => {
+        const normalizedAllergy = normalizeForMatch(allergy);
+        if (
+          normalizedAllergy &&
+          (ingredientName.includes(normalizedAllergy) ||
+            normalizedAllergy.includes(ingredientName))
+        ) {
+          matched.add(allergy);
+        }
+      });
+    });
+  });
+
+  return Array.from(matched);
+}
+
+function normalizeForMatch(value?: string | null) {
+  return (value ?? "").replace(/\s/g, "").toLowerCase();
 }
 
 function getYoutubeVideoId(url?: string | null) {
