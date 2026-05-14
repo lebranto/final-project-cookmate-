@@ -59,7 +59,7 @@ export default function UsersPage() {
       if (isInitialLoading) setLoading(true);
 
       const response = await axios.get<UserResponse>(
-        'http://localhost:8081/api/admin/user',
+        'http://localhost:8081/api/admin/users',
         { params: { page, keyword, status, role, sort } },
       );
 
@@ -125,7 +125,7 @@ export default function UsersPage() {
 
     setSubmitting(true);
     try {
-      await axios.post(`http://localhost:8081/api/admin/user/${suspendTarget.userId}/suspend`, {
+      await axios.post(`http://localhost:8081/api/admin/users/${suspendTarget.userId}/suspend`, {
         days: Number(suspendDays),
         reason: suspendReason,
         banType: Number(suspendDays) === 0 ? 'PERMANENT' : 'TEMPORARY',
@@ -146,7 +146,7 @@ export default function UsersPage() {
 
     setSubmitting(true);
     try {
-      await axios.patch(`http://localhost:8081/api/admin/user/${user.userId}/suspend/release`);
+      await axios.patch(`http://localhost:8081/api/admin/users/${user.userId}/suspend/release`);
       alert('정지 해제가 완료되었습니다.');
       fetchUsers(currentPage);
     } catch (error) {
@@ -170,7 +170,7 @@ export default function UsersPage() {
 
     setSubmitting(true);
     try {
-      await axios.post(`http://localhost:8081/api/admin/user/${withdrawTarget.userId}/withdraw`, {
+      await axios.post(`http://localhost:8081/api/admin/users/${withdrawTarget.userId}/withdraw`, {
         reason: withdrawReason,
       });
       alert('강제 탈퇴 처리가 완료되었습니다.');
@@ -287,7 +287,7 @@ export default function UsersPage() {
                     <div className={styles.actionGroup}>
                       <button
                         className={styles.detailBtn}
-                        onClick={() => router.push(`/admin/user/${user.userId}`)}
+                        onClick={() => router.push(`/admin/users/${user.userId}`)}
                       >
                         상세
                       </button>

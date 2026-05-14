@@ -1,7 +1,7 @@
 // app/admin/layout.tsx
 
 import { Suspense } from "react";
-import Header from "./components/Header"
+
 
 export default function AdminLayout({
   children,
@@ -12,9 +12,6 @@ export default function AdminLayout({
   return (
     
     <div>
-
-      <Header />
-
       <main>
         {children}
       </main>

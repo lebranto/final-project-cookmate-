@@ -93,7 +93,7 @@ public class AdminDto {
     @AllArgsConstructor
     public static class RecipeDto {
 
-        private Long recipeId;
+        private Long boardNo;
         private String title;
         private String author;
         private int likeCount;

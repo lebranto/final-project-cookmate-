@@ -11,7 +11,8 @@ import com.kh.cookmate.admin.dto.AdminDto.UserRecipeDto;
 import com.kh.cookmate.admin.dto.AdminDto.UserReportDto;
 import com.kh.cookmate.admin.dto.AdminDto.UserSuspendRequestDto;
 
-public interface AdminService {
+public interface AdminService 
+{
 	
 	// 대시보드
 	AdminDto getDashboard();
@@ -24,8 +25,8 @@ public interface AdminService {
     Map<String, Object> getInquiries(AdminDto.InquirySearchDto condition);
     
     boolean processReport(long reportId, AdminDto.ReportProcessRequestDto request);
-    boolean hideRecipe(int recipeId);
-    boolean restoreRecipe(int recipeId);
+    boolean hideRecipe(int boardNo);
+    boolean restoreRecipe(int boardNo);
     
     // Notice
     boolean createNotice(AdminDto.NoticeDto notice);

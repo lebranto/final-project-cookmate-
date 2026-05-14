@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 
 interface TopRecipe {
-  recipeId: number;
+  boardNo: number;
   title: string;
   author: string;
   likeCount: number;
@@ -425,15 +425,15 @@ export default function DashboardPage() {
             </thead>
             <tbody>
 
-              {dashboard.topRecipes.map((recipe, index) => (
+              {dashboard.topRecipes.map((board, index) => (
 
-                <tr key={recipe.recipeId}>
+                <tr key={board.boardNo}>
                   <td>{index + 1}</td>
                   <td className={styles.ellipsis}>
-                  {recipe.title}
+                  {board.title}
                   </td>
-                  <td>{recipe.author}</td>
-                  <td>💗{recipe.likeCount}</td>
+                  <td>{board.author}</td>
+                  <td>💗{board.likeCount}</td>
                 </tr>
 
               ))}

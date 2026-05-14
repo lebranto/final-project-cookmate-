@@ -121,7 +121,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
     const load = async () => {
       try {
         const { data } = await axios.get<UserDetail>(
-          `http://localhost:8081/api/admin/user/${userId}`
+          `http://localhost:8081/api/admin/users/${userId}`
         );
         setUser(data);
       } catch (e) {
@@ -141,7 +141,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
         if (tab === 'board') {
           //setBoardPage(0);
           const { data } = await axios.get<PageResponse<BoardItem>>(
-            `http://localhost:8081/api/admin/user/${userId}/board`,
+            `http://localhost:8081/api/admin/users/${userId}/boards`,
             { params: { page: boardPage + 1 , size: PAGE_SIZE } }
           );
           setBoards(getPageItems(data));
@@ -149,7 +149,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
         }
         if (tab === 'comment') {
           const { data } = await axios.get<PageResponse<CommentItem>>(
-            `http://localhost:8081/api/admin/user/${userId}/comment`,
+            `http://localhost:8081/api/admin/users/${userId}/comments`,
             { params: { page: commentPage + 1, size: PAGE_SIZE } }
           );
           setComments(getPageItems(data));
@@ -157,7 +157,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
         }
         if (tab === 'report') {
           const { data } = await axios.get<PageResponse<ReportItem>>(
-            `http://localhost:8081/api/admin/user/${userId}/report`,
+            `http://localhost:8081/api/admin/users/${userId}/reports`,
             { params: { page: reportPage + 1, size: PAGE_SIZE } }
           );
           setReports(getPageItems(data));
@@ -165,7 +165,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
         }
         if (tab === 'log') {
           const { data } = await axios.get<PageResponse<BanHistoryItem>>(
-            `http://localhost:8081/api/admin/user/${userId}/log`,
+            `http://localhost:8081/api/admin/users/${userId}/logs`,
             { params: { page: logPage + 1 , size: PAGE_SIZE } }
           );
           setLogs(getPageItems(data));
@@ -190,12 +190,21 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
   const groupEnd   = Math.min(groupStart + GROUP_SIZE, totalPages);
   const pageNumbers = Array.from({ length: groupEnd - groupStart }, (_, i) => groupStart + i);
 
+  const handleTabChange = (nextTab: Tab) => {
+    setTab(nextTab);
+
+    if (nextTab === 'board') setBoardPage(0);
+    if (nextTab === 'comment') setCommentPage(0);
+    if (nextTab === 'report') setReportPage(0);
+    if (nextTab === 'log') setLogPage(0);
+  };
+
   // ── 정지 처리 ─────────────────────────────────────────
   const handleSuspend = async () => {
     if (!suspendReason.trim()) { alert('정지 사유를 입력해주세요.'); return; }
     setSubmitting(true);
     try {
-      await axios.post(`http://localhost:8081/api/admin/user/${userId}/suspend`, {
+      await axios.post(`http://localhost:8081/api/admin/users/${userId}/suspend`, {
         days: Number(suspendDays),
         reason: suspendReason,
         banType: Number(suspendDays) === 0 ? 'PERMANENT' : 'TEMPORARY',
@@ -219,7 +228,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
     if (!withdrawConfirmed)     { alert('데이터 삭제 확인 체크박스를 선택해주세요.'); return; }
     setSubmitting(true);
     try {
-      await axios.post(`http://localhost:8081/api/admin/user/${userId}/withdraw`, {
+      await axios.post(`http://localhost:8081/api/admin/users/${userId}/withdraw`, {
         reason: withdrawReason,
       });
       alert('강제 탈퇴 처리가 완료되었습니다.');
