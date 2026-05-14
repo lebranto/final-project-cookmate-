@@ -258,15 +258,6 @@ export default function AiRecipeDetailPage() {
               <p className={styles.relatedNote}>DB의 BOARD에서 이름 유사도가 높은 레시피를 연결할 예정입니다.</p>
             </section>
 
-            <section className={styles.asideCard}>
-              <h2>저장 분류</h2>
-              <div className={styles.tags}>
-                <span>{toCookTimeTag(draft.cookTimeMinutes)}</span>
-                <span>{toCaloryTag(draft.calories)}</span>
-                <span>{draft.difficult}</span>
-                <span>{draft.typeName}</span>
-              </div>
-            </section>
           </aside>
         </div>
       </div>
