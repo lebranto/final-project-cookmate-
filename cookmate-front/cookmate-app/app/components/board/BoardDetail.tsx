@@ -20,6 +20,12 @@ interface ProfileResponse {
   allergies?: string[];
 }
 
+const CALORY_RANGES: Record<string, string> = {
+  저칼로리: "~ 400kcal",
+  보통: "400~700kcal",
+  고칼로리: "700kcal ~",
+};
+
 export default function BoardDetail({ boardNo }: Props) {
   const [board, setBoard] = useState<Board | null>(null);
   const [loading, setLoading] = useState(true);
@@ -417,7 +423,7 @@ export default function BoardDetail({ boardNo }: Props) {
               <MetaPill label="종류" value={board.typeName} />
               <MetaPill label="난이도" value={board.difficult} />
               <MetaPill label="조리시간" value={board.cookTime} />
-              <MetaPill label="칼로리" value={board.calory} />
+              <MetaPill label="칼로리" value={formatCaloryValue(board.calory)} />
             </div>
           </section>
 
@@ -634,6 +640,13 @@ function findAllergyMatches(board: Board | null, allergies: string[]) {
 
 function normalizeForMatch(value?: string | null) {
   return (value ?? "").replace(/\s/g, "").toLowerCase();
+}
+
+function formatCaloryValue(value?: string | null) {
+  if (!value) return "";
+
+  const range = CALORY_RANGES[value];
+  return range ? `${value} · ${range}` : value;
 }
 
 function getYoutubeVideoId(url?: string | null) {

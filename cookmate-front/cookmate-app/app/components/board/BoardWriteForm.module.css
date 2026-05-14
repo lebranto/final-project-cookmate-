@@ -307,26 +307,47 @@
   opacity: 0;
 }
 
-.caloryOption span {
-  display: grid;
+.caloryOptionText {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   min-height: 42px;
-  place-items: center;
   border: 1px solid var(--border-md);
   border-radius: 8px;
   background: var(--bg);
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 13px;
+  line-height: 1.25;
+  padding: 8px 10px;
+  text-align: center;
 }
 
-.caloryOption input:checked + span {
+.caloryLabel {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.caloryRange {
+  color: var(--text-hint);
+  font-size: 11px;
+}
+
+.caloryOption input:checked + .caloryOptionText {
   border-color: var(--green);
   background: var(--green-light);
   color: var(--green-text);
   font-weight: 700;
 }
 
-.invalidChoiceGroup .caloryOption span {
+.caloryOption input:checked + .caloryOptionText .caloryRange {
+  color: var(--green-text);
+}
+
+.invalidChoiceGroup .caloryOptionText {
   border-color: var(--red);
   background: #fff8f7;
 }
