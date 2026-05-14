@@ -51,7 +51,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler{
 			                .collect(Collectors.joining("|"));
 		
 	ResponseCookie accessCookie = CookieUtil.createTokenCookie( CookieUtil.ACCESS_COOKIE, accessToken.toString(),30);
-	ResponseCookie refreshCookie = CookieUtil.createTokenCookie(CookieUtil.REFRESH_COOKIE, refreshToken.toString(), 7);
+	ResponseCookie refreshCookie = CookieUtil.createTokenCookie(CookieUtil.REFRESH_COOKIE, refreshToken.toString(), 1);
 	ResponseCookie roleCookie = CookieUtil.createTokenCookie(CookieUtil.ROLE_COOKIE, roles, 30);
 	
 	
