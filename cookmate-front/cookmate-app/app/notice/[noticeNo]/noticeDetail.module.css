@@ -1,0 +1,282 @@
+.page {
+  min-height: calc(100vh - 72px);
+  background: #f4f0e8;
+  color: #162033;
+  font-family: Arial, "Noto Sans KR", sans-serif;
+}
+
+.inner {
+  width: min(1040px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 30px 0 34px;
+}
+
+.backLink {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: #718094;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: #315b3a;
+}
+
+.detailCard,
+.adjacentNav {
+  overflow: hidden;
+  border: 1px solid #ebe3d7;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(77, 61, 42, 0.08);
+}
+
+.detailHeader {
+  position: relative;
+  min-height: 120px;
+  padding: 34px 38px 26px;
+  border-bottom: 1px solid #eee7dc;
+}
+
+.badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.typeBadge,
+.statusBadge {
+  min-width: 62px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.important {
+  background: #ffe9ec;
+  color: #c6203e;
+}
+
+.info {
+  background: #e6f3ff;
+  color: #226ca5;
+}
+
+.maintenance {
+  background: #fff1dc;
+  color: #b66700;
+}
+
+.update {
+  background: #e9f4e9;
+  color: #32745b;
+}
+
+.event {
+  background: #fff4d5;
+  color: #ad7a00;
+}
+
+.open {
+  background: #edf7ec;
+  color: #2f7541;
+}
+
+.upcoming {
+  background: #eef2f7;
+  color: #64748b;
+}
+
+.closed {
+  background: #f4f4f4;
+  color: #777777;
+}
+
+.detailHeader time {
+  position: absolute;
+  top: 44px;
+  right: 38px;
+  color: #98a0af;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.titleLine {
+  max-width: calc(100% - 150px);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.detailHeader h1 {
+  max-width: calc(100% - 150px);
+  margin: 0;
+  color: #111827;
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1.35;
+  letter-spacing: 0;
+  word-break: keep-all;
+}
+
+.periodText {
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.content {
+  min-height: 520px;
+  padding: 52px 38px 64px;
+  color: #202a3a;
+  font-size: 16px;
+  line-height: 2.1;
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+
+.cardFooter {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid #eee7dc;
+}
+
+.listButton {
+  min-width: 118px;
+  height: 42px;
+  padding: 0 20px;
+  border: 1px solid #e2dbd0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #566274;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.listButton:hover {
+  border-color: #315b3a;
+  color: #315b3a;
+}
+
+.adjacentNav {
+  margin-top: 18px;
+}
+
+.adjacentRow {
+  min-height: 52px;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 104px;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #eee7dc;
+  color: #172033;
+  text-decoration: none;
+}
+
+.adjacentRow:last-child {
+  border-bottom: 0;
+}
+
+.adjacentRow:hover .adjacentTitle {
+  color: #315b3a;
+}
+
+.adjacentLabel {
+  color: #768294;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.adjacentTitle {
+  overflow: hidden;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.emptyText {
+  color: #a0a6b2;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.adjacentRow time {
+  color: #a0a7b6;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.state {
+  min-height: 360px;
+  border: 1px solid #ebe3d7;
+  border-radius: 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777777;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .inner {
+    width: min(100% - 24px, 560px);
+    padding-top: 22px;
+  }
+
+  .detailHeader {
+    padding: 28px 22px 22px;
+  }
+
+  .detailHeader time {
+    position: static;
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  .titleLine {
+    max-width: none;
+  }
+
+  .detailHeader h1 {
+    max-width: none;
+    font-size: 21px;
+  }
+
+  .content {
+    min-height: 360px;
+    padding: 34px 22px 44px;
+    font-size: 15px;
+    line-height: 1.9;
+  }
+
+  .adjacentRow {
+    min-height: 64px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: 4px 12px;
+  }
+
+  .adjacentRow time {
+    grid-column: 2;
+    text-align: left;
+  }
+}

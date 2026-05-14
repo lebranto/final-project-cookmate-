@@ -1,141 +1,1088 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="admin">
-
-	<!--<!<select id="countAllUsers" resultType="_int">
-        SELECT COUNT(*) FROM USER WHERE WITHDRAW != 'N'
+	
+	<!-- ///////////////////대시보드 영역/////////////////////////-->
+	<select id="countAllUsers" resultType="_int">
+        SELECT COUNT(*) 
+        FROM USER 
+        WHERE WITHDRAW = 'N'
     </select>
 
     <select id="countAllRecipes" resultType="_int">
-        SELECT COUNT(*) FROM BOARD WHERE BOARD_DELETE = 'N'
+        SELECT COUNT(*) 
+        FROM BOARD 
+        WHERE BOARD_DELETE = 'N'
     </select>
 
-    <select id="countPendingReport" resultType="_int">
-        SELECT COUNT(*) FROM REPORT_DETAIL WHERE STATE = 'N'
+    <select id="countPendingReports" resultType="_int">
+        SELECT COUNT(*) 
+        FROM REPORT_DETAIL 
+        WHERE STATE = 'W'
     </select>
 
     <select id="countUnansweredInquiries" resultType="_int">
-        SELECT COUNT(*) FROM INQUIRY WHERE INQUIRY_STATUS = 'N'
+        SELECT COUNT(*) 
+        FROM INQUIRY
+        WHERE INQUIRY_STATUS = 'N'
     </select>
 
-	 오늘의 방문자 
+	<!-- 오늘의 로그인 한 유저수 -->
     <select id="countTodayVisitors" resultType="_int">
-         CURDATE()는 오늘 날짜만 가져오는 MySQL 함수입니다 
-        SELECT COUNT(*) FROM ???? 
-        WHERE DATE(VISIT_DATE) = CURDATE()
+        <!-- CURDATE()는 오늘 날짜만 가져오는 MySQL 함수입니다 -->
+        SELECT COUNT(*) 
+        FROM USER
+        WHERE USER_STATUS = 'N'
+        AND DATE(LAST_LOGIN) = CURDATE()
     </select>
 
     <select id="countTodayScrap" resultType="_int">
-        SELECT COUNT(*) FROM SCRAP
+        SELECT COUNT(*) 
+        FROM SCRAP
         WHERE DATE(SCRAP_DATE) = CURDATE()
     </select>
 
     <select id="countTodayComments" resultType="_int">
-        SELECT COUNT(*) FROM COMMENT
+        SELECT COUNT(*) 
+        FROM COMMENT
         WHERE DATE(COMMENT_POSTDATE) = CURDATE()
     </select>
 
     <select id="countMonthlyBannedUsers" resultType="_int">
-        SELECT COUNT(*) FROM USER
-        WHERE STATUS = 'N' 
-        AND STATUS_UPDATE_DATE >= DATE_FORMAT(NOW(), '%Y-%m-01')
+	    SELECT COUNT(DISTINCT BU.USER_NO)
+	    FROM BANNED_USER BU
+	
+	    JOIN USER U
+	      ON BU.USER_NO = U.USER_NO
+	
+	    WHERE DATE_FORMAT(BU.BAN_START, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')
+	    AND U.WITHDRAW = 'N'
+	</select>
+    
+    <select id="countActiveNotices" resultType="_int">
+        SELECT COUNT(*)
+        FROM NOTICE
+        WHERE NOTICE_STATUS = 'Y'
     </select>
+    
+    <select id="countTodayJoinedUsers" resultType="_int">
+	    SELECT COUNT(*)
+	    FROM USER
+	    WHERE DATE(USER_ENROLL_DATE) = CURDATE()
+	</select>
+	
+	<select id="countTodayRecipes" resultType="_int">
+	    SELECT COUNT(*)
+	    FROM BOARD
+	    WHERE DATE(BOARD_POSTDATE) = CURDATE()
+	</select>
+	
+	<!-- 오늘 회원 증감 -->
+	<select id="countTodayUsersDiff" resultType="_int">
+	    SELECT
+	        (
+	            SELECT COUNT(*)
+	            FROM USER
+	            WHERE DATE(USER_ENROLL_DATE) = CURDATE()
+	        )
+	        -
+	        (
+	            SELECT COUNT(*)
+	            FROM USER
+	            WHERE WITHDRAW = 'Y'
+	        )
+	</select>
+	
+	<!-- 오늘 레시피 증감 -->
+	<select id="countTodayRecipesDiff" resultType="_int">
+	    SELECT
+	        (
+	            SELECT COUNT(*)
+	            FROM BOARD
+	            WHERE DATE(BOARD_POSTDATE) = CURDATE()
+	        )
+	        -
+	        (
+	            SELECT COUNT(*)
+	            FROM BOARD
+	            WHERE BOARD_DELETE = 'Y'
+	              AND DATE(BOARD_POSTDATE) = CURDATE()
+	        )
+	</select>
 
-     =================== 대시 보드 리스트 영역 =================== 
+    <!-- =================== 대시 보드 리스트 영역 =================== -->
 
-    <select id="selectRecentReports" resultType="reportDto">
-        SELECT 
-            REPORT_NO as reportNo,
-            REPORT_TYPE as reportType,
-            REPORTEE_NO as reporteeNo,
-            REPORT_REASON as reportReason,
-            DATE_FORMAT(CREATE_DATE, '%Y-%m-%d') as createdAt
-        FROM REPORT
-        ORDER BY CREATE_DATE DESC
+    <select id="selectRecentReports" resultType="com.kh.cookmate.admin.dto.AdminDto$ReportDto">
+	    SELECT
+	        R.REPORT_NO       AS reportId,
+	        R.REPORT_TYPE     AS reportType,
+	        R.REPORTEE_NO     AS targetId,
+	        U.NICKNAME        AS targetNickname,
+	        R.USER_NO         AS reporterId,
+	        R.REPORT_REASON   AS reason,
+	        RD.STATE          AS status,
+	        DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d') AS createdAt
+	
+	    FROM REPORT R
+	
+	    LEFT JOIN USER U
+	        ON R.REPORTEE_NO = U.USER_NO
+	
+	    LEFT JOIN REPORT_DETAIL RD
+	        ON R.REPORT_NO = RD.REPORT_NO
+	
+	    ORDER BY R.REPORT_DATE DESC
+	
+	    LIMIT 5
+	
+	</select>
+
+    <select id="selectTopRecipes" resultType="com.kh.cookmate.admin.dto.AdminDto$RecipeDto">
+        SELECT
+            B.BOARD_NO        AS recipeId,
+            B.BOARD_TITLE     AS title,
+            U.NICKNAME        AS author,
+            B.LIKES_COUNT     AS likeCount,
+            B.TYPE_NO         AS typeNo
+        FROM BOARD B
+        JOIN USER U ON B.USER_NO = U.USER_NO
+        WHERE B.BOARD_DELETE = 'N'
+        ORDER BY B.LIKES_COUNT DESC
         LIMIT 5
     </select>
 
-    <select id="selectTopRecipes" resultType="recipeDto">
-
-        SELECT 
-            BOARD_NO as boardNo,
-            BOARD_TITLE as boardTitle,
-            NICKNAME as nickname,
-            LIKES_COUNT as likesCount,
-            VIEW_COUNT as viewCount
-        FROM BOARD
-        ORDER BY LIKES_COUNT DESC, VIEW_COUNT DESC
-        LIMIT 5
-    </select>
-
-    <select id="selectUnansweredInquiries" resultType="inquiryDto">
-        SELECT 
-            INQUIRY_ID as inquiryId,
-            USER_ID as userId,
-            TITLE as title,
-            STATUS as status,
-            DATE_FORMAT(CREATE_DATE, '%Y-%m-%d') as createdAt
-        FROM INQUIRIES
-        WHERE STATUS = 'N'
-        ORDER BY CREATE_DATE ASC
-    </select>
+    <select id="selectUnansweredInquiries" resultType="com.kh.cookmate.admin.dto.AdminDto$InquiryDto">
+	    SELECT
+	        I.INQUIRY_NO AS inquiryId,
+	        I.USER_NO AS userNo,
+	        I.INQUIRY_TITLE AS title,
+	        I.INQUIRY_CONTENT AS content,
+	        I.TYPE_NAME AS typeName,
+	        U.NICKNAME AS writer,
+	        U.USER_EMAIL AS email,
+	        I.INQUIRY_STATUS AS status,
+	        DATE_FORMAT(I.INQUIRY_POSTDATE, '%Y-%m-%d') AS createdAt,
+	        I.ANSWER AS answer,
+	        DATE_FORMAT(I.ANSWER_DATE, '%Y-%m-%d') AS answerDate
+	
+	    FROM INQUIRY I
+	    LEFT JOIN USER U ON I.USER_NO = U.USER_NO
+	
+	    WHERE I.INQUIRY_STATUS = 'N'
+	    ORDER BY I.INQUIRY_POSTDATE ASC
+	    LIMIT 5
+	</select>
 
     <select id="selectNotice" resultType="string">
-        SELECT CONTENT FROM (
-            SELECT CONTENT FROM NOTICES ORDER BY CREATE_DATE DESC
-        ) LIMIT 1
+        SELECT NOTICE_CONTENT
+        FROM NOTICE
+        WHERE NOTICE_DELETE = 'N'
+          AND NOTICE_STATUS = 'Y'
+        ORDER BY START_DATE DESC
+        LIMIT 1
+    </select>
+    
+    <!-- =========== 회원 목록 조회 (검색 + 필터 + 정렬 + 페이징)======================== -->
+	<select id="selectUserList"
+	        parameterType="com.kh.cookmate.admin.dto.AdminDto$UserSearchDto"
+	        resultType="com.kh.cookmate.admin.dto.AdminDto$UserPageDto">
+	
+	    SELECT
+	        U.USER_NO AS userId,
+	        U.NICKNAME AS nickname,
+	        U.USER_EMAIL AS email,
+	        A.AUTHORITY AS role,
+	
+	        (
+	            SELECT COUNT(*)
+	            FROM BOARD B
+	            WHERE B.USER_NO = U.USER_NO
+	              AND B.BOARD_DELETE = 'N'
+	        ) AS recipeCount,
+	
+	        U.USER_ENROLL_DATE AS enrollDate,
+	        U.USER_STATUS AS status,
+	        U.WITHDRAW AS withdraw
+	
+	    FROM USER U
+	
+	    LEFT JOIN AUTHORITY A
+	        ON U.USER_NO = A.USER_NO
+	
+	    <where>
+	
+	        U.WITHDRAW = 'N'
+	
+	        <!-- 검색 -->
+	        <if test="keyword != null and keyword != ''">
+	            AND (
+	                U.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
+	                OR U.USER_EMAIL LIKE CONCAT('%', #{keyword}, '%')
+	            )
+	        </if>
+	
+	        <!-- 상태 필터 -->
+	        <if test="status != null and status != ''">
+	            AND U.USER_STATUS = #{status}
+	        </if>
+	
+	        <!-- 권한 -->
+	        <if test="role != null and role != ''">
+	            <choose>
+	                <!-- 일반 회원 -->
+	                <when test="role == 'USER_ROLE'">
+	                    AND (
+	                        A.AUTHORITY IS NULL
+	                        OR A.AUTHORITY = 'USER_ROLE'
+	                    )
+	                </when>
+	
+	                <!-- 관리자 -->
+	                <when test="role == 'ADMIN_ROLE'">
+	                    AND A.AUTHORITY = 'ADMIN_ROLE'
+	                </when>
+	            </choose>
+	        </if>
+	    </where>
+	
+	    <!-- 정렬 -->
+	    <choose>
+
+		    <when test="sort == 'latest'">
+		        ORDER BY U.USER_ENROLL_DATE DESC
+		    </when>
+		
+		    <when test="sort == 'oldest'">
+		        ORDER BY U.USER_ENROLL_DATE ASC
+		    </when>
+		
+		    <when test="sort == 'recipeDesc'">
+		        ORDER BY recipeCount DESC
+		    </when>
+		
+		    <!-- 기본값 -->
+		    <otherwise>
+		        ORDER BY U.USER_ENROLL_DATE DESC
+		    </otherwise>
+		
+		</choose>
+	
+	    LIMIT #{size}
+	    OFFSET #{offset}
+	</select>
+
+    <select id="selectUserCount" parameterType="com.kh.cookmate.admin.dto.AdminDto$UserSearchDto"
+	    resultType="_int">
+	    SELECT COUNT(*)
+	    FROM USER U
+	    LEFT JOIN AUTHORITY A
+	        ON U.USER_NO = A.USER_NO
+	    <where>
+	        U.WITHDRAW = 'N'
+	        <!-- 검색 -->
+	        <if test="keyword != null and keyword != ''">
+	            AND (
+	                U.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
+	                OR U.USER_EMAIL LIKE CONCAT('%', #{keyword}, '%')
+	            )
+	        </if>
+	        <!-- 상태 -->
+	        <if test="status != null and status != ''">
+	            AND U.USER_STATUS = #{status}
+	        </if>
+	
+	        <!-- 권한 -->
+	        <if test="role != null and role != ''">
+	
+	            <choose>
+	
+	                <!-- 관리자 -->
+	                <when test="'ADMIN_ROLE'.equals(role)">
+	                    AND A.AUTHORITY = 'ADMIN_ROLE'
+	                </when>
+	
+	                <!-- 일반회원 -->
+	                <when test="'USER_ROLE'.equals(role)">
+	                    AND (
+	                        A.AUTHORITY IS NULL
+	                        OR A.AUTHORITY = 'USER_ROLE'
+	                    )
+	                </when>
+	            </choose>
+	        </if>
+	    </where>
+	</select>
+    
+    <!-- =================== 신고 관리 영역 =================== -->
+
+    <select id="selectReportList" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportSearchDto"
+	        resultType="com.kh.cookmate.admin.dto.AdminDto$ReportDto">
+	
+	    SELECT
+	        R.REPORT_NO       AS reportId,
+	        R.REPORT_TYPE     AS reportType,
+	        R.REPORTEE_NO     AS targetId,
+	        U.NICKNAME        AS targetNickname,
+	        R.USER_NO         AS reporterId,
+	        R.REPORT_REASON   AS reason,
+	        RD.STATE          AS status,
+	        DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d') AS createdAt
+	
+	    FROM REPORT R
+	
+	    LEFT JOIN USER U
+	        ON R.REPORTEE_NO = U.USER_NO
+	
+	    LEFT JOIN REPORT_DETAIL RD
+	        ON R.REPORT_NO = RD.REPORT_NO
+	
+	    <where>
+	
+			<!-- 신고 유형 -->
+	        <if test="reportType != null and reportType != ''">
+	            AND R.REPORT_TYPE = #{reportType}
+	        </if>
+	
+			<!-- 상태 -->
+	        <if test="status != null and status != ''">
+	            AND RD.STATE = #{status}
+	        </if>
+	
+			<!-- 검색 -->
+	        <if test="keyword != null and keyword != ''">
+	            AND (
+	                R.USER_NO LIKE CONCAT('%', #{keyword}, '%')
+	                OR R.REPORTEE_NO LIKE CONCAT('%', #{keyword}, '%')
+	                OR R.REPORT_REASON LIKE CONCAT('%', #{keyword}, '%')
+	                OR U.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
+	            )
+	        </if>
+	    </where>
+	
+		<!-- 정렬 -->
+	    <choose>
+	        <when test="orderBy == 'oldest'">
+	            ORDER BY R.REPORT_DATE ASC
+	        </when>
+	
+	        <otherwise>
+	            ORDER BY R.REPORT_DATE DESC
+	        </otherwise>
+	    </choose>
+	    LIMIT #{size} OFFSET #{offset}
+	</select>
+
+    <select id="selectReportDetail" parameterType="long" resultType="com.kh.cookmate.admin.dto.AdminDto$ReportDetailDto">
+        SELECT
+            R.REPORT_NO AS reportId,
+            R.REPORT_TYPE AS reportType,
+            R.USER_NO AS reporterNo,
+            REPORTER.NICKNAME AS reporterNickname,
+            REPORTER.USER_EMAIL AS reporterEmail,
+            R.REPORTEE_NO AS reporteeNo,
+            REPORTEE.NICKNAME AS reporteeNickname,
+            REPORTEE.USER_EMAIL AS reporteeEmail,
+            REPORTEE.WARNING AS reporteeWarning,
+            R.REPORT_REASON AS reason,
+            RD.STATE AS status,
+            DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d %H:%i') AS createdAt,
+            CASE
+                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN 'COMMENT'
+                ELSE 'BOARD'
+            END AS targetKind,
+            CASE
+                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (
+                    SELECT C.COMMENT_NO
+                    FROM COMMENT C
+                    WHERE C.USER_NO = R.REPORTEE_NO
+                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE
+                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC
+                    LIMIT 1
+                )
+                ELSE (
+                    SELECT B.BOARD_NO
+                    FROM BOARD B
+                    WHERE B.USER_NO = R.REPORTEE_NO
+                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE
+                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC
+                    LIMIT 1
+                )
+            END AS targetContentId,
+            CASE
+                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (
+                    SELECT B.BOARD_TITLE
+                    FROM COMMENT C
+                    JOIN BOARD B ON C.BOARD_NO = B.BOARD_NO
+                    WHERE C.USER_NO = R.REPORTEE_NO
+                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE
+                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC
+                    LIMIT 1
+                )
+                ELSE (
+                    SELECT B.BOARD_TITLE
+                    FROM BOARD B
+                    WHERE B.USER_NO = R.REPORTEE_NO
+                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE
+                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC
+                    LIMIT 1
+                )
+            END AS targetTitle,
+            CASE
+                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (
+                    SELECT C.COMMENT_CONTENT
+                    FROM COMMENT C
+                    WHERE C.USER_NO = R.REPORTEE_NO
+                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE
+                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC
+                    LIMIT 1
+                )
+                ELSE (
+                    SELECT B.BOARD_TITLE
+                    FROM BOARD B
+                    WHERE B.USER_NO = R.REPORTEE_NO
+                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE
+                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC
+                    LIMIT 1
+                )
+            END AS targetContent,
+            CASE
+                WHEN RD.STATE = 'C' THEN '처리 완료'
+                WHEN RD.STATE = 'R' THEN '반려'
+                ELSE NULL
+            END AS processAction
+        FROM REPORT R
+        LEFT JOIN REPORT_DETAIL RD ON R.REPORT_NO = RD.REPORT_NO
+        LEFT JOIN USER REPORTER ON R.USER_NO = REPORTER.USER_NO
+        LEFT JOIN USER REPORTEE ON R.REPORTEE_NO = REPORTEE.USER_NO
+        WHERE R.REPORT_NO = #{_parameter}
+    </select>
+    
+    <select id="selectReportedCount" parameterType="long" resultType="int">
+    	SELECT COUNT(*)
+	    FROM REPORT
+	    WHERE REPORTEE_NO = #{value}
+	</select>
+
+    <update id="processReport" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportProcessRequestDto">
+        UPDATE REPORT_DETAIL
+        SET STATE =
+            <choose>
+                <when test="'REJECT'.equals(action)">'R'</when>
+                <otherwise>'C'</otherwise>
+            </choose>
+        WHERE REPORT_NO = #{reportId}
+    </update>
+
+    <update id="hideReportedBoard" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportProcessRequestDto">
+        UPDATE BOARD
+        SET BOARD_DELETE = 'Y'
+        WHERE BOARD_NO = #{targetContentId}
+    </update>
+
+    <update id="deleteReportedBoard" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportProcessRequestDto">
+        UPDATE BOARD
+        SET BOARD_DELETE = 'Y'
+        WHERE BOARD_NO = #{targetContentId}
+    </update>
+
+    <update id="hideReportedComment" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportProcessRequestDto">
+        UPDATE COMMENT
+        SET COMMENT_DELETE = 'Y'
+        WHERE COMMENT_NO = #{targetContentId}
+    </update>
+
+    <update id="deleteReportedComment" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportProcessRequestDto">
+        UPDATE COMMENT
+        SET COMMENT_DELETE = 'Y'
+        WHERE COMMENT_NO = #{targetContentId}
+    </update>
+
+    <update id="increaseReporteeWarning" parameterType="long">
+        UPDATE USER U
+        JOIN REPORT R ON U.USER_NO = R.REPORTEE_NO
+        SET U.WARNING = U.WARNING + 1
+        WHERE R.REPORT_NO = #{_parameter}
+    </update>
+
+    <select id="selectUnansweredReportCount" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportSearchDto"
+            resultType="_int">
+        SELECT COUNT(*)
+        FROM REPORT R
+        JOIN REPORT_DETAIL D ON R.REPORTEE_NO = D.USER_NO
+        WHERE D.STATE = 'W'
+    </select>
+    
+    <select id="selectTotalReportCount" resultType="_int">
+        SELECT COUNT(*)
+        FROM REPORT
+    </select>
+    
+    <select id="selectTotalInquiryCount" resultType="_int">
+        SELECT COUNT(*)
+        FROM INQUIRY
     </select>
 
-	 수정 예정 파트 
+    <!-- =================== 레시피 관리 영역 =================== -->
 
-     =================== 회원 관리 영역 (추후 수정 예정) =================== 
-
-     회원 목록 조회 (검색 및 페이징 포함) 
-    <select id="selectUserList" parameterType="userSearchDto" resultType="userPageDto">
-        SELECT 
-            U.USER_NO as userNo,
-            U.NICKNAME as nickname,
-            U.EMAIL as email,
-            U.ROLE as role,
-            (SELECT COUNT(*) FROM BOARD B WHERE B.USER_NO = U.USER_NO AND B.BOARD_DELETE = 'N') as recipeCount,
-            U.ENROLL_DATE as enrollDate,
-            U.STATUS as status
-        FROM USER U
+    <select id="selectRecipeList" parameterType="com.kh.cookmate.admin.dto.AdminDto$RecipeSearchDto"
+            resultType="com.kh.cookmate.admin.dto.AdminDto$RecipeDto">
+        SELECT
+            B.BOARD_NO      AS recipeId,
+            B.BOARD_TITLE   AS title,
+            U.NICKNAME      AS author,
+            B.LIKES_COUNT   AS likeCount,
+            B.TYPE_NO       AS typeNo,
+            B.BOARD_DELETE  AS status,
+            DATE_FORMAT(B.BOARD_POSTDATE, '%Y-%m-%d') AS createdAt
+        FROM BOARD B
+        JOIN USER U ON B.USER_NO = U.USER_NO
         <where>
-            <if test="nickname != null and nickname != ''">
-                AND (U.NICKNAME LIKE CONCAT('%', #{keyword}, '%') OR U.EMAIL LIKE CONCAT('%', #{keyword}, '%'))
+            <if test="keyword != null and keyword != ''">
+                AND (B.BOARD_TITLE LIKE CONCAT('%', #{keyword}, '%')
+                  OR U.NICKNAME    LIKE CONCAT('%', #{keyword}, '%'))
             </if>
-            <if test="status != null and status != '' and status != '전체 상태'">
-                AND U.USER_STATUS = #{userStatus}
+            <if test="typeNo != null and typeNo != ''">
+                AND B.TYPE_NO = #{typeNo}
             </if>
-            <if test="role != null and role != '' and role != '전체 등급'">
-                AND U.ROLE = #{role}
+            <if test="status != null and status != ''">
+                AND B.BOARD_DELETE = #{status}
             </if>
         </where>
         <choose>
-            <when test="orderBy == '가입일 최신순'">ORDER BY U.ENROLL_DATE DESC</when>
-            <when test="orderBy == '레시피 많은순'">ORDER BY recipeCount DESC</when>
-            <otherwise>ORDER BY U.USER_NO DESC</otherwise>
+            <when test="orderBy == 'oldest'">ORDER BY B.BOARD_POSTDATE ASC, B.BOARD_NO ASC</when>
+            <otherwise>ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC</otherwise>
         </choose>
-        /* 페이징 처리를 위해 반드시 Service에서 offset 계산이 선행되어야 합니다 */
-        LIMIT #{offset}, #{size}
+        LIMIT #{size} OFFSET #{offset}
     </select>
 
-    <select id="selectUserCount" parameterType="userSearchDto" resultType="_int">
-        SELECT COUNT(*) 
-        FROM USER U
+    <select id="selectRecipeCount" parameterType="com.kh.cookmate.admin.dto.AdminDto$RecipeSearchDto"
+            resultType="_int">
+        SELECT COUNT(*)
+        FROM BOARD B
+        JOIN USER U ON B.USER_NO = U.USER_NO
         <where>
             <if test="keyword != null and keyword != ''">
-                AND (U.NICKNAME LIKE CONCAT('%', #{keyword}, '%') OR U.EMAIL LIKE CONCAT('%', #{keyword}, '%'))
+                AND (B.BOARD_TITLE LIKE CONCAT('%', #{keyword}, '%')
+                  OR U.NICKNAME    LIKE CONCAT('%', #{keyword}, '%'))
             </if>
-            <if test="status != null and status != '' and status != '전체 상태'">
-                AND U.STATUS = #{status}
+            <if test="typeNo != null and typeNo != ''">
+                AND B.TYPE_NO = #{typeNo}
             </if>
-            <if test="role != null and role != '' and role != '전체 등급'">
-                AND U.ROLE = #{role}
+            <if test="status != null and status != ''">
+                AND B.BOARD_DELETE = #{status}
             </if>
         </where>
-    </select>-->
+    </select>
+
+    <update id="hideRecipe" parameterType="int">
+        UPDATE BOARD
+        SET BOARD_DELETE = 'Y'
+        WHERE BOARD_NO = #{recipeId}
+    </update>
+
+    <update id="restoreRecipe" parameterType="int">
+        UPDATE BOARD
+        SET BOARD_DELETE = 'N'
+        WHERE BOARD_NO = #{recipeId}
+    </update>
+
+    <!-- =================== 공지사항 관리 영역 =================== -->
+
+    <select id="selectNoticeList" parameterType="com.kh.cookmate.admin.dto.AdminDto$NoticeSearchDto"
+            resultType="com.kh.cookmate.admin.dto.AdminDto$NoticeDto">
+        SELECT
+            NOTICE_NO     	       AS noticeId,
+            USER_NO                AS userNo,
+            NOTICE_TITLE           AS title,
+            NOTICE_CONTENT         AS content,
+            TYPE_NAME              AS typeName,
+            NOTICE_STATUS          AS status,
+            NOTICE_DELETE          AS deleteYn,
+            DATE_FORMAT(START_DATE, '%Y-%m-%d') AS startDate,
+            DATE_FORMAT(END_DATE, '%Y-%m-%d') AS endDate,
+            DATE_FORMAT(NOTICE_MODIFIEDDATE, '%Y-%m-%d %H:%i:%s') AS modifiedDate
+        FROM NOTICE
+        <where>
+            NOTICE_DELETE = 'N'
+            <if test="keyword != null and keyword != ''">
+                AND NOTICE_TITLE LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="typeName != null and typeName != ''">
+                AND TYPE_NAME = #{typeName}
+            </if>
+            <if test="status != null and status != ''">
+                AND NOTICE_STATUS = #{status}
+            </if>
+        </where>
+        ORDER BY START_DATE DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="selectNoticeCount" parameterType="com.kh.cookmate.admin.dto.AdminDto$NoticeSearchDto"
+            resultType="_int">
+        SELECT COUNT(*)
+        FROM NOTICE
+        <where>
+            NOTICE_DELETE = 'N'
+            <if test="keyword != null and keyword != ''">
+                AND NOTICE_TITLE LIKE CONCAT('%', #{keyword}, '%')
+            </if>
+            <if test="typeName != null and typeName != ''">
+                AND TYPE_NAME = #{typeName}
+            </if>
+            <if test="status != null and status != ''">
+                AND NOTICE_STATUS = #{status}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertNotice" parameterType="com.kh.cookmate.admin.dto.AdminDto$NoticeDto">
+        INSERT INTO NOTICE (
+            USER_NO,
+            NOTICE_TITLE,
+            NOTICE_CONTENT,
+            START_DATE,
+            END_DATE,
+            NOTICE_STATUS,
+            NOTICE_DELETE,
+            TYPE_NAME
+        ) VALUES (
+            #{userNo},
+            #{title},
+            #{content},
+            <choose>
+                <when test="startDate != null and startDate != ''">#{startDate}</when>
+                <otherwise>NOW()</otherwise>
+            </choose>,
+            <choose>
+                <when test="endDate != null and endDate != ''">#{endDate}</when>
+                <otherwise>NULL</otherwise>
+            </choose>,
+            #{status},
+            'N',
+            #{typeName}
+        )
+    </insert>
+
+    <update id="updateNotice" parameterType="com.kh.cookmate.admin.dto.AdminDto$NoticeDto">
+        UPDATE NOTICE
+        SET
+            NOTICE_TITLE = #{title},
+            NOTICE_CONTENT = #{content},
+            START_DATE = #{startDate},
+            END_DATE =
+            <choose>
+                <when test="endDate != null and endDate != ''">#{endDate}</when>
+                <otherwise>NULL</otherwise>
+            </choose>,
+            NOTICE_STATUS = #{status},
+            TYPE_NAME = #{typeName},
+            NOTICE_MODIFIEDDATE = NOW()
+        WHERE NOTICE_NO = #{noticeId}
+          AND NOTICE_DELETE = 'N'
+    </update>
+
+    <update id="deleteNotice" parameterType="long">
+        UPDATE NOTICE
+        SET NOTICE_DELETE = 'Y',
+            NOTICE_MODIFIEDDATE = NOW()
+        WHERE NOTICE_NO = #{noticeId}
+    </update>
+
+    <!-- =================== 문의 관리 영역 =================== -->
+
+    <resultMap id="inquiryResultMap" type="com.kh.cookmate.admin.dto.AdminDto$InquiryDto">
+        <id property="inquiryId" column="INQUIRY_NO" />
+        <result property="userNo" column="USER_NO" />
+        <result property="title" column="INQUIRY_TITLE" />
+        <result property="content" column="INQUIRY_CONTENT" />
+        <result property="typeName" column="TYPE_NAME" />
+        <result property="writer" column="NICKNAME" />
+        <result property="email" column="USER_EMAIL" />
+        <result property="status" column="INQUIRY_STATUS" />
+        <result property="createdAt" column="CREATED_AT" />
+        <result property="answer" column="ANSWER" />
+        <result property="answerDate" column="ANSWER_DATE" />
+    </resultMap>
+
+    <select id="selectInquiryList" parameterType="com.kh.cookmate.admin.dto.AdminDto$InquirySearchDto"
+            resultMap="inquiryResultMap">
+        SELECT
+            I.INQUIRY_NO,
+            I.USER_NO,
+            I.INQUIRY_TITLE,
+            I.INQUIRY_CONTENT,
+            I.TYPE_NAME,
+            U.NICKNAME,
+            U.USER_EMAIL,
+            I.INQUIRY_STATUS,
+            DATE_FORMAT(I.INQUIRY_POSTDATE, '%Y-%m-%d') AS CREATED_AT,
+            I.ANSWER,
+            DATE_FORMAT(I.ANSWER_DATE, '%Y-%m-%d') AS ANSWER_DATE
+        FROM INQUIRY I
+        LEFT JOIN USER U ON I.USER_NO = U.USER_NO
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (I.INQUIRY_TITLE LIKE CONCAT('%', #{keyword}, '%')
+                  OR I.INQUIRY_CONTENT LIKE CONCAT('%', #{keyword}, '%')
+                  OR U.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
+                  OR U.USER_EMAIL LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="typeName != null and typeName != ''">
+                AND I.TYPE_NAME = #{typeName}
+            </if>
+            <if test="status != null and status != ''">
+                AND I.INQUIRY_STATUS = #{status}
+            </if>
+        </where>
+        ORDER BY I.INQUIRY_POSTDATE DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="selectUnansweredInquiryCount" parameterType="com.kh.cookmate.admin.dto.AdminDto$InquirySearchDto"
+            resultType="_int">
+        SELECT COUNT(*)
+        FROM INQUIRY I
+        LEFT JOIN USER U ON I.USER_NO = U.USER_NO
+        WHERE INQUIRY_STATUS = 'N'
+    </select>
+
+    <update id="answerInquiry" parameterType="com.kh.cookmate.admin.dto.AdminDto$InquiryAnswerDto">
+        UPDATE INQUIRY
+        SET INQUIRY_STATUS = 'Y',
+            ANSWER = #{answer},
+            ANSWER_DATE = NOW()
+        WHERE INQUIRY_NO = #{inquiryId}
+    </update>
+    
+    <select id="selectUserDetail" parameterType="int" resultType="com.kh.cookmate.admin.dto.AdminDto$UserDetailDto">
+	    SELECT 
+	        u.USER_NO AS userId,             
+	        u.NICKNAME AS nickname,
+	        u.USER_EMAIL AS email,
+	        u.USER_ENROLL_DATE AS enrollDate,
+	        u.LAST_LOGIN AS lastLogin,
+<!--	        u.LAST_LOGIN_IP AS lastLoginIp,-->
+	        u.USER_STATUS AS status,
+	        u.WITHDRAW AS withdraw,
+	        a.AUTHORITY AS role,
+	        u.PROFILE_IMAGE_URL AS profileImageUrl,
+	        (SELECT COUNT(*) FROM BOARD WHERE user_no = u.user_no) AS boardCount,
+	        (SELECT COUNT(*) FROM COMMENT WHERE user_no = u.user_no) AS commentCount,
+	        (SELECT COUNT(*) FROM SCRAP WHERE user_no = u.user_no) AS scrapCount,
+	        <!-- 수정 필요 -->
+	        (SELECT COUNT(*) FROM REPORT WHERE user_no = u.user_no) AS reportCount
+	    FROM USER u
+	    LEFT JOIN AUTHORITY a ON u.USER_NO = a.USER_NO
+	    WHERE u.user_no = #{userId}
+	</select>
+
+	<!-- ====================== 회원 상세 - 작성 레시피 ====================== -->
+
+	<select id="selectUserRecipe" parameterType="map" resultType="com.kh.cookmate.admin.dto.AdminDto$UserRecipeDto">
+	    SELECT
+	        B.BOARD_NO            AS boardId,
+	        B.BOARD_TITLE         AS title,
+	        B.LIKES_COUNT         AS likeCount,
+	        DATE_FORMAT(B.BOARD_POSTDATE, '%Y-%m-%d') AS createdAt,
+	
+	        CASE
+	            WHEN B.BOARD_DELETE = 'Y' THEN '삭제'
+	            ELSE '정상'
+	        END                    AS status
+	
+	    FROM BOARD B
+	    WHERE B.USER_NO = #{userId}
+	    ORDER BY B.BOARD_NO DESC
+	    LIMIT #{size}
+		OFFSET #{offset}
+	</select>
+	
+	<select id="selectUserRecipeCount" parameterType="int" resultType="_int">
+        SELECT COUNT(*) 
+        FROM BOARD
+        WHERE USER_NO = #{userId}
+        AND BOARD_DELETE = 'N'
+    </select>
+	
+	<!-- ====================== 회원 상세 - 작성 댓글 ====================== -->
+	
+	<select id="selectUserComment" parameterType="map" resultType="com.kh.cookmate.admin.dto.AdminDto$UserCommentDto">
+	
+	    SELECT
+	        C.COMMENT_NO           AS commentId,
+	        B.BOARD_NO             AS recipeId,
+	        B.BOARD_TITLE          AS recipeTitle,
+	        C.COMMENT_CONTENT      AS content,
+	        DATE_FORMAT(C.COMMENT_POSTDATE, '%Y-%m-%d') AS createdAt,
+	        CASE
+	            WHEN C.COMMENT_DELETE = 'Y' THEN '삭제'
+	            ELSE '정상'
+	        END                     AS status
+	
+	    FROM COMMENT C
+	    JOIN BOARD B ON C.BOARD_NO = B.BOARD_NO
+	    WHERE C.USER_NO = #{userId}
+	    ORDER BY C.COMMENT_NO DESC
+	    LIMIT #{size}
+		OFFSET #{offset}
+	</select>
+	
+	<select id="selectUserCommentCount" parameterType="map" resultType="_int">
+        SELECT COUNT(*)
+        FROM COMMENT
+        WHERE USER_NO = #{userId}
+    </select>
+	
+	<!-- ====================== 회원 상세 - 신고 내역 ====================== -->
+	
+	<select id="selectUserReport" parameterType="map" resultType="com.kh.cookmate.admin.dto.AdminDto$UserReportDto">
+	    SELECT
+	        R.REPORT_NO      AS reportId,
+	        R.REPORT_TYPE    AS reportType,
+	        R.REPORT_REASON  AS reason,
+	
+	        RD.STATE AS state,
+	        DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d') AS createdAt
+	
+	    FROM REPORT R
+	    LEFT JOIN REPORT_DETAIL RD ON R.REPORT_NO = RD.REPORT_NO
+	    WHERE R.REPORTEE_NO = #{userId}
+	    ORDER BY R.REPORT_NO DESC
+	    LIMIT #{size}
+		OFFSET #{offset}
+	</select>
+	
+	 <select id="selectUserReportCount" parameterType="int" resultType="_int">
+        SELECT COUNT(*)
+        FROM REPORT
+        WHERE REPORTEE_NO = #{userId}
+    </select>
+    
+
+	
+	<!-- ====================== 회원 상세 - 정지 처리 이력 ====================== -->
+	
+	<select id="selectUserLog"
+        parameterType="map"
+        resultType="com.kh.cookmate.admin.dto.AdminDto$UserLogDto">
+
+	    SELECT
+	        BAN_ID AS banId,
+	        USER_NO AS userNo,
+	        REASON AS reason,
+	        BAN_TYPE AS banType,
+	        DATE_FORMAT(BAN_START, '%Y-%m-%d %H:%i:%s') AS banStart,
+	        DATE_FORMAT(BAN_END, '%Y-%m-%d %H:%i:%s') AS banEnd,
+	        BAN_ACTICE AS banActice
+	    FROM BANNED_USER
+	    WHERE USER_NO = #{userId}
+	    ORDER BY BAN_ID DESC
+	    LIMIT #{size}
+		OFFSET #{offset}
+	
+	</select>
+		
+		<select id="selectUserLogCount" parameterType="int" resultType="_int">
+			SELECT COUNT(*)
+			FROM BANNED_USER
+			WHERE USER_NO = #{_parameter}
+		</select>
+
+
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- ///////////////////////////스케줄링 영역//////////////////////////////////////////////////////////// -->
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+    <insert id="insertUserBan" parameterType="com.kh.cookmate.admin.dto.AdminDto$UserSuspendRequestDto">
+        INSERT INTO BANNED_USER (
+            USER_NO,
+            REASON,
+            BAN_TYPE,
+            BAN_START,
+            BAN_END,
+            BAN_ACTICE
+        ) VALUES (
+            #{userId},
+            #{reason},
+            #{banType},
+            NOW(),
+            <choose>
+                <when test="days == 0">NULL</when>
+                <otherwise>DATE_ADD(NOW(), INTERVAL #{days} DAY)</otherwise>
+            </choose>,
+            'Y'
+        )
+    </insert>
+
+    <update id="releaseUserBan" parameterType="int">
+        UPDATE BANNED_USER
+        SET BAN_ACTICE = 'N'
+        WHERE USER_NO = #{_parameter}
+          AND BAN_ACTICE = 'Y'
+    </update>
+
+    <update id="updateUserStatus" parameterType="map">
+        UPDATE USER
+        SET USER_STATUS = #{status}
+        WHERE USER_NO = #{userId}
+          AND WITHDRAW = 'N'
+    </update>
+
+    <update id="withdrawUser" parameterType="int">
+        UPDATE USER
+        SET WITHDRAW = 'Y'
+        WHERE USER_NO = #{_parameter}
+    </update>
+
+    <update id="updateExpiredBanUsers">
+        UPDATE USER U
+        SET U.USER_STATUS = 'N'
+        WHERE U.USER_STATUS = 'B'
+          AND U.WITHDRAW = 'N'
+          AND EXISTS (
+              SELECT 1
+              FROM BANNED_USER BU
+              WHERE BU.USER_NO = U.USER_NO
+                AND BU.BAN_ACTICE = 'Y'
+                AND BU.BAN_END IS NOT NULL
+                AND BU.BAN_END &lt;= NOW()
+          )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM BANNED_USER BU2
+              WHERE BU2.USER_NO = U.USER_NO
+                AND BU2.BAN_ACTICE = 'Y'
+                AND (
+                    BU2.BAN_END IS NULL
+                    OR BU2.BAN_END &gt; NOW()
+                )
+          )
+    </update>
+
+    <update id="deactivateExpiredBans">
+        UPDATE BANNED_USER
+        SET BAN_ACTICE = 'N'
+        WHERE BAN_ACTICE = 'Y'
+          AND BAN_END IS NOT NULL
+          AND BAN_END &lt;= NOW()
+    </update>
+
+    <update id="closeExpiredNotices">
+        UPDATE NOTICE
+        SET NOTICE_STATUS = 'N',
+            NOTICE_MODIFIEDDATE = NOW()
+        WHERE NOTICE_STATUS = 'Y'
+          AND NOTICE_DELETE = 'N'
+          AND END_DATE IS NOT NULL
+          AND END_DATE &lt; CURDATE()
+    </update>
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+<!-- ///////////////////////////스케줄링 영역 끝////////////////////////////////////////////////////////// -->
+<!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
+
+	<!-- 회원 신고 상세 -->
+<!--	<select id="getUserReportCount" parameterType="int" resultType="int">-->
+<!--	    SELECT COUNT(*)-->
+<!--	    FROM REPORT_DETAIL RD-->
+	    
+<!--	    JOIN REPORT R-->
+<!--	        ON RD.REPORT_NO = R.REPORT_NO-->
+<!--	    LEFT JOIN BOARD B-->
+<!--	        ON R.BOARD_NO = B.BOARD_NO-->
+<!--	    LEFT JOIN COMMENT C-->
+<!--	        ON R.COMMENT_NO = C.COMMENT_NO-->
+	
+<!--	    WHERE RD.STATE != 'R'-->
+<!--	    AND (-->
+<!--	        B.USER_NO = #{userNo}-->
+<!--	        OR C.USER_NO = #{userNo}-->
+<!--	    )-->
+<!--	</select>-->
+
+<!--	<select id="getReportDetail" parameterType="long" resultType="com.kh.cookmate.admin.dto.AdminDto$ReportDetailDto">-->
+<!--        SELECT-->
+<!--            R.REPORT_NO AS reportId,-->
+<!--            R.REPORT_TYPE AS reportType,-->
+<!--            R.USER_NO AS reporterNo,-->
+<!--            REPORTER.NICKNAME AS reporterNickname,-->
+<!--            REPORTER.USER_EMAIL AS reporterEmail,-->
+<!--            R.REPORTEE_NO AS reporteeNo,-->
+<!--            REPORTEE.NICKNAME AS reporteeNickname,-->
+<!--            REPORTEE.USER_EMAIL AS reporteeEmail,-->
+<!--            REPORTEE.WARNING AS reporteeWarning,-->
+<!--            R.REPORT_REASON AS reason,-->
+<!--            RD.STATE AS status,-->
+<!--            DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d %H:%i') AS createdAt,-->
+<!--            CASE-->
+<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN 'COMMENT'-->
+<!--                ELSE 'BOARD'-->
+<!--            END AS targetKind,-->
+<!--            CASE-->
+<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (-->
+<!--                    SELECT C.COMMENT_NO-->
+<!--                    FROM COMMENT C-->
+<!--                    WHERE C.USER_NO = R.REPORTEE_NO-->
+<!--                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE-->
+<!--                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC-->
+<!--                    LIMIT 1-->
+<!--                )-->
+<!--                ELSE (-->
+<!--                    SELECT B.BOARD_NO-->
+<!--                    FROM BOARD B-->
+<!--                    WHERE B.USER_NO = R.REPORTEE_NO-->
+<!--                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE-->
+<!--                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC-->
+<!--                    LIMIT 1-->
+<!--                )-->
+<!--            END AS targetContentId,-->
+<!--            CASE-->
+<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (-->
+<!--                    SELECT B.BOARD_TITLE-->
+<!--                    FROM COMMENT C-->
+<!--                    JOIN BOARD B ON C.BOARD_NO = B.BOARD_NO-->
+<!--                    WHERE C.USER_NO = R.REPORTEE_NO-->
+<!--                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE-->
+<!--                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC-->
+<!--                    LIMIT 1-->
+<!--                )-->
+<!--                ELSE (-->
+<!--                    SELECT B.BOARD_TITLE-->
+<!--                    FROM BOARD B-->
+<!--                    WHERE B.USER_NO = R.REPORTEE_NO-->
+<!--                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE-->
+<!--                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC-->
+<!--                    LIMIT 1-->
+<!--                )-->
+<!--            END AS targetTitle,-->
+<!--            CASE-->
+<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (-->
+<!--                    SELECT C.COMMENT_CONTENT-->
+<!--                    FROM COMMENT C-->
+<!--                    WHERE C.USER_NO = R.REPORTEE_NO-->
+<!--                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE-->
+<!--                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC-->
+<!--                    LIMIT 1-->
+<!--                )-->
+<!--                ELSE (-->
+<!--                    SELECT B.BOARD_TITLE-->
+<!--                    FROM BOARD B-->
+<!--                    WHERE B.USER_NO = R.REPORTEE_NO-->
+<!--                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE-->
+<!--                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC-->
+<!--                    LIMIT 1-->
+<!--                )-->
+<!--            END AS targetContent,-->
+<!--            CASE-->
+<!--                WHEN RD.STATE = 'Y' THEN '처리 완료'-->
+<!--                WHEN RD.STATE = 'R' THEN '반려'-->
+<!--                ELSE NULL-->
+<!--            END AS processAction-->
+<!--        FROM REPORT R-->
+<!--        LEFT JOIN REPORT_DETAIL RD ON R.REPORT_NO = RD.REPORT_NO-->
+<!--        LEFT JOIN USER REPORTER ON R.USER_NO = REPORTER.USER_NO-->
+<!--        LEFT JOIN USER REPORTEE ON R.REPORTEE_NO = REPORTEE.USER_NO-->
+<!--        WHERE R.REPORT_NO = #{_parameter}-->
+<!--    </select>-->
+
 
 </mapper>
-
