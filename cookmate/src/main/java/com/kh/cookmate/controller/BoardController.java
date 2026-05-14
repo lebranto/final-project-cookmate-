@@ -19,6 +19,7 @@ import com.kh.cookmate.board.dto.BoardDto.BoardPut;
 import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
 import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
 import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
+import com.kh.cookmate.board.dto.ReportDto.CommentReportRequest;
 import com.kh.cookmate.board.service.BoardService;
 
 import lombok.RequiredArgsConstructor;
@@ -144,5 +145,27 @@ public class BoardController {
         int result = service.deleteComment(commentNo);
         if (result > 0) return ResponseEntity.ok("댓글이 삭제되었습니다.");
         return ResponseEntity.badRequest().body("댓글 삭제에 실패했습니다.");
+    }
+
+    @PostMapping("/comments/{commentNo}/reports")
+    public ResponseEntity<?> reportComment(
+            @PathVariable int commentNo,
+            @RequestBody CommentReportRequest request) {
+        int result = service.reportComment(commentNo, request);
+
+        if (result == -1) {
+            return ResponseEntity.badRequest().body("로그인 후 신고할 수 있습니다.");
+        } else if (result == -2) {
+            return ResponseEntity.badRequest().body("신고할 댓글을 찾을 수 없습니다.");
+        } else if (result == -3) {
+            return ResponseEntity.badRequest().body("본인 댓글은 신고할 수 없습니다.");
+        } else if (result == -4) {
+            return ResponseEntity.badRequest().body("이미 신고한 댓글입니다.");
+        } else if (result == -5) {
+            return ResponseEntity.badRequest().body("신고 유형을 선택해 주세요.");
+        }
+
+        if (result > 0) return ResponseEntity.ok("댓글 신고가 접수되었습니다.");
+        return ResponseEntity.badRequest().body("댓글 신고에 실패했습니다.");
     }
 }

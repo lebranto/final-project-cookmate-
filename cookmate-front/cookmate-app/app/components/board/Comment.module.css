@@ -202,6 +202,45 @@
   color: #c0392b;
 }
 
+.reportBox {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid rgba(192, 57, 43, 0.22);
+  border-radius: 10px;
+  background: #fff8f7;
+}
+
+.reportSelect,
+.reportTextarea {
+  width: 100%;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  color: #1a1a1a;
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.reportSelect:focus,
+.reportTextarea:focus {
+  border-color: #c0392b;
+}
+
+.reportTextarea {
+  resize: none;
+  line-height: 1.5;
+}
+
+.reportActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .replyList {
   display: flex;
   flex-direction: column;

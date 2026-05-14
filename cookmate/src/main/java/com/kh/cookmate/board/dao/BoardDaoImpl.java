@@ -191,6 +191,29 @@ public class BoardDaoImpl implements BoardDao{
 	}
 
 	@Override
+	public int selectCommentUserNo(int commentNo) {
+		Integer userNo = session.selectOne("boardmapper.selectCommentUserNo", commentNo);
+		return userNo == null ? 0 : userNo;
+	}
+
+	@Override
+	public int selectCommentBoardNo(int commentNo) {
+		Integer boardNo = session.selectOne("boardmapper.selectCommentBoardNo", commentNo);
+		return boardNo == null ? 0 : boardNo;
+	}
+
+	@Override
+	public int selectCommentReportCount(Map<String, Object> params) {
+		Integer count = session.selectOne("boardmapper.selectCommentReportCount", params);
+		return count == null ? 0 : count;
+	}
+
+	@Override
+	public int insertCommentReport(Map<String, Object> params) {
+		return session.insert("boardmapper.insertCommentReport", params);
+	}
+
+	@Override
 	public List<Map<String, Object>> selectApiBoards() {
 	    return session.selectList("boardmapper.selectApiBoards");
 	}

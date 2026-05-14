@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/axios';
 import styles from './profile.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
+import { uploadImageWithPresignedUrl } from "@/app/lib/imageUpload";
 
 const ALLERGY_OPTIONS = [
   "새우", "땅콩", "우유", "달걀", "밀(글루텐)", 
@@ -171,18 +172,17 @@ export default function ProfileEditPage() {
     try {
       let finalImageUrl = member.profileImageUrl;
 
-      // 🌟 [임시 보류] 백엔드 S3 API URL 연결 문제로 인해 업로드 기능 차단
-      // if (selectedFile) {
-      //   try {
-      //     const uploadedUrl = await uploadImageWithPresignedUrl(selectedFile, "profiles");
-      //     finalImageUrl = uploadedUrl;
-      //   } catch (uploadErr) {
-      //     console.error("이미지 업로드 실패:", uploadErr);
-      //     alert("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
-      //     setIsSubmitting(false);
-      //     return; 
-      //   }
-      // }
+      if (selectedFile) {
+        try {
+          const uploadedUrl = await uploadImageWithPresignedUrl(selectedFile, "users/profiles");
+          finalImageUrl = uploadedUrl;
+        } catch (uploadErr) {
+          console.error("이미지 업로드 실패:", uploadErr);
+          alert("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
+          setIsSubmitting(false);
+          return; 
+        }
+      }
 
       const payload = {
         userNo: loginUserNo,
@@ -230,7 +230,7 @@ export default function ProfileEditPage() {
       <h2 className={styles.sectionTitle}>회원 정보 수정</h2>
 
       <div className={styles.formCard}>
-        <div className={styles.formCardTitle}>프로필 이미지 (현재 준비 중)</div>
+        <div className={styles.formCardTitle}>프로필 이미지</div>
         <div className={styles.avatarRow}>
           <div className={styles.avatarBig}>
              {(!displayImageUrl || imgError) ? (
@@ -243,8 +243,7 @@ export default function ProfileEditPage() {
           </div>
           <div className={styles.avatarActions}>
             <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleImageChange} />
-            {/* 🌟 클릭 시 실제 파일 업로드 창 대신 알림창 띄우기 */}
-            <button className={styles.avatarBtn} onClick={() => alert("이미지 업로드 기능은 현재 준비 중입니다.")}>이미지 변경</button>
+            <button className={styles.avatarBtn} onClick={() => fileInputRef.current?.click()}>이미지 변경</button>
             <button className={styles.avatarBtn} onClick={resetImageToDefault}>기본으로 변경</button>
           </div>
         </div>
