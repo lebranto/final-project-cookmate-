@@ -91,7 +91,7 @@ export default function ReportsPage() {
 
     try {
       const { data } = await axios.get<ReportResponse>(
-        'http://localhost:8081/api/admin/report',
+        'http://localhost:8081/api/admin/reports',
         {
           params: {
             page,
@@ -160,7 +160,7 @@ export default function ReportsPage() {
     setProcessReason('');
 
     try {
-      const { data } = await axios.get<ReportDetail>(`http://localhost:8081/api/admin/report/${reportId}`);
+      const { data } = await axios.get<ReportDetail>(`http://localhost:8081/api/admin/reports/${reportId}`);
       setSelectedReport(data);
       if (convertStatus(data.status) === '완료' || convertStatus(data.status) === '반려') {
         setSelectedAction('REJECT');
@@ -195,7 +195,7 @@ export default function ReportsPage() {
 
     setSubmitting(true);
     try {
-      await axios.patch(`http://localhost:8081/api/admin/report/${selectedReport.reportId}/process`, {
+      await axios.patch(`http://localhost:8081/api/admin/reports/${selectedReport.reportId}/process`, {
         action: selectedAction,
         reason: processReason,
         targetKind: selectedReport.targetKind,

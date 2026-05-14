@@ -64,8 +64,8 @@ public interface AdminDao {
 
 	List<RecipeDto> selectRecipeList(RecipeSearchDto condition);
 	int selectRecipeCount(RecipeSearchDto condition);
-	int hideRecipe(int recipeId);
-	int restoreRecipe(int recipeId);
+	int hideRecipe(int boardNo);
+	int restoreRecipe(int boardNo);
 
 	List<NoticeDto> selectNoticeList(NoticeSearchDto condition);
 	int selectNoticeCount(NoticeSearchDto condition);

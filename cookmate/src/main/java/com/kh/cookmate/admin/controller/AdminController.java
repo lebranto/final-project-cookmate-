@@ -52,7 +52,7 @@ public class AdminController {
 	    return ResponseEntity.ok(dto);
 	}
 	
-	@GetMapping("/user")
+	@GetMapping("/users")
 	public ResponseEntity<Map<String, Object>> getUsers(UserSearchDto dto) {
 		
 		dto.setOffset((dto.getPage() - 1) * dto.getSize());
@@ -60,7 +60,7 @@ public class AdminController {
 	    return ResponseEntity.ok(adminService.getUsers(dto));
 	}
 	
-	@GetMapping("/user/{userId}")
+	@GetMapping("/users/{userId}")
     public ResponseEntity<UserDetailDto> getUserDetail(@PathVariable("userId") int userId) {
         AdminDto.UserDetailDto userDetail = adminService.getUserDetail(userId);
         
@@ -71,7 +71,7 @@ public class AdminController {
         }
     }
 	
-	@GetMapping("/user/{userId}/board")
+	@GetMapping("/users/{userId}/boards")
 	public ResponseEntity<Map<String, Object>> getUserRecipes(
 	        @PathVariable int userId,
 	        AdminDto.UserRecipeDto dto) {
@@ -84,7 +84,7 @@ public class AdminController {
 	    return ResponseEntity.ok(result);
 	}
 	
-	@GetMapping("/user/{userId}/comment")
+	@GetMapping("/users/{userId}/comments")
 	public ResponseEntity<Map<String, Object>> getUserComments(
 	        @PathVariable int userId,
 	        AdminDto.UserCommentDto dto) {
@@ -96,7 +96,7 @@ public class AdminController {
 	    );
 	}
 	
-	@GetMapping("/user/{userId}/report")
+	@GetMapping("/users/{userId}/reports")
 	public ResponseEntity<Map<String, Object>> getUserReports(
 	        @PathVariable int userId,
 	        AdminDto.UserReportDto dto) {
@@ -108,7 +108,7 @@ public class AdminController {
 	    );
 	}
 	
-	@GetMapping("/user/{userId}/log")
+	@GetMapping("/users/{userId}/logs")
 	public ResponseEntity<Map<String, Object>> getUserLogs(
 	        @PathVariable int userId,
 	        AdminDto.UserLogDto dto) {
@@ -120,7 +120,7 @@ public class AdminController {
 	    );
 	}
 
-	@PostMapping("/user/{userId}/suspend")
+	@PostMapping("/users/{userId}/suspend")
 	public ResponseEntity<Void> suspendUser(
 			@PathVariable int userId,
 			@RequestBody UserSuspendRequestDto request
@@ -134,14 +134,14 @@ public class AdminController {
 				: ResponseEntity.notFound().build();
 	}
 
-	@PatchMapping("/user/{userId}/suspend/release")
+	@PatchMapping("/users/{userId}/suspend/release")
 	public ResponseEntity<Void> releaseUserBan(@PathVariable int userId) {
 		return adminService.releaseUserBan(userId)
 				? ResponseEntity.noContent().build()
 				: ResponseEntity.notFound().build();
 	}
 
-	@PostMapping("/user/{userId}/withdraw")
+	@PostMapping("/users/{userId}/withdraw")
 	public ResponseEntity<Void> withdrawUser(
 			@PathVariable int userId,
 			@RequestBody(required = false) UserWithdrawRequestDto request
@@ -151,7 +151,7 @@ public class AdminController {
 				: ResponseEntity.notFound().build();
 	}
 	
-	@GetMapping("/report")
+	@GetMapping("/reports")
 	public ResponseEntity<Map<String, Object>> getReports(ReportSearchDto dto){
 		
 		log.info("신고 목록 조회");
@@ -161,7 +161,7 @@ public class AdminController {
 		return ResponseEntity.ok(adminService.getReports(dto));
 	}
 
-	@GetMapping("/report/{reportId}")
+	@GetMapping("/reports/{reportId}")
 	public ResponseEntity<ReportDetailDto> getReportDetail(@PathVariable long reportId) {
 		
 		System.out.println("reportId = " + reportId);
@@ -173,7 +173,7 @@ public class AdminController {
 				: ResponseEntity.notFound().build();
 	}
 
-	@PatchMapping("/report/{reportId}/process")
+	@PatchMapping("/reports/{reportId}/process")
 	public ResponseEntity<Void> processReport(
 			@PathVariable long reportId,
 			@RequestBody ReportProcessRequestDto request
@@ -187,7 +187,7 @@ public class AdminController {
 				: ResponseEntity.notFound().build();
 	}
 	
-	@GetMapping("/recipe")
+	@GetMapping("/boards")
 	public ResponseEntity<Map<String, Object>> getRecipes(RecipeSearchDto dto){
 		
 		dto.setOffset((dto.getPage() - 1) * dto.getSize());
@@ -195,34 +195,34 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getRecipes(dto));
 	}
 
-	@PatchMapping("/recipe/{recipeId}/hide")
-	public ResponseEntity<Void> hideRecipe(@PathVariable int recipeId) {
-		return adminService.hideRecipe(recipeId)
+	@PatchMapping("/boards/{boardNo}/hide")
+	public ResponseEntity<Void> hideRecipe(@PathVariable int boardNo) {
+		return adminService.hideRecipe(boardNo)
 				? ResponseEntity.noContent().build()
 				: ResponseEntity.notFound().build();
 	}
 
-	@PatchMapping("/recipe/{recipeId}/restore")
-	public ResponseEntity<Void> restoreRecipe(@PathVariable int recipeId) {
-		return adminService.restoreRecipe(recipeId)
+	@PatchMapping("/boards/{boardNo}/restore")
+	public ResponseEntity<Void> restoreRecipe(@PathVariable int boardNo) {
+		return adminService.restoreRecipe(boardNo)
 				? ResponseEntity.noContent().build()
 				: ResponseEntity.notFound().build();
 	}
 	
-	@GetMapping("/notice")
+	@GetMapping("/notices")
 	public ResponseEntity<Map<String, Object>> Notice(NoticeSearchDto condition){
 		condition.setOffset((condition.getPage() - 1) * condition.getSize());
 	    return ResponseEntity.ok(adminService.getNotices(condition));
 	}
 
-	@PostMapping("/notice")
+	@PostMapping("/notices")
 	public ResponseEntity<Void> createNotice(@RequestBody NoticeDto notice) {
 		return adminService.createNotice(notice)
 				? ResponseEntity.noContent().build()
 				: ResponseEntity.badRequest().build();
 	}
 
-	@PutMapping("/notice/{noticeId}")
+	@PutMapping("/notices/{noticeId}")
 	public ResponseEntity<Void> updateNotice(
 			@PathVariable long noticeId,
 			@RequestBody NoticeDto notice
@@ -233,20 +233,20 @@ public class AdminController {
 				: ResponseEntity.notFound().build();
 	}
 
-	@PatchMapping("/notice/{noticeId}/delete")
+	@PatchMapping("/notices/{noticeId}/delete")
 	public ResponseEntity<Void> deleteNotice(@PathVariable long noticeId) {
 		return adminService.deleteNotice(noticeId)
 				? ResponseEntity.noContent().build()
 				: ResponseEntity.notFound().build();
 	}
 	
-	@GetMapping("/inquiry")
+	@GetMapping("/inquiries")
 	public ResponseEntity<Map<String, Object>> Inquiry(InquirySearchDto condition){
 		condition.setOffset((condition.getPage() - 1) * condition.getSize());
         return ResponseEntity.ok(adminService.getInquiries(condition));
 	}
 
-	@PatchMapping("/inquiry/{inquiryId}/answer")
+	@PatchMapping("/inquiries/{inquiryId}/answer")
 	public ResponseEntity<Void> answerInquiry(@PathVariable long inquiryId, @RequestBody InquiryAnswerDto request) {
 		if (request == null || request.getAnswer() == null || request.getAnswer().trim().isEmpty()) {
 			return ResponseEntity.badRequest().build();

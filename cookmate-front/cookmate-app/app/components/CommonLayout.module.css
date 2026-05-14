@@ -177,6 +177,83 @@
   display: none;
 }
 
+.adminHeader {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  width: 100%;
+  background: #243a2e;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.adminInner {
+  max-width: 1280px;
+  height: 68px;
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.adminLogo {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.adminLogo span {
+  color: #f4c35b;
+}
+
+.adminNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.adminNav button {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  padding: 10px 13px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.adminNav button:hover,
+.adminNav .adminNavActive {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.adminActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adminSiteButton {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  cursor: pointer;
+  padding: 9px 15px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.adminSiteButton:hover {
+  background: rgba(255, 255, 255, 0.16);
 .globalFooter {
   margin-top: 40px;
   border-top: 1px solid #ebe5dc;
@@ -317,6 +394,31 @@
     color: #e05a2b;
   }
 
+  .adminInner {
+    height: auto;
+    min-height: 60px;
+    padding: 12px 16px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .adminNav {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .adminNav button {
+    white-space: nowrap;
+  }
+
+  .adminActions {
+    width: 100%;
+  }
+
+  .adminSiteButton {
+    width: 100%;
   .gfInner {
     width: calc(100% - 32px);
     flex-direction: column;
