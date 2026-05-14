@@ -36,4 +36,5 @@ public interface MemberService {
     MemberDto getChefDetail(long chefNo, Long loginUserNo);
     List<Map<String, Object>> getChefRecipeComments(long chefNo);
     boolean toggleFollow(long loginUserNo, String targetEmail); // 팔로우/언팔로우 토글
+	String withdrawKakaoUser(long userNo, String accessToken);
 }

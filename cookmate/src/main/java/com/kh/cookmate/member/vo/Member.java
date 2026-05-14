@@ -28,5 +28,6 @@ public class Member {
     private int scrapCount;    
     private int inquiryCount;
     
+    private String provider;
     
 }

@@ -1,6 +1,6 @@
 package com.kh.cookmate.member.dto;
 
-import java.time.format.DateTimeFormatter; 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,6 +33,7 @@ public class MemberDto {
     
     private List<String> allergies; 
 
+    private String provider;
     
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String userPw; 
@@ -55,6 +56,7 @@ public class MemberDto {
                 .scrapCount(member.getScrapCount())
                 .inquiryCount(member.getInquiryCount())
                 .enrollDate(formattedDate) 
+                .provider(member.getProvider())
                 .build();
     }
     

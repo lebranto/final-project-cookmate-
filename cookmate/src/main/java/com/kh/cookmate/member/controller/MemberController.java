@@ -8,11 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -198,6 +198,7 @@ public class MemberController {
         response.put("introduce", member.getIntroduce());
         response.put("profileImageUrl", member.getProfileImageUrl());
         response.put("allergies", allergies); 
+        response.put("provider", member.getProvider());
         
         return ResponseEntity.ok(response);
     }
@@ -243,5 +244,31 @@ public class MemberController {
         response.put("isValid", isValid);
 
         return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/withdraw/kakao/{userNo}")
+    public ResponseEntity<String> withdrawKakao(
+            @PathVariable long userNo, 
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        
+        // 1. 헤더에 토큰이 잘 들어왔는지 검사 (방어 로직)
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("토큰이 존재하지 않거나 형식이 잘못되었습니다.");
+        }
+
+        // 2. "Bearer " (7글자)를 잘라내고 순수 엑세스 토큰 문자열만 추출
+        String accessToken = authHeader.substring(7);
+
+        // 3. 서비스로 유저 번호와 토큰을 넘겨서 비즈니스 로직 실행
+        String result = memberService.withdrawKakaoUser(userNo, accessToken);
+
+        // 4. 서비스에서 돌아온 결과에 따라 프론트엔드에 응답 쏴주기
+        if ("SUCCESS".equals(result)) {
+            return ResponseEntity.ok("탈퇴가 완료되었습니다.");
+        } else if ("TOKEN_EXPIRED".equals(result)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("TOKEN_EXPIRED");
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("탈퇴 처리에 실패했습니다.");
+        }
     }
 }

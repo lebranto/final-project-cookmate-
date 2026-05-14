@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link'; // 🌟 이동을 위한 Link 컴포넌트 추가
+import Link from 'next/link'; 
 import api from '@/lib/axios';
 import styles from './detail.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
+import UserAvatar from '@/app/components/UserAvatar';
 
 interface ChefDetail {
   userNo: number;
@@ -38,10 +39,9 @@ interface Recipe {
   likesCount: number;
   thumbClass: string;
   boardPostdate: string;
-  imageUrl?: string; // 🌟 이미지 URL 필드 추가
+  imageUrl?: string; 
 }
 
-// 🌟 공통 이미지 URL 처리 함수
 function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
 }
@@ -50,9 +50,7 @@ export default function ChefDetailPage() {
   const params = useParams();
   const chefNo = params.chefNo;
   
-  // 🌟 하이드레이션 방지용 상태 추가
   const [isMounted, setIsMounted] = useState(false);
-
   const [chef, setChef] = useState<ChefDetail | null>(null);
   const [comments, setComments] = useState<RecipeComment[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -122,14 +120,11 @@ export default function ChefDetailPage() {
       {/* 1. 프로필 상단 영역 */}
       <div className={styles.profileCard}>
         <div className={styles.avatar}>
-          {/* 🌟 1. 사람 이모지 제거 & 프로필 없으면 닉네임 첫 글자 렌더링 */}
-          {chef.profileImageUrl ? (
-            <img src={chef.profileImageUrl} alt="프로필" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit: 'cover'}}/>
-          ) : (
-            <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#666' }}>
-              {chef.nickname.charAt(0)}
-            </div>
-          )}
+          <UserAvatar 
+            imageUrl={chef.profileImageUrl} 
+            name={chef.userEmail || chef.nickname} 
+            size={120} 
+          />
         </div>
         <div className={styles.profileInfo}>
           <div className={styles.nameRow}>
@@ -170,7 +165,6 @@ export default function ChefDetailPage() {
         </div>
       </div>
 
-      {/* 2. 탭 메뉴 영역 */}
       <div className={styles.tabs}>
         <button className={`${styles.tab} ${activeTab === 'recipe' ? styles.active : ''}`} onClick={() => setActiveTab('recipe')}>
           공개 레시피 <span className={styles.tabCount}>{chef.recipeCount}</span>
@@ -180,16 +174,12 @@ export default function ChefDetailPage() {
         </button>
       </div>
 
-      {/* 3. 공개 레시피 콘텐츠 영역 */}
       {activeTab === 'recipe' && (
         <div className={styles.recipeGrid}>
           {recipes.length > 0 ? (
             recipes.map(recipe => (
-              /* 🌟 2. 클릭 시 레시피 상세 페이지 이동 처리 */
               <Link href={`/boards/${recipe.boardNo}`} key={recipe.boardNo} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className={styles.recipeCard}>
-                  
-                  {/* 🌟 3. 음식 이모지 제거 & 실제 이미지 or CookMate 바탕 적용 */}
                   <div className={styles.recipeThumb} style={{ overflow: 'hidden' }}>
                     {recipe.imageUrl ? (
                       <img 
@@ -229,7 +219,6 @@ export default function ChefDetailPage() {
         </div>
       )}
 
-      {/* 4. 댓글 목록 렌더링 영역 */}
       {activeTab === 'comment' && (
         <div className={styles.commentList}>
           {comments.length > 0 ? (
@@ -237,14 +226,11 @@ export default function ChefDetailPage() {
               <div key={c.commentNo} className={styles.commentItem}>
                 <div className={styles.commentHeader}>
                   <div className={styles.commentAvatar}>
-                    {/* 🌟 4. 댓글 프로필도 이모지 제거 & 닉네임 첫 글자 렌더링 */}
-                    {c.commenterProfileUrl ? (
-                      <img src={c.commenterProfileUrl} alt="프로필" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit: 'cover'}}/>
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#666' }}>
-                        {c.commenterNickname.charAt(0)}
-                      </div>
-                    )}
+                    <UserAvatar 
+                      imageUrl={c.commenterProfileUrl} 
+                      name={c.commenterNickname} 
+                      size={36} 
+                    />
                   </div>
                   <div>
                     <span className={styles.commenter}>{c.commenterNickname}</span>
@@ -253,7 +239,6 @@ export default function ChefDetailPage() {
                 </div>
                 <div className={styles.commentContent}>{c.commentContent}</div>
                 
-                {/* 🌟 5. 댓글의 원문(레시피) 클릭 시 바로가기 추가 */}
                 <div className={styles.commentTarget}>
                   📌 원문: 
                   <Link href={`/boards/${c.boardNo}`} style={{ marginLeft: '4px', color: '#4a7c59', textDecoration: 'none' }}>

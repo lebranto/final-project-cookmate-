@@ -6,9 +6,11 @@
     <select id="selectUserByNo" parameterType="long" resultType="Member">
         SELECT 
             U.*, 
-            C.USER_PW 
+            C.USER_PW,
+            I.PROVIDER
         FROM USER U
         LEFT JOIN USER_CREDENTIALS C ON U.USER_NO = C.USER_NO
+        LEFT JOIN USER_IDENTITIES I ON U.USER_NO = I.USER_NO
         WHERE U.USER_NO = #{userNo}
     </select>
 

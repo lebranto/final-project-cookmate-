@@ -7,6 +7,7 @@ import { Comment } from "@/app/type/board";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
 import CommentForm from "./CommentForm";
 import styles from "./Comment.module.css";
+import UserAvatar from "@/app/components/UserAvatar";
 
 interface Props {
   boardNo: number;
@@ -165,21 +166,16 @@ function CommentItem({
   onReplySuccess: () => void;
   boardNo: number;
 }) {
-  const initial = comment.nickname?.trim().charAt(0) || "C";
   const canDelete = currentUserNo === comment.userNo;
 
   return (
     <div className={isReply ? styles.replyItem : styles.commentItem}>
       <div className={isReply ? styles.replyAvatar : styles.commentAvatar}>
-        {comment.profileImageUrl ? (
-          <img
-            src={comment.profileImageUrl}
-            alt={comment.nickname}
-            className={styles.avatarImage}
-          />
-        ) : (
-          <span>{initial}</span>
-        )}
+        <UserAvatar
+          imageUrl={comment.profileImageUrl}
+          name={comment.nickname || "user"}
+          size="100%"
+        />
       </div>
       <div className={isReply ? styles.replyBody : styles.commentBody}>
         <div className={isReply ? styles.replyNameRow : styles.commentNameRow}>
