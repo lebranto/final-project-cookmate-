@@ -8,80 +8,133 @@ import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 
 export default function WithdrawPage() {
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false); // 🌟 하이드레이션 에러 방지
+  const [isMounted, setIsMounted] = useState(false); 
+  
   const [password, setPassword] = useState("");
+  const [withdrawText, setWithdrawText] = useState(""); // 카카오 유저용 입력 텍스트
+  const [provider, setProvider] = useState(""); // 카카오 유저 판별용
   const [agreed, setAgreed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 🌟 훅을 사용하여 로그인 정보 가져오기
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
 
-  // 마운트 체크
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 탈퇴 조건: 비밀번호 입력(1자 이상) AND 체크박스 동의 AND 유저번호 존재
-  const isSubmitDisabled = password.length === 0 || !agreed || isSubmitting || !loginUserNo;
+  // 마운트 시 유저 프로필을 조회하여 카카오 로그인 유저인지 확인
+  useEffect(() => {
+    if (!isMounted || !loginUserNo) return;
+    const fetchProvider = async () => {
+      try {
+        const response = await api.get(`/users/profile/${loginUserNo}`);
+        if (response.status === 200) {
+          setProvider(response.data.provider || "");
+        }
+      } catch (err) {
+        console.error("유저 정보 로드 실패", err);
+      }
+    };
+    fetchProvider();
+  }, [loginUserNo, isMounted]);
+
+  const isKakaoUser = provider.toLowerCase() === 'kakao';
+
+  // 탈퇴 조건 분기 처리 (카카오 vs 일반)
+  const isSubmitDisabled = isKakaoUser 
+    ? (withdrawText !== "탈퇴하겠습니다" || !agreed || isSubmitting || !loginUserNo)
+    : (password.length === 0 || !agreed || isSubmitting || !loginUserNo);
 
   const handleWithdraw = async () => {
-  if (!loginUserNo) {
-    alert("로그인 정보가 유효하지 않습니다.");
-    return;
-  }
-
-  if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 취소할 수 없습니다.')) return;
-
-  setIsSubmitting(true);
-
-  try {
-    // 1단계: 비밀번호 검증
-    const verifyResponse = await api.post('/users/profile/verify-password', {
-      userNo: loginUserNo,
-      password: password
-    });
-
-    if (!verifyResponse.data.isValid) {
-      alert("비밀번호가 일치하지 않습니다. 다시 확인해 주세요.");
-      setIsSubmitting(false);
+    if (!loginUserNo) {
+      alert("로그인 정보가 유효하지 않습니다.");
       return;
     }
 
-    // 2단계: 실제 탈퇴 요청
-    const withdrawResponse = await api.post('/users/withdraw', null, {
-      params: { userNo: loginUserNo }
-    });
+    if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 취소할 수 없습니다.')) return;
 
-    if (withdrawResponse.status === 200) {
-      alert('탈퇴가 완료되었습니다. 그동안 CookMate를 이용해 주셔서 감사합니다.');
+    setIsSubmitting(true);
+    let isWithdrawSuccess = false; // 공통 성공 처리용 플래그
 
-      // 🌟 3단계: 헤더가 체크하는 모든 저장소 청소 (로컬 스토리지 + 쿠키)
-      
-      // 1) 로컬 스토리지 청소
-      const STORAGE_USER_KEYS = ["user", "loginUser", "member", "authUser", "accessToken", "role"];
-      STORAGE_USER_KEYS.forEach(key => window.localStorage.removeItem(key));
+    try {
+      if (isKakaoUser) {
+        // ==========================================
+        // 1. 카카오 유저 탈퇴 로직
+        // ==========================================
+        // (참고: api 객체의 인터셉터가 헤더에 자동으로 토큰을 넣어준다고 가정합니다)
+        const withdrawResponse = await api.post(`/users/withdraw/kakao/${loginUserNo}`);
+        
+        if (withdrawResponse.status === 200) {
+          isWithdrawSuccess = true;
+        }
+      } else {
+        // ==========================================
+        // 2. 일반 유저 탈퇴 로직 (기존 코드 유지)
+        // ==========================================
+        const verifyResponse = await api.post('/users/profile/verify-password', {
+          userNo: loginUserNo,
+          password: password
+        });
 
-      // 2) 쿠키 청소 (이게 빠져서 헤더가 안 바뀌었던 겁니다!)
-      const COOKIE_KEYS = ["accessToken", "refreshToken", "userRoles"];
-      COOKIE_KEYS.forEach(name => {
-        document.cookie = `${name}=; Max-Age=0; path=/;`;
-      });
+        if (!verifyResponse.data.isValid) {
+          alert("비밀번호가 일치하지 않습니다. 다시 확인해 주세요.");
+          setIsSubmitting(false);
+          return;
+        }
 
-      // 🌟 4단계: 'auth-state-changed' 이벤트 발생 (혹시 모를 즉시 반영용)
-      window.dispatchEvent(new Event("auth-state-changed"));
+        const withdrawResponse = await api.post('/users/withdraw', null, {
+          params: { userNo: loginUserNo }
+        });
 
-      // 🌟 5단계: 메인으로 강제 이동
-      window.location.href = '/'; 
+        if (withdrawResponse.status === 200) {
+          isWithdrawSuccess = true;
+        }
+      }
+
+      // ==========================================
+      // 3. 공통: 탈퇴 성공 후 클린업 로직
+      // ==========================================
+      if (isWithdrawSuccess) {
+        alert('탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
+        
+        const STORAGE_USER_KEYS = ["user", "loginUser", "member", "authUser", "accessToken", "role"];
+        STORAGE_USER_KEYS.forEach(key => window.localStorage.removeItem(key));
+
+        const COOKIE_KEYS = ["accessToken", "refreshToken", "userRoles"];
+        COOKIE_KEYS.forEach(name => {
+          document.cookie = `${name}=; Max-Age=0; path=/;`;
+        });
+
+        window.dispatchEvent(new Event("auth-state-changed"));
+        window.location.href = '/'; 
+      }
+
+    } catch (err: any) {
+      console.error("탈퇴 실패", err);
+      // 백엔드에서 던진 401 에러(TOKEN_EXPIRED) 처리
+      if (err.response?.status === 401) {
+        alert("보안을 위해 다시 로그인한 후 탈퇴를 진행해 주세요.");
+        const STORAGE_USER_KEYS = ["user", "loginUser", "member", "authUser", "accessToken", "role"];
+        STORAGE_USER_KEYS.forEach(key => window.localStorage.removeItem(key));
+
+        const COOKIE_KEYS = ["accessToken", "refreshToken", "userRoles"];
+        COOKIE_KEYS.forEach(name => {
+          document.cookie = `${name}=; Max-Age=0; path=/;`;
+        });
+
+        // 헤더초기화
+        window.dispatchEvent(new Event("auth-state-changed"));
+        
+        window.location.href = '/login';
+      } else {
+        alert("탈퇴 처리 중 오류가 발생했습니다.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (err: any) {
-    console.error("탈퇴 실패", err);
-    alert("탈퇴 처리 중 오류가 발생했습니다.");
-    setIsSubmitting(false);
-  }
-};
+  };
 
-  // 하이드레이션 방어 및 로그인 체크
   if (!isMounted) return null;
 
   if (!isLoggedIn || !loginUserNo) {
@@ -90,7 +143,7 @@ export default function WithdrawPage() {
 
   return (
     <div className={styles.main}>
-      <h2 className={styles.sectionTitle}>🚪 회원 탈퇴</h2>
+      <h2 className={styles.sectionTitle}>회원 탈퇴</h2>
 
       <div className={styles.warnBox}>
         <div className={styles.warnTitle}>⚠️ 탈퇴하기 전에 확인해 주세요</div>
@@ -115,18 +168,34 @@ export default function WithdrawPage() {
       </div>
 
       <div className={styles.confirmBox}>
-        <div className={styles.confirmTitle}>탈퇴를 진행하려면 비밀번호를 입력해 주세요</div>
-        
-        <div className={styles.formGroup}>
-          <label className={styles.formLabel}>비밀번호</label>
-          <input 
-            className={styles.formInput} 
-            type="password" 
-            placeholder="현재 비밀번호 입력" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+        <div className={styles.confirmTitle}>
+          {isKakaoUser ? '안전한 탈퇴를 위해 아래 문구를 입력해 주세요' : '탈퇴를 진행하려면 비밀번호를 입력해 주세요'}
         </div>
+        
+        {/* 🌟 카카오 유저 vs 일반 유저 폼 분기 */}
+        {isKakaoUser ? (
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>탈퇴 확인 문구</label>
+            <input 
+              className={styles.formInput} 
+              type="text" 
+              placeholder="'탈퇴하겠습니다' 를 정확히 입력해 주세요" 
+              value={withdrawText}
+              onChange={(e) => setWithdrawText(e.target.value)}
+            />
+          </div>
+        ) : (
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>비밀번호</label>
+            <input 
+              className={styles.formInput} 
+              type="password" 
+              placeholder="현재 비밀번호 입력" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+        )}
 
         <label className={styles.checkboxRow}>
           <input 

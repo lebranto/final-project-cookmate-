@@ -5,6 +5,7 @@ import { useState } from "react";
 import api from "@/app/lib/api";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
 import styles from "./Comment.module.css";
+import UserAvatar from '@/app/components/UserAvatar';
 
 interface Props {
   boardNo: number;
@@ -57,7 +58,11 @@ export default function CommentForm({
     >
       {!parentCommentNo && (
         <div className={styles.commentAvatar}>
-          {userInfo?.nickname?.charAt(0) || "C"}
+          <UserAvatar 
+            imageUrl={userInfo?.profileImageUrl} 
+            name={userInfo?.nickname ||  "guest"} 
+            size="100%" 
+          />
         </div>
       )}
       <div className={styles.commentInputWrap}>

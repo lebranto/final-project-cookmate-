@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import api from '@/lib/axios';
 import styles from './mypage.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
+import UserAvatar from '@/app/components/UserAvatar';
 
 interface UserData {
   nickname: string;
@@ -87,17 +88,11 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
           <div className={styles.profile}>
             
             <div className={styles.avatar}>
-              {userData?.profileImageUrl ? (
-                <img 
-                  src={userData.profileImageUrl} 
-                  alt="프로필" 
-                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                /> 
-              ) : (
-                <div style={{ width: '100%', height: '100%', borderRadius: '50%', backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', color: '#666', fontWeight: 'bold' }}>
-                  {userData?.nickname ? userData.nickname.charAt(0) : 'U'}
-                </div>
-              )}
+              <UserAvatar 
+                imageUrl={userData?.profileImageUrl} 
+                name={userData?.userEmail || userData?.nickname || 'user'} 
+                size="100%" 
+              />
             </div>
             
             <div className={styles.profileName}>
