@@ -387,6 +387,30 @@
   gap: 0 32px;
 }
 
+.allergyWarning {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding: 13px 15px;
+  border: 1px solid #f0c6a8;
+  border-radius: 8px;
+  background: #fff7ef;
+  color: #9a4a12;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.allergyWarning strong {
+  color: #80380d;
+  font-size: 13px;
+}
+
+.allergyWarning em {
+  color: #b34b0f;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .ingredientGroup {
   min-width: 0;
 }

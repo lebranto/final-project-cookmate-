@@ -177,6 +177,59 @@
   display: none;
 }
 
+.globalFooter {
+  margin-top: 40px;
+  border-top: 1px solid #ebe5dc;
+  background: #fafaf8;
+}
+
+.gfInner {
+  width: min(1100px, calc(100% - 64px));
+  display: flex;
+  justify-content: space-between;
+  gap: 32px;
+  margin: 0 auto;
+  padding: 36px 0 44px;
+}
+
+.gfBrand strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #2a2420;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.gfBrand strong span {
+  color: #2d6a26;
+}
+
+.gfBrand p {
+  margin: 0;
+  color: #7a7168;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.gfLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-content: flex-start;
+}
+
+.gfLinks a {
+  color: #7a7168;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.gfLinks a:hover {
+  color: #2d6a26;
+}
+
 @media (max-width: 768px) {
   .ghInner {
     height: 60px;
@@ -262,5 +315,12 @@
 
   .bnavItem.active {
     color: #e05a2b;
+  }
+
+  .gfInner {
+    width: calc(100% - 32px);
+    flex-direction: column;
+    align-items: flex-start;
+    padding-bottom: 92px;
   }
 }
