@@ -319,51 +319,64 @@
     
     <!-- =================== 신고 관리 영역 =================== -->
 
-    <select id="selectReportList" parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportSearchDto"
+    <select id="selectReportList"
+	        parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportSearchDto"
 	        resultType="com.kh.cookmate.admin.dto.AdminDto$ReportDto">
 	
 	    SELECT
 	        R.REPORT_NO       AS reportId,
 	        R.REPORT_TYPE     AS reportType,
+	
 	        R.REPORTEE_NO     AS targetId,
 	        U.NICKNAME        AS targetNickname,
+	
 	        R.USER_NO         AS reporterId,
+	        RU.NICKNAME       AS reporterNickname,
+	
 	        R.REPORT_REASON   AS reason,
 	        RD.STATE          AS status,
+	
 	        DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d') AS createdAt
 	
 	    FROM REPORT R
 	
+	    -- 피신고자
 	    LEFT JOIN USER U
 	        ON R.REPORTEE_NO = U.USER_NO
+	
+	    -- 신고자
+	    LEFT JOIN USER RU
+	        ON R.USER_NO = RU.USER_NO
 	
 	    LEFT JOIN REPORT_DETAIL RD
 	        ON R.REPORT_NO = RD.REPORT_NO
 	
 	    <where>
 	
-			<!-- 신고 유형 -->
+	        <!-- 신고 유형 -->
 	        <if test="reportType != null and reportType != ''">
 	            AND R.REPORT_TYPE = #{reportType}
 	        </if>
 	
-			<!-- 상태 -->
+	        <!-- 상태 -->
 	        <if test="status != null and status != ''">
 	            AND RD.STATE = #{status}
 	        </if>
 	
-			<!-- 검색 -->
+	        <!-- 검색 -->
 	        <if test="keyword != null and keyword != ''">
 	            AND (
-	                R.USER_NO LIKE CONCAT('%', #{keyword}, '%')
-	                OR R.REPORTEE_NO LIKE CONCAT('%', #{keyword}, '%')
+	                CAST(R.USER_NO AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
+	                OR CAST(R.REPORTEE_NO AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
 	                OR R.REPORT_REASON LIKE CONCAT('%', #{keyword}, '%')
 	                OR U.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
+	                OR RU.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
 	            )
 	        </if>
+	
 	    </where>
 	
-		<!-- 정렬 -->
+	    <!-- 정렬 -->
 	    <choose>
 	        <when test="orderBy == 'oldest'">
 	            ORDER BY R.REPORT_DATE ASC
@@ -373,7 +386,9 @@
 	            ORDER BY R.REPORT_DATE DESC
 	        </otherwise>
 	    </choose>
+	
 	    LIMIT #{size} OFFSET #{offset}
+	
 	</select>
 
     <select id="selectReportDetail" parameterType="long" resultType="com.kh.cookmate.admin.dto.AdminDto$ReportDetailDto">
