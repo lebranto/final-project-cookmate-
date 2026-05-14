@@ -9,10 +9,13 @@ import styles from "./page.module.css";
 interface MainRecipe {
   boardNo: number;
   boardTitle: string;
+  introduce: string;
   imageUrl: string;
   likesCount: number;
   typeName: string;
+  difficult: string;
   cookTime: string;
+  calory: string;
 }
 
 interface SearchResponse {
@@ -108,6 +111,8 @@ export default function Home() {
   const [keyword, setKeyword] = useState("");
   const [latestRecipes, setLatestRecipes] = useState<MainRecipe[]>([]);
   const [latestLoading, setLatestLoading] = useState(true);
+  const [featuredRecipe, setFeaturedRecipe] = useState<MainRecipe | null>(null);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -139,6 +144,31 @@ export default function Home() {
     };
 
     void fetchLatestRecipes();
+  }, []);
+
+  useEffect(() => {
+    const fetchFeaturedRecipe = async () => {
+      try {
+        setFeaturedLoading(true);
+        const res = await api.get<SearchResponse>("/boards/search", {
+          params: {
+            source: "user",
+            sort: "likes",
+            page: 1,
+            size: 1,
+          },
+        });
+
+        setFeaturedRecipe(res.data.list?.[0] ?? null);
+      } catch (error) {
+        console.error("이달의 추천 레시피 조회 실패:", error);
+        setFeaturedRecipe(null);
+      } finally {
+        setFeaturedLoading(false);
+      }
+    };
+
+    void fetchFeaturedRecipe();
   }, []);
 
   return (
@@ -232,30 +262,49 @@ export default function Home() {
         )}
       </section>
 
-      <section className={styles.featured}>
-        <div className={styles.featuredImage}>
-          <img
-            src="https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=900&q=85"
-            alt="까르보나라"
-          />
-        </div>
-        <div className={styles.featuredBody}>
-          <span>이달의 추천 레시피</span>
-          <h2>생크림 없이 만드는 정통 크리미 까르보나라</h2>
-          <p>
-            달걀노른자와 파르메산 치즈만으로 완성하는 이탈리아식 까르보나라. 팬의 온도가
-            핵심입니다.
-          </p>
-          <div className={styles.featuredMeta}>
-            <strong>20분</strong>
-            <strong>보통</strong>
-            <strong>~520kcal</strong>
+      {featuredLoading ? (
+        <section className={`${styles.featured} ${styles.featuredSkeleton}`}>
+          <div className={styles.featuredImage} />
+          <div className={styles.featuredBody}>
+            <span />
+            <h2 />
+            <p />
+            <div className={styles.featuredMeta}>
+              <strong />
+              <strong />
+              <strong />
+            </div>
           </div>
-          <Link href="/boards" className={styles.primaryButton}>
-            레시피 보기
-          </Link>
-        </div>
-      </section>
+        </section>
+      ) : featuredRecipe ? (
+        <section className={styles.featured}>
+          <div className={styles.featuredImage}>
+            {featuredRecipe.imageUrl ? (
+              <img src={featuredRecipe.imageUrl} alt={featuredRecipe.boardTitle} />
+            ) : (
+              <span>CookMate</span>
+            )}
+          </div>
+          <div className={styles.featuredBody}>
+            <span>이달의 추천 레시피</span>
+            <h2>{featuredRecipe.boardTitle}</h2>
+            <p>{getFeaturedDescription(featuredRecipe)}</p>
+            <div className={styles.featuredMeta}>
+              {featuredRecipe.cookTime && <strong>{featuredRecipe.cookTime}</strong>}
+              {featuredRecipe.difficult && <strong>{featuredRecipe.difficult}</strong>}
+              {featuredRecipe.calory && <strong>{formatCaloryValue(featuredRecipe.calory)}</strong>}
+              <strong>좋아요 {featuredRecipe.likesCount}</strong>
+            </div>
+            <Link href={`/boards/${featuredRecipe.boardNo}`} className={styles.primaryButton}>
+              레시피 보기
+            </Link>
+          </div>
+        </section>
+      ) : (
+        <section className={styles.featuredEmpty}>
+          이달의 추천으로 보여줄 레시피가 없습니다.
+        </section>
+      )}
 
       <section className={styles.steps}>
         <h2>CookMate를 이렇게 활용하세요</h2>
@@ -324,4 +373,24 @@ export default function Home() {
 
     </main>
   );
+}
+
+function getFeaturedDescription(recipe: MainRecipe) {
+  const trimmed = recipe.introduce?.replace(/\s+/g, " ").trim();
+  if (trimmed) return trimmed;
+
+  const meta = [recipe.typeName, recipe.cookTime, recipe.difficult].filter(Boolean).join(" · ");
+  return meta
+    ? `${meta} 레시피입니다. 많은 사용자가 좋아한 CookMate 추천 레시피를 확인해보세요.`
+    : "많은 사용자가 좋아한 CookMate 추천 레시피를 확인해보세요.";
+}
+
+function formatCaloryValue(value: string) {
+  const ranges: Record<string, string> = {
+    저칼로리: "~ 400kcal",
+    보통: "400~700kcal",
+    고칼로리: "700kcal ~",
+  };
+
+  return ranges[value] ? `${value} · ${ranges[value]}` : value;
 }
