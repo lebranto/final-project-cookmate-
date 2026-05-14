@@ -1,8 +1,14 @@
 "use client";
 
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import {
+  AI_RECIPE_DRAFT_KEY,
+  AiRecipeDraft,
+  toCaloryTag,
+  toCookTimeTag,
+} from "@/app/ai/aiRecipeDraft";
 import api from "@/app/lib/api";
 import { uploadImageWithPresignedUrl } from "@/app/lib/imageUpload";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
@@ -51,7 +57,7 @@ interface FormErrors {
   cookSteps?: string;
 }
 
-const CATEGORIES = ["한식", "중식", "일식", "양식", "셀러드", "수프","디저트"];
+const CATEGORIES = ["한식", "중식", "일식", "양식", "샐러드", "수프","디저트"];
 const DIFFICULTIES = ["쉬움", "보통", "어려움"];
 const COOK_TIMES = ["15분 이내", "30분 이내", "1시간 이내"];
 const CALORY_OPTIONS: { value: Exclude<Calory, "">; range: string }[] = [
@@ -85,6 +91,65 @@ const createStep = (): CookStepForm => ({
   imageFile: null,
   imagePreview: "",
 });
+
+const createIngredientGroupsFromAiDraft = (draft?: AiRecipeDraft | null): IngredientGroup[] => {
+  if (!draft) {
+    return [createGroup("주재료"), createGroup("양념")];
+  }
+
+  const toIngredient = (ingredient: AiRecipeDraft["ingredients"][number]): IngredientRow => ({
+    id: newId(),
+    ingredientName: ingredient.name,
+    quantity: ingredient.quantity,
+    unit: ingredient.unit,
+  });
+
+  return [
+    {
+      id: newId(),
+      setName: "주재료",
+      ingredients: draft.ingredients.filter((ingredient) => ingredient.group === "주재료").map(toIngredient),
+    },
+    {
+      id: newId(),
+      setName: "양념",
+      ingredients: draft.ingredients.filter((ingredient) => ingredient.group === "양념").map(toIngredient),
+    },
+  ];
+};
+
+const createCookStepsFromAiDraft = (draft?: AiRecipeDraft | null): CookStepForm[] => {
+  if (!draft) {
+    return [createStep()];
+  }
+
+  return draft.cookSteps.map((step) => ({
+    id: newId(),
+    cookContent: step.content,
+    cookImage: "",
+    imageFile: null,
+    imagePreview: "",
+  }));
+};
+
+const readAiDraft = (enabled: boolean): AiRecipeDraft | null => {
+  if (!enabled || typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const rawDraft = window.sessionStorage.getItem(AI_RECIPE_DRAFT_KEY);
+    const draft = rawDraft ? (JSON.parse(rawDraft) as AiRecipeDraft) : null;
+    return draft
+      ? {
+          ...draft,
+          imageUrl: draft.imageUrl?.startsWith("data:") ? "/ai-recipe-placeholder.svg" : draft.imageUrl,
+        }
+      : null;
+  } catch {
+    return null;
+  }
+};
 
 const hasErrors = (errors: FormErrors) => Object.values(errors).some(Boolean);
 
@@ -191,34 +256,41 @@ function getErrorMessage(error: unknown) {
 
 export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const isEditMode = mode === "edit";
+  const aiDraft = useMemo(
+    () => readAiDraft(!isEditMode && searchParams.get("from") === "ai"),
+    [isEditMode, searchParams]
+  );
 
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [initialImageUrl, setInitialImageUrl] = useState("");
-  const [coverPreview, setCoverPreview] = useState("");
-  const [boardTitle, setBoardTitle] = useState("");
-  const [introduce, setIntroduce] = useState("");
+  const [initialImageUrl, setInitialImageUrl] = useState(aiDraft?.imageUrl || "");
+  const [coverPreview, setCoverPreview] = useState(aiDraft?.imageUrl || "");
+  const [boardTitle, setBoardTitle] = useState(aiDraft?.title || "");
+  const [introduce, setIntroduce] = useState(
+    aiDraft ? `입력하신 재료(${aiDraft.inputIngredients.join(", ")})를 기반으로 찾은 레시피예요.` : ""
+  );
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [appliedYoutubeUrl, setAppliedYoutubeUrl] = useState("");
   const [typeNo, setTypeNo] = useState(0);
-  const [typeName, setTypeName] = useState("");
-  const [difficult, setDifficult] = useState("");
-  const [cookTime, setCookTime] = useState("");
-  const [calory, setCalory] = useState<Calory>("");
-  const [ingredientGroups, setIngredientGroups] = useState<IngredientGroup[]>([
-    createGroup("주재료"),
-    createGroup("양념"),
-  ]);
+  const [typeName, setTypeName] = useState(aiDraft?.typeName || "");
+  const [difficult, setDifficult] = useState(aiDraft?.difficult || "");
+  const [cookTime, setCookTime] = useState(aiDraft ? toCookTimeTag(aiDraft.cookTimeMinutes) : "");
+  const [calory, setCalory] = useState<Calory>(aiDraft ? (toCaloryTag(aiDraft.calories) as Calory) : "");
+  const [ingredientGroups, setIngredientGroups] = useState<IngredientGroup[]>(() =>
+    createIngredientGroupsFromAiDraft(aiDraft)
+  );
   const [initialSetNos, setInitialSetNos] = useState<number[]>([]);
-  const [cookSteps, setCookSteps] = useState<CookStepForm[]>([createStep()]);
+  const [cookSteps, setCookSteps] = useState<CookStepForm[]>(() => createCookStepsFromAiDraft(aiDraft));
   const [initialStepNumbers, setInitialStepNumbers] = useState<number[]>([]);
   const [caution, setCaution] = useState("");
-  const [tip, setTip] = useState("");
-  const [isPublic, setIsPublic] = useState(true);
+  const [tip, setTip] = useState(aiDraft?.cookSteps.map((step) => step.tip).filter(Boolean).join("\n") ?? "");
+  const [isPublic, setIsPublic] = useState(!aiDraft);
+  const [sourceIsAi] = useState(Boolean(aiDraft));
   const [saving, setSaving] = useState(false);
   const [loadingInitialData, setLoadingInitialData] = useState(isEditMode);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(aiDraft ? "AI 추천 레시피 내용을 작성 폼에 불러왔습니다." : "");
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
 
   const youtubeId = useMemo(() => extractYoutubeId(appliedYoutubeUrl), [appliedYoutubeUrl]);
@@ -489,7 +561,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
         difficult,
         cookTime,
         calory,
-        ai: "N",
+        ai: sourceIsAi ? "Y" : "N",
         ingredientSets: buildIngredientPayload(ingredientGroups, isEditMode, initialSetNos),
         cookSteps: buildCookStepPayload(cookSteps, stepImageUrls, isEditMode, initialStepNumbers),
       };
