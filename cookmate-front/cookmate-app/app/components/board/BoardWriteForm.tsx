@@ -583,7 +583,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
             placeholder="YouTube URL을 입력하세요."
           />
           <button type="button" onClick={applyYoutubeUrl}>
-            적용
+            영상 확인
           </button>
         </div>
 
