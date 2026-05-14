@@ -6,6 +6,7 @@ import com.kh.cookmate.board.dto.BoardDto.BoardDetail;
 import com.kh.cookmate.board.dto.BoardDto.BoardPut;
 import com.kh.cookmate.board.dto.BoardDto.BoardSearchRequest;
 import com.kh.cookmate.board.dto.BoardDto.BoardSearchResponse;
+import com.kh.cookmate.board.dto.BoardDto.BoardSearchResult;
 import com.kh.cookmate.board.dto.BoardDto.BoardWrite;
 import com.kh.cookmate.board.dto.CommentDto.CommentDetail;
 import com.kh.cookmate.board.dto.CommentDto.CommentWrite;
@@ -18,6 +19,8 @@ public interface BoardService{
 	BoardDetail getBoardDetail(int boardNo);
 
 	BoardSearchResponse searchBoards(BoardSearchRequest request);
+
+	List<BoardSearchResult> getWeeklyPopularBoards(int size);
 
 	int updateRecipe(int boardNo, BoardPut dto);
 

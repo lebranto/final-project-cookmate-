@@ -12,6 +12,7 @@ interface MainRecipe {
   introduce: string;
   imageUrl: string;
   likesCount: number;
+  nickname: string;
   typeName: string;
   difficult: string;
   cookTime: string;
@@ -62,44 +63,6 @@ const categories = [
   },
 ];
 
-const popularRecipes = [
-  {
-    title: "구수한 된장찌개 — 냉장고 남은 채소로 완성하는 법",
-    category: "한식",
-    chef: "김민준 셰프",
-    time: "30분",
-    image: "https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=220&q=80",
-  },
-  {
-    title: "크리미 까르보나라 — 생크림 없이 만드는 정통 레시피",
-    category: "양식",
-    chef: "박수진 셰프",
-    time: "20분",
-    image: "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=220&q=80",
-  },
-  {
-    title: "그린 퀴노아 볼 : 단백질 42g을 담은 한 그릇",
-    category: "샐러드",
-    chef: "정유나 셰프",
-    time: "10분",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=220&q=80",
-  },
-  {
-    title: "말차 크림 롤케이크 — 집에서도 카페 수준으로",
-    category: "디저트",
-    chef: "이서연 셰프",
-    time: "90분",
-    image: "https://images.unsplash.com/photo-1596560548464-f010549b84d7?w=220&q=80",
-  },
-  {
-    title: "토마토 미네스트로네 — 채소를 맛있게 먹는 방법",
-    category: "양식",
-    chef: "최동현 셰프",
-    time: "25분",
-    image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=220&q=80",
-  },
-];
-
 const chefs = [
   { name: "김민준 셰프", desc: "한식 · 레시피 84개" },
   { name: "박수진 셰프", desc: "양식 · 레시피 62개" },
@@ -113,6 +76,8 @@ export default function Home() {
   const [latestLoading, setLatestLoading] = useState(true);
   const [featuredRecipe, setFeaturedRecipe] = useState<MainRecipe | null>(null);
   const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [weeklyPopularRecipes, setWeeklyPopularRecipes] = useState<MainRecipe[]>([]);
+  const [weeklyPopularLoading, setWeeklyPopularLoading] = useState(true);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -169,6 +134,26 @@ export default function Home() {
     };
 
     void fetchFeaturedRecipe();
+  }, []);
+
+  useEffect(() => {
+    const fetchWeeklyPopularRecipes = async () => {
+      try {
+        setWeeklyPopularLoading(true);
+        const res = await api.get<SearchResponse>("/boards/weekly-popular", {
+          params: { size: 5 },
+        });
+
+        setWeeklyPopularRecipes(res.data.list ?? []);
+      } catch (error) {
+        console.error("이번 주 인기 레시피 조회 실패:", error);
+        setWeeklyPopularRecipes([]);
+      } finally {
+        setWeeklyPopularLoading(false);
+      }
+    };
+
+    void fetchWeeklyPopularRecipes();
   }, []);
 
   return (
@@ -327,20 +312,43 @@ export default function Home() {
             <Link href="/boards">더보기</Link>
           </div>
           <div className={styles.popularList}>
-            {popularRecipes.map((recipe, index) => (
-              <Link href="/boards" className={styles.popularItem} key={recipe.title}>
-                <span className={styles.rank}>{index + 1}</span>
-                <div className={styles.popularImage}>
-                  <img src={recipe.image} alt={recipe.title} />
-                </div>
-                <div>
-                  <span className={styles.popularTag}>{recipe.category}</span>
-                  <strong>{recipe.title}</strong>
-                  <p>{recipe.chef} · {recipe.time}</p>
-                </div>
-              </Link>
-            ))}
+            {weeklyPopularLoading
+              ? Array.from({ length: 5 }, (_, index) => (
+                  <div className={`${styles.popularItem} ${styles.popularSkeleton}`} key={index}>
+                    <span className={styles.rank}>{index + 1}</span>
+                    <div className={styles.popularImage} />
+                    <div>
+                      <span className={styles.popularTag} />
+                      <strong />
+                      <p />
+                    </div>
+                  </div>
+                ))
+              : weeklyPopularRecipes.map((recipe, index) => (
+                  <Link href={`/boards/${recipe.boardNo}`} className={styles.popularItem} key={recipe.boardNo}>
+                    <span className={styles.rank}>{index + 1}</span>
+                    <div className={styles.popularImage}>
+                      {recipe.imageUrl ? (
+                        <img src={recipe.imageUrl} alt={recipe.boardTitle} />
+                      ) : (
+                        <span>CookMate</span>
+                      )}
+                    </div>
+                    <div>
+                      {recipe.typeName && <span className={styles.popularTag}>{recipe.typeName}</span>}
+                      <strong>{recipe.boardTitle}</strong>
+                      <p>
+                        {[recipe.nickname, recipe.cookTime, `좋아요 ${recipe.likesCount}`]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
           </div>
+          {!weeklyPopularLoading && weeklyPopularRecipes.length === 0 && (
+            <div className={styles.popularEmpty}>최근 7일 인기 레시피가 없습니다.</div>
+          )}
         </div>
 
         <aside className={styles.sidebar}>

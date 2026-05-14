@@ -76,6 +76,11 @@ public class BoardDaoImpl implements BoardDao{
 		return session.selectOne("boardmapper.countSearchBoards", request);
 	}
 
+	@Override
+	public List<BoardSearchResult> selectWeeklyPopularBoards(int size) {
+		return session.selectList("boardmapper.selectWeeklyPopularBoards", size);
+	}
+
 	@Override public int insertIngredients(List<Ingredient> list) {
         return session.insert("boardmapper.insertIngredients", list);
     }

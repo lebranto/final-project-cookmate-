@@ -149,6 +149,48 @@
         LIMIT #{offset}, #{size}
     </select>
 
+    <select id="selectWeeklyPopularBoards"
+            parameterType="int"
+            resultType="com.kh.cookmate.board.dto.BoardDto$BoardSearchResult">
+        SELECT
+            b.BOARD_NO,
+            b.USER_NO,
+            b.BOARD_TITLE,
+            b.INTRODUCE,
+            b.IMAGE_URL,
+            b.LIKES_COUNT,
+            COALESCE(u.NICKNAME, b.NICKNAME) AS NICKNAME,
+            b.IS_API_DATA,
+            DATE_FORMAT(b.BOARD_POSTDATE, '%Y-%m-%d') AS BOARD_POSTDATE,
+            t.TYPE_NAME,
+            t.DIFFICULT,
+            t.COOK_TIME,
+            t.CALORY,
+            t.AI
+        FROM BOARD b
+        JOIN TAG t ON b.TYPE_NO = t.TYPE_NO
+        LEFT JOIN USER u ON b.USER_NO = u.USER_NO
+        LEFT JOIN (
+            SELECT BOARD_NO, COUNT(*) AS WEEKLY_SCRAP_COUNT
+            FROM SCRAP
+            WHERE SCRAP_DATE >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            GROUP BY BOARD_NO
+        ) ws ON ws.BOARD_NO = b.BOARD_NO
+        WHERE b.BOARD_DELETE = 'N'
+          AND b.OPEN = 'Y'
+          AND b.IS_API_DATA = 'N'
+          AND (
+              b.BOARD_POSTDATE >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+              OR COALESCE(ws.WEEKLY_SCRAP_COUNT, 0) > 0
+          )
+        ORDER BY
+            (b.LIKES_COUNT * 3 + COALESCE(ws.WEEKLY_SCRAP_COUNT, 0) * 5) DESC,
+            COALESCE(ws.WEEKLY_SCRAP_COUNT, 0) DESC,
+            b.LIKES_COUNT DESC,
+            b.BOARD_POSTDATE DESC
+        LIMIT #{_parameter}
+    </select>
+
     <!-- BOARD -->
 
     <!-- 공식 레시피 수 조회 -->

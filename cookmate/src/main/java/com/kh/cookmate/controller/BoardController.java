@@ -72,6 +72,12 @@ public class BoardController {
         return ResponseEntity.ok(service.searchBoards(request));
     }
 
+    @GetMapping("/boards/weekly-popular")
+    public ResponseEntity<?> getWeeklyPopularBoards(
+            @RequestParam(defaultValue = "5") int size) {
+        return ResponseEntity.ok(Map.of("list", service.getWeeklyPopularBoards(size)));
+    }
+
     @PutMapping("/boards/{boardNo}")
     public ResponseEntity<?> updateRecipe(
             @PathVariable int boardNo,

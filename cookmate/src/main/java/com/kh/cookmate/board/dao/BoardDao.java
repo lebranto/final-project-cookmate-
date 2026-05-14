@@ -39,6 +39,8 @@ public interface BoardDao {
 
 	int countSearchBoards(BoardSearchRequest request);
 
+	List<BoardSearchResult> selectWeeklyPopularBoards(int size);
+
 	int insertIngredients(List<Ingredient> ings);
 
 	int insertCookSteps(List<CookStep> steps);
