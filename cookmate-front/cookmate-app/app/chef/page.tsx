@@ -5,6 +5,7 @@ import api from '@/lib/axios';
 import styles from './chef.module.css';
 import Link from 'next/link';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
+import UserAvatar from '@/app/components/UserAvatar';
 
 interface Chef {
   userNo: number;
@@ -121,7 +122,6 @@ export default function RankingPage() {
   return (
     <main className={styles.main}>
       <div className={styles.inner}>
-        {/* 🌟 1. 타이틀 이모지 제거 */}
         <h1 className={styles.pageTitle}>셰프 리스트</h1>
         <div className={styles.pageSubtitle}>CookMate의 인기 셰프들을 만나보세요</div>
 
@@ -160,13 +160,12 @@ export default function RankingPage() {
                 <Link key={chef.userNo} href={`/chef/${chef.userNo}`} className={styles.chefCard} style={{textDecoration:'none'}}>
                   <div className={`${styles.chefRank} ${rankClass}`}>{rank}</div>
                   
-                  {/* 🌟 2. 프로필 이미지 없을 때 이모지 대신 첫 글자 출력 */}
                   <div className={styles.chefAvatar}>
-                    {chef.profileImageUrl ? (
-                      <img src={chef.profileImageUrl} alt="프로필" style={{width:'100%', height:'100%', borderRadius:'50%', objectFit: 'cover'}}/>
-                    ) : (
-                      <div className={styles.defaultAvatar}>{chef.nickname.charAt(0)}</div>
-                    )}
+                    <UserAvatar 
+                      imageUrl={chef.profileImageUrl} 
+                      name={chef.userEmail || chef.nickname} 
+                      size="100%" 
+                    />
                   </div>
                   
                   <div className={styles.chefInfo}>
@@ -182,7 +181,6 @@ export default function RankingPage() {
                       )}
                     </div>
                     
-                    {/* 🌟 3. 통계 영역 아이콘(🍳, 🔖, 👥) 제거 */}
                     <div className={styles.chefStats}>
                       <div className={styles.chefStat}>
                         <span className={styles.statLabel}>레시피</span>

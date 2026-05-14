@@ -11,6 +11,7 @@ import { Board } from "@/app/type/board";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
 import styles from "./BoardDetail.module.css";
+import UserAvatar from "@/app/components/UserAvatar";
 
 interface Props {
   boardNo: number;
@@ -384,10 +385,11 @@ export default function BoardDetail({ boardNo }: Props) {
 
             <div className={styles.authorRow}>
               <div className={styles.authorLink}>
-                <Avatar
+                {/* UserAvatar*/}
+                <UserAvatar
                   imageUrl={board.profileImageUrl}
-                  name={board.nickname}
-                  size="large"
+                  name={board.nickname || "user"}
+                  size={48} 
                 />
                 <div className={styles.authorInfo}>
                   <span className={styles.authorName}>{board.nickname}</span>
@@ -564,32 +566,6 @@ function MetaPill({ label, value }: { label: string; value?: string }) {
   );
 }
 
-function Avatar({
-  imageUrl,
-  name,
-  size = "default",
-}: {
-  imageUrl?: string;
-  name?: string;
-  size?: "default" | "large";
-}) {
-  const initial = name?.trim().charAt(0) || "C";
-
-  return (
-    <div
-      className={`${styles.avatar} ${
-        size === "large" ? styles.avatarLarge : ""
-      }`}
-    >
-      {imageUrl ? (
-        <img src={imageUrl} alt={name || "프로필"} className={styles.avatarImg} />
-      ) : (
-        <span>{initial}</span>
-      )}
-    </div>
-  );
-}
-
 function getErrorMessage(error: unknown, fallback: string) {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data;
@@ -662,6 +638,3 @@ function getYoutubeVideoId(url?: string | null) {
 function getFollowStorageKey(userNo: number, authorNo: number) {
   return `cookmate-follow-${userNo}-${authorNo}`;
 }
-
-
-

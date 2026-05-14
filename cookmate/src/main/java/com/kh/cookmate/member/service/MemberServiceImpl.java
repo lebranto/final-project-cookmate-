@@ -4,9 +4,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
 
 import com.kh.cookmate.member.dao.MemberDao;
 import com.kh.cookmate.member.dto.InquiryDto;
@@ -161,5 +168,44 @@ public class MemberServiceImpl implements MemberService {
         // 첫 번째 인자: 사용자가 입력한 평문 ("1234")
         // 두 번째 인자: DB에 저장된 암호화된 문자열 ("$2a$10$...")
         return passwordEncoder.matches(rawPassword, dbPassword);
+    }
+    
+    @Override
+    public String withdrawKakaoUser(long userNo, String accessToken) {
+        // 1. 카카오 '연결 끊기' API 주소
+        String reqURL = "https://kapi.kakao.com/v1/user/unlink";
+        
+        // 2. HTTP 헤더 세팅: 프론트에서 받은 엑세스 토큰을 넣습니다.
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken); 
+
+        // 3. 헤더를 담은 HTTP 요청 객체 생성 (Body는 비어있음)
+        HttpEntity<String> request = new HttpEntity<>(headers);
+        RestTemplate restTemplate = new RestTemplate();
+        
+        try {
+            // 4. 카카오 서버로 POST 요청 쏘기!
+            ResponseEntity<String> response = restTemplate.exchange(
+                    reqURL, HttpMethod.POST, request, String.class);
+            
+            // 5. 응답 코드가 200번대(성공)라면 우리 DB에서도 탈퇴 처리!
+            if (response.getStatusCode().is2xxSuccessful()) {
+                int result = memberDao.withdrawMember(userNo);
+                return result > 0 ? "SUCCESS" : "FAIL";
+            }
+            
+        } catch (HttpClientErrorException e) {
+            // 🚨 카카오가 에러를 뱉었을 때 (특히 토큰 만료!)
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                System.out.println("⚠️ 카카오 엑세스 토큰 만료 (401)");
+                return "TOKEN_EXPIRED"; 
+            }
+            System.err.println("❌ 카카오 API 호출 에러: " + e.getMessage());
+        } catch (Exception e) {
+            // 기타 서버 통신 에러 등
+            System.err.println("❌ 서버 내부 에러: " + e.getMessage());
+        }
+        
+        return "FAIL";
     }
 }

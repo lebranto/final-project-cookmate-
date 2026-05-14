@@ -5,6 +5,7 @@ import api from '@/lib/axios';
 import styles from './profile.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 import { uploadImageWithPresignedUrl } from "@/app/lib/imageUpload";
+import UserAvatar from '@/app/components/UserAvatar';
 
 const ALLERGY_OPTIONS = [
   "새우", "땅콩", "우유", "달걀", "밀(글루텐)", 
@@ -18,6 +19,7 @@ interface MemberProfile {
   introduce: string;
   profileImageUrl: string;
   allergies: string[];
+  provider?: string;
 }
 
 export default function ProfileEditPage() {
@@ -32,9 +34,12 @@ export default function ProfileEditPage() {
     nickname: "",
     introduce: "",
     profileImageUrl: "",
-    allergies: []
+    allergies: [],
+    provider: ""
   });
 
+  const isKakaoUser = member.provider?.toLowerCase() === 'kakao';
+  
   const [passwords, setPasswords] = useState({
     current: "",
     new: "",
@@ -47,7 +52,6 @@ export default function ProfileEditPage() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [imgError, setImgError] = useState(false);
   
-  // 선택한 실제 파일 객체를 담을 상태 (현재 미사용, 백엔드 복구 시 사용)
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [customAllergy, setCustomAllergy] = useState("");
@@ -76,7 +80,8 @@ export default function ProfileEditPage() {
             nickname: data.nickname || "",
             introduce: data.introduce || "",
             profileImageUrl: data.profileImageUrl || "",
-            allergies: data.allergies || []
+            allergies: data.allergies || [],
+            provider: data.provider || ""
           });
           setImgError(false);
         }
@@ -122,9 +127,14 @@ export default function ProfileEditPage() {
 
   const resetImageToDefault = () => {
     setSelectedFile(null); 
-    setPreviewUrl(""); 
     setImgError(false);
-    setMember(prev => ({ ...prev, profileImageUrl: "" })); 
+    
+    const randomSeed = Math.random().toString(36).substring(7);
+    const boringValue = `boring:${randomSeed}`;
+    
+    setPreviewUrl(boringValue); 
+    setMember(prev => ({ ...prev, profileImageUrl: boringValue })); 
+    
     if (fileInputRef.current) fileInputRef.current.value = ""; 
   };
 
@@ -152,7 +162,7 @@ export default function ProfileEditPage() {
   const handleSave = async () => {
     if (!loginUserNo) return;
 
-    if (passwords.current || passwords.new || passwords.confirm) {
+    if (!isKakaoUser && (passwords.current || passwords.new || passwords.confirm)) {
       if (currentPwStatus !== 'matched') {
         alert("현재 비밀번호를 정확히 확인해 주세요.");
         return;
@@ -190,7 +200,7 @@ export default function ProfileEditPage() {
         introduce: member.introduce,
         profileImageUrl: finalImageUrl, 
         allergies: member.allergies,
-        ...(passwords.new && { newPassword: passwords.new })
+        ...(!isKakaoUser && passwords.new && { newPassword: passwords.new })
       };
 
       const response = await api.post('/users/profile/update', payload);
@@ -216,14 +226,10 @@ export default function ProfileEditPage() {
   };
 
   if (!isMounted) return null;
-
-  if (!isLoggedIn || !loginUserNo) { 
-    return <div style={{ padding: '50px', textAlign: 'center' }}>로그인이 필요한 서비스입니다.</div>;
-  }
-
+  if (!isLoggedIn || !loginUserNo) return <div style={{ padding: '50px', textAlign: 'center' }}>로그인이 필요한 서비스입니다.</div>;
   if (loading) return <div className={styles.loader}>데이터를 불러오는 중입니다...</div>; 
 
-  const displayImageUrl = previewUrl || member.profileImageUrl;
+  const displayValue = previewUrl || member.profileImageUrl;
 
   return (
     <div className={styles.container}>
@@ -233,13 +239,11 @@ export default function ProfileEditPage() {
         <div className={styles.formCardTitle}>프로필 이미지</div>
         <div className={styles.avatarRow}>
           <div className={styles.avatarBig}>
-             {(!displayImageUrl || imgError) ? (
-               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', width: '100%', height: '100%', backgroundColor: '#eee', color: '#666', fontWeight: 'bold' }}>
-                 {member.nickname ? member.nickname.charAt(0) : 'U'}
-               </div>
-             ) : (
-               <img src={displayImageUrl} alt="프로필" className={styles.avatarImg} onError={() => setImgError(true)} style={{ objectFit: 'cover' }} />
-             )}
+            <UserAvatar 
+              imageUrl={displayValue} 
+              name={member.userEmail || "user"} 
+              size={90} 
+            />
           </div>
           <div className={styles.avatarActions}>
             <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleImageChange} />
@@ -267,41 +271,43 @@ export default function ProfileEditPage() {
         </div>
       </div>
 
-      <div className={styles.formCard}>
-        <div className={styles.formCardTitle}>비밀번호 변경 (선택)</div>
-        <div className={styles.formGrid}>
-          <div className={`${styles.formGroup} ${styles.full}`}>
-            <label className={styles.formLabel}>현재 비밀번호</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <input 
-                className={styles.formInput} type="password" placeholder="비밀번호 변경 시에만 입력" 
-                style={{ maxWidth: '320px' }}
-                value={passwords.current}
-                onChange={(e) => {
-                  setPasswords({...passwords, current: e.target.value});
-                  setCurrentPwStatus('idle'); 
-                }}
-                onBlur={verifyCurrentPassword} 
-              />
-              {currentPwStatus === 'checking' && <span className={styles.formHint}>확인 중...</span>}
-              {currentPwStatus === 'matched' && <span className={`${styles.formHint} ${styles.textSuccess}`}>✓ 확인됨</span>}
-              {currentPwStatus === 'mismatched' && <span className={`${styles.formHint} ${styles.textError}`}>불일치</span>}
+      {!isKakaoUser && (
+        <div className={styles.formCard}>
+          <div className={styles.formCardTitle}>비밀번호 변경 (선택)</div>
+          <div className={styles.formGrid}>
+            <div className={`${styles.formGroup} ${styles.full}`}>
+              <label className={styles.formLabel}>현재 비밀번호</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input 
+                  className={styles.formInput} type="password" placeholder="비밀번호 변경 시에만 입력" 
+                  style={{ maxWidth: '320px' }}
+                  value={passwords.current}
+                  onChange={(e) => {
+                    setPasswords({...passwords, current: e.target.value});
+                    setCurrentPwStatus('idle'); 
+                  }}
+                  onBlur={verifyCurrentPassword} 
+                />
+                {currentPwStatus === 'checking' && <span className={styles.formHint}>확인 중...</span>}
+                {currentPwStatus === 'matched' && <span className={`${styles.formHint} ${styles.textSuccess}`}>✓ 확인됨</span>}
+                {currentPwStatus === 'mismatched' && <span className={`${styles.formHint} ${styles.textError}`}>불일치</span>}
+              </div>
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>새 비밀번호</label>
+              <input className={styles.formInput} type="password" placeholder="새 비밀번호 (8자 이상)" value={passwords.new} onChange={(e) => setPasswords({...passwords, new: e.target.value})} />
+              {isNewPwTooShort && <span className={`${styles.formHint} ${styles.textError}`}>8자리 이상이어야 합니다.</span>}
+            </div>
+            
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>새 비밀번호 확인</label>
+              <input className={styles.formInput} type="password" placeholder="새 비밀번호 재입력" value={passwords.confirm} onChange={(e) => setPasswords({...passwords, confirm: e.target.value})} />
+              {isPwMatch && <span className={`${styles.formHint} ${styles.textSuccess}`}>✓ 일치합니다</span>}
             </div>
           </div>
-          
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>새 비밀번호</label>
-            <input className={styles.formInput} type="password" placeholder="새 비밀번호 (8자 이상)" value={passwords.new} onChange={(e) => setPasswords({...passwords, new: e.target.value})} />
-            {isNewPwTooShort && <span className={`${styles.formHint} ${styles.textError}`}>8자리 이상이어야 합니다.</span>}
-          </div>
-          
-          <div className={styles.formGroup}>
-            <label className={styles.formLabel}>새 비밀번호 확인</label>
-            <input className={styles.formInput} type="password" placeholder="새 비밀번호 재입력" value={passwords.confirm} onChange={(e) => setPasswords({...passwords, confirm: e.target.value})} />
-            {isPwMatch && <span className={`${styles.formHint} ${styles.textSuccess}`}>✓ 일치합니다</span>}
-          </div>
         </div>
-      </div>
+      )}
 
       <div className={styles.formCard}>
         <div className={styles.formCardTitle}>알레르기 정보</div>
