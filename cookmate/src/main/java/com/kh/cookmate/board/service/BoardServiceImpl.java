@@ -136,6 +136,23 @@ public class BoardServiceImpl implements BoardService {
 		return new BoardSearchResponse(list, totalCount, page, size);
 	}
 
+	@Override
+	public List<BoardSearchResult> getWeeklyPopularBoards(int size) {
+		int safeSize = size < 1 ? 5 : Math.min(size, 20);
+		List<BoardSearchResult> list = boardDao.selectWeeklyPopularBoards(safeSize);
+		if (!list.isEmpty()) {
+			return list;
+		}
+
+		BoardSearchRequest fallback = new BoardSearchRequest();
+		fallback.setSource("user");
+		fallback.setSort("likes");
+		fallback.setPage(1);
+		fallback.setSize(safeSize);
+		fallback.setOffset(0);
+		return boardDao.searchBoards(fallback);
+	}
+
 	//레시피 수정 (부분 수정)
     @Override
     @Transactional
@@ -380,7 +397,12 @@ public class BoardServiceImpl implements BoardService {
 			return -4;
 		}
 
-		return boardDao.insertCommentReport(params);
+		int result = boardDao.insertCommentReport(params);
+		if (result > 0) {
+			boardDao.insertCommentReportDetail(params);
+		}
+
+		return result;
 	}
 
 	private boolean isValidReportType(String reportType) {

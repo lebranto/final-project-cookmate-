@@ -244,9 +244,13 @@
 
 .recipeGrid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
 }
 
 .recipeCard {
+  display: flex;
+  flex-direction: column;
+  height: 286px;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -256,11 +260,33 @@
 }
 
 .recipeImage {
-  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  height: 168px;
+  overflow: hidden;
   background: var(--warm);
 }
 
+.recipeImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recipeImage span {
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 900;
+}
+
 .recipeBody {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  background: #fff;
   padding: 14px;
 }
 
@@ -283,6 +309,12 @@
   margin: 0 0 8px;
   font-family: var(--serif);
   font-size: 16px;
+  line-height: 1.35;
+  display: -webkit-box;
+  min-height: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .recipeBody p,
@@ -291,6 +323,71 @@
   margin: 0;
   color: var(--muted);
   font-size: 12px;
+}
+
+.recipeBody p {
+  margin-top: auto;
+}
+
+.recipeSkeleton {
+  pointer-events: none;
+}
+
+.recipeSkeleton .recipeImage,
+.recipeSkeleton .recipeBody span,
+.recipeSkeleton .recipeBody h3,
+.recipeSkeleton .recipeBody p {
+  position: relative;
+  overflow: hidden;
+  background: #eee8df;
+}
+
+.recipeSkeleton .recipeImage::after,
+.recipeSkeleton .recipeBody span::after,
+.recipeSkeleton .recipeBody h3::after,
+.recipeSkeleton .recipeBody p::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.3s infinite;
+}
+
+.recipeSkeleton .recipeBody span {
+  width: 54px;
+  height: 18px;
+  margin-bottom: 9px;
+  border-radius: 4px;
+}
+
+.recipeSkeleton .recipeBody h3 {
+  width: 100%;
+  min-height: 43px;
+  border-radius: 5px;
+}
+
+.recipeSkeleton .recipeBody p {
+  width: 72%;
+  height: 14px;
+  border-radius: 5px;
+}
+
+.recipeEmpty {
+  margin-top: 14px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 18px;
+  text-align: center;
+}
+
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
 }
 
 .featured {
@@ -308,7 +405,17 @@
 }
 
 .featuredImage {
+  display: grid;
+  place-items: center;
   min-height: 420px;
+  overflow: hidden;
+  background: var(--warm);
+}
+
+.featuredImage span {
+  color: var(--green);
+  font-size: 28px;
+  font-weight: 900;
 }
 
 .featuredBody {
@@ -328,12 +435,83 @@
   margin: 0 0 24px;
   color: var(--muted);
   line-height: 1.8;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
 }
 
 .featuredMeta {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 26px;
+}
+
+.featuredMeta strong {
+  border-radius: 999px;
+  background: var(--warm);
+  color: var(--ink);
+  font-size: 13px;
+  padding: 7px 12px;
+}
+
+.featuredEmpty {
+  width: min(1100px, calc(100% - 64px));
+  margin: 56px auto 0;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 38px;
+  text-align: center;
+}
+
+.featuredSkeleton .featuredImage,
+.featuredSkeleton .featuredBody span,
+.featuredSkeleton .featuredBody h2,
+.featuredSkeleton .featuredBody p,
+.featuredSkeleton .featuredMeta strong {
+  position: relative;
+  overflow: hidden;
+  background: #eee8df;
+}
+
+.featuredSkeleton .featuredImage::after,
+.featuredSkeleton .featuredBody span::after,
+.featuredSkeleton .featuredBody h2::after,
+.featuredSkeleton .featuredBody p::after,
+.featuredSkeleton .featuredMeta strong::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.3s infinite;
+}
+
+.featuredSkeleton .featuredBody span {
+  width: 116px;
+  height: 16px;
+  border-radius: 4px;
+}
+
+.featuredSkeleton .featuredBody h2 {
+  width: 90%;
+  height: 76px;
+  border-radius: 8px;
+}
+
+.featuredSkeleton .featuredBody p {
+  width: 100%;
+  height: 82px;
+  border-radius: 8px;
+}
+
+.featuredSkeleton .featuredMeta strong {
+  width: 70px;
+  height: 30px;
 }
 
 .steps {
@@ -412,11 +590,19 @@
 }
 
 .popularImage {
+  display: grid;
+  place-items: center;
   width: 88px;
   height: 74px;
   overflow: hidden;
   border-radius: 6px;
   background: var(--warm);
+}
+
+.popularImage span {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .rank {
@@ -441,6 +627,61 @@
   font-size: 16px;
   line-height: 1.35;
   transition: color 0.15s;
+}
+
+.popularSkeleton {
+  pointer-events: none;
+}
+
+.popularSkeleton .popularImage,
+.popularSkeleton .popularTag,
+.popularSkeleton strong,
+.popularSkeleton p {
+  position: relative;
+  overflow: hidden;
+  background: #eee8df;
+}
+
+.popularSkeleton .popularImage::after,
+.popularSkeleton .popularTag::after,
+.popularSkeleton strong::after,
+.popularSkeleton p::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 1.3s infinite;
+}
+
+.popularSkeleton .popularTag {
+  display: block;
+  width: 42px;
+  height: 12px;
+  border-radius: 4px;
+}
+
+.popularSkeleton strong {
+  width: 92%;
+  height: 20px;
+  border-radius: 5px;
+}
+
+.popularSkeleton p {
+  width: 68%;
+  height: 13px;
+  border-radius: 5px;
+}
+
+.popularEmpty {
+  margin-top: 14px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 18px;
+  text-align: center;
 }
 
 .sidebar {
@@ -588,6 +829,14 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .recipeCard {
+    height: 270px;
+  }
+
+  .recipeImage {
+    height: 152px;
+  }
+
   .categoryWide {
     grid-column: span 1;
   }
@@ -636,6 +885,22 @@
   .recipeGrid,
   .stepGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .recipeCard {
+    height: 252px;
+  }
+
+  .recipeImage {
+    height: 136px;
+  }
+
+  .recipeBody {
+    padding: 12px;
+  }
+
+  .recipeBody h3 {
+    font-size: 14px;
   }
 
   .searchBox {
