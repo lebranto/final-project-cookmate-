@@ -35,8 +35,8 @@ public class PublicApiServiceImpl implements PublicApiService {
 
     @Override
     public void fetchAndSaveAll() {
-        int start = 1;
-        int end = 100;
+        int start = 101;
+        int end = 500;
 
         while (true) {
             fetchByRange(start, end);
@@ -85,6 +85,24 @@ public class PublicApiServiceImpl implements PublicApiService {
     // API 데이터 파싱 후 DB 저장
     private void saveApiRecipe(Map row) {
 
+    	String apiRecipeId = row.get("RCP_SEQ") == null ? null : row.get("RCP_SEQ").toString();
+        String recipeTitle = (String) row.get("RCP_NM");
+        String highResImageUrl = (String) row.get("ATT_FILE_NO_MK");
+        String mainImageUrl = (String) row.get("ATT_FILE_NO_MAIN");
+        String imageUrl = highResImageUrl != null && !highResImageUrl.isBlank()
+                ? highResImageUrl
+                : mainImageUrl;
+
+        Map<String, Object> duplicateParams = Map.of(
+                "apiRecipeId", apiRecipeId == null || apiRecipeId.isBlank() ? "" : apiRecipeId,
+                "boardTitle", recipeTitle == null ? "" : recipeTitle,
+                "imageUrl", imageUrl == null ? "" : imageUrl
+        );
+    	if (boardDao.countApiRecipeDuplicate(duplicateParams) > 0) {
+    		log.info("이미 저장된 공식 레시피입니다. apiRecipeId={}, title={}", apiRecipeId, recipeTitle);
+    		return;
+    	}
+
     	// TAG 저장
         Tag tag = new Tag();
         tag.setTypeName((String) row.get("RCP_PAT2"));
@@ -97,18 +115,13 @@ public class PublicApiServiceImpl implements PublicApiService {
         // BOARD 저장
         Board board = new Board();
         board.setTypeNo(tag.getTypeNo());
-        board.setBoardTitle((String) row.get("RCP_NM"));
+        board.setBoardTitle(recipeTitle);
         board.setIntroduce("");              // ← 빈값으로 변경
-        String highResImageUrl = (String) row.get("ATT_FILE_NO_MK");
-        String mainImageUrl = (String) row.get("ATT_FILE_NO_MAIN");
-        board.setImageUrl(
-            highResImageUrl != null && !highResImageUrl.isBlank()
-                ? highResImageUrl
-                : mainImageUrl
-        );
+        board.setImageUrl(imageUrl);
         board.setNickname("공식");
         board.setUserNo(1);
         board.setIsApiData('Y');
+        board.setApiRecipeId(apiRecipeId == null || apiRecipeId.isBlank() ? null : apiRecipeId);
         board.setOpen('Y');
         board.setLikesCount(0);
         board.setBoardDelete('N');

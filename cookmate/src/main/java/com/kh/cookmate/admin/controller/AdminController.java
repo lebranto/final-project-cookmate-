@@ -31,6 +31,7 @@ import com.kh.cookmate.admin.dto.AdminDto.UserSearchDto;
 import com.kh.cookmate.admin.dto.AdminDto.UserSuspendRequestDto;
 import com.kh.cookmate.admin.dto.AdminDto.UserWithdrawRequestDto;
 import com.kh.cookmate.admin.service.AdminService;
+import com.kh.cookmate.admin.service.PublicApiService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AdminController {
 	
 	private final AdminService adminService;
+	private final PublicApiService publicApiService;
 	
 	@GetMapping("/dashboard")
 	public ResponseEntity<AdminDto> dashboard(){
@@ -195,6 +197,8 @@ public class AdminController {
         return ResponseEntity.ok(adminService.getRecipes(dto));
 	}
 
+	
+
 	@PatchMapping("/boards/{boardNo}/hide")
 	public ResponseEntity<Void> hideRecipe(@PathVariable int boardNo) {
 		return adminService.hideRecipe(boardNo)
@@ -258,4 +262,48 @@ public class AdminController {
 				: ResponseEntity.notFound().build();
 	}
 	
+	@PostMapping("/fetch-api-recipes")
+	public ResponseEntity<Map<String, Object>> fetchApiRecipes() {
+		try {
+			publicApiService.fetchAndSaveAll();
+
+			return ResponseEntity.ok(Map.of(
+					"message", "공식 레시피 수집이 완료되었습니다.",
+					"count", publicApiService.getApiRecipeCount()
+			));
+		} catch (Exception e) {
+			log.error("공식 레시피 수집 실패", e);
+			return ResponseEntity.internalServerError().body(Map.of(
+					"message", "공식 레시피 수집 중 오류가 발생했습니다."
+			));
+		}
+	}
+
+	@PostMapping("/fetch-api-recipes/{start}/{end}")
+	public ResponseEntity<Map<String, Object>> fetchApiRecipesByRange(
+			@PathVariable int start,
+			@PathVariable int end
+	) {
+		if (start < 1 || end < start) {
+			return ResponseEntity.badRequest().body(Map.of(
+					"message", "시작 번호와 끝 번호를 올바르게 입력해주세요."
+			));
+		}
+
+		try {
+			publicApiService.fetchByRange(start, end);
+
+			return ResponseEntity.ok(Map.of(
+					"message", "공식 레시피 범위 수집이 완료되었습니다.",
+					"start", start,
+					"end", end,
+					"count", publicApiService.getApiRecipeCount()
+			));
+		} catch (Exception e) {
+			log.error("공식 레시피 범위 수집 실패: {}~{}", start, end, e);
+			return ResponseEntity.internalServerError().body(Map.of(
+					"message", "공식 레시피 범위 수집 중 오류가 발생했습니다."
+			));
+		}
+	}
 }

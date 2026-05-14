@@ -57,6 +57,9 @@ public class BoardDto {
         private String calory;
         private char ai;
         private String boardPostdate;
+        private int recipeCount;
+        private int followerCount;
+        private int followingCount;
         private List<IngredientSetDto.SetDetail> ingredientSets;
         private List<CookStepDto.StepDetail> cookSteps;
     }

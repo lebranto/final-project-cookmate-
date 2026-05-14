@@ -25,6 +25,9 @@
         <result property="cookTime"     column="COOK_TIME"/>
         <result property="calory"       column="CALORY"/>
         <result property="ai"           column="AI"/>
+        <result property="recipeCount"  column="RECIPE_COUNT"/>
+        <result property="followerCount" column="FOLLOWER_COUNT"/>
+        <result property="followingCount" column="FOLLOWING_COUNT"/>
         <collection property="ingredientSets"
                     column="BOARD_NO"
                     select="selectIngredientSetDetail"/>
@@ -50,6 +53,8 @@
         <choose>
             <when test="source == 'official'">
                 AND b.IS_API_DATA = 'Y'
+            </when>
+            <when test="source == 'all'">
             </when>
             <otherwise>
                 AND b.IS_API_DATA = 'N'
@@ -178,7 +183,6 @@
         ) ws ON ws.BOARD_NO = b.BOARD_NO
         WHERE b.BOARD_DELETE = 'N'
           AND b.OPEN = 'Y'
-          AND b.IS_API_DATA = 'N'
           AND (
               b.BOARD_POSTDATE >= DATE_SUB(NOW(), INTERVAL 7 DAY)
               OR COALESCE(ws.WEEKLY_SCRAP_COUNT, 0) > 0
@@ -198,6 +202,20 @@
         SELECT COUNT(*) FROM BOARD WHERE IS_API_DATA = 'Y'
     </select>
 
+    <select id="countApiRecipeDuplicate" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM BOARD
+        WHERE IS_API_DATA = 'Y'
+          AND (
+              (#{apiRecipeId} IS NOT NULL AND API_RECIPE_ID = #{apiRecipeId})
+              OR (
+                  (API_RECIPE_ID IS NULL OR API_RECIPE_ID = '')
+                  AND BOARD_TITLE = #{boardTitle}
+                  AND IMAGE_URL = #{imageUrl}
+              )
+          )
+    </select>
+
     <!-- 레시피 등록 -->
     <select id="selectNicknameByUserNo" parameterType="int" resultType="string">
         SELECT NICKNAME FROM USER WHERE USER_NO = #{userNo}
@@ -208,11 +226,11 @@
         INSERT INTO BOARD (
             USER_NO, TYPE_NO, BOARD_TITLE, NICKNAME,
             INTRODUCE, IMAGE_URL, URL, OPEN,
-            IS_API_DATA, LIKES_COUNT, BOARD_DELETE, BOARD_POSTDATE
+            IS_API_DATA, API_RECIPE_ID, LIKES_COUNT, BOARD_DELETE, BOARD_POSTDATE
         ) VALUES (
             #{userNo}, #{typeNo}, #{boardTitle}, #{nickname},
             #{introduce}, #{imageUrl}, #{url}, #{open},
-            #{isApiData}, 0, 'N', NOW()
+            #{isApiData}, #{apiRecipeId}, 0, 'N', NOW()
         )
     </insert>
 
@@ -222,7 +240,38 @@
             b.BOARD_NO, b.USER_NO, b.TYPE_NO, b.BOARD_TITLE,
             COALESCE(u.NICKNAME, b.NICKNAME) AS NICKNAME, b.INTRODUCE, b.IMAGE_URL, b.URL,
             b.OPEN, b.IS_API_DATA, b.LIKES_COUNT, DATE_FORMAT(b.BOARD_POSTDATE, '%Y년 %c월 %e일') AS BOARD_POSTDATE,
-            t.TYPE_NAME, t.DIFFICULT, t.COOK_TIME, t.CALORY, t.AI
+            t.TYPE_NAME, t.DIFFICULT, t.COOK_TIME, t.CALORY, t.AI,
+            CASE
+                WHEN b.IS_API_DATA = 'Y' THEN (
+                    SELECT COUNT(*)
+                    FROM BOARD rb
+                    WHERE rb.BOARD_DELETE = 'N'
+                      AND rb.IS_API_DATA = 'Y'
+                )
+                ELSE (
+                    SELECT COUNT(*)
+                    FROM BOARD rb
+                    WHERE rb.USER_NO = b.USER_NO
+                      AND rb.BOARD_DELETE = 'N'
+                      AND rb.IS_API_DATA = 'N'
+                )
+            END AS RECIPE_COUNT,
+            CASE
+                WHEN b.IS_API_DATA = 'Y' OR u.USER_EMAIL IS NULL THEN 0
+                ELSE (
+                    SELECT COUNT(*)
+                    FROM FOLLOWING f
+                    WHERE f.FOLLOWING_ID = u.USER_EMAIL
+                )
+            END AS FOLLOWER_COUNT,
+            CASE
+                WHEN b.IS_API_DATA = 'Y' THEN 0
+                ELSE (
+                    SELECT COUNT(*)
+                    FROM FOLLOWING f
+                    WHERE f.USER_NO = b.USER_NO
+                )
+            END AS FOLLOWING_COUNT
         FROM BOARD b
         JOIN TAG t ON b.TYPE_NO = t.TYPE_NO
         LEFT JOIN USER u ON b.USER_NO = u.USER_NO
