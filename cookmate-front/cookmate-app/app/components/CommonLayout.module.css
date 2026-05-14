@@ -254,6 +254,8 @@
 
 .adminSiteButton:hover {
   background: rgba(255, 255, 255, 0.16);
+}
+
 .globalFooter {
   margin-top: 40px;
   border-top: 1px solid #ebe5dc;
@@ -425,4 +427,5 @@
     align-items: flex-start;
     padding-bottom: 92px;
   }
+}
 }
