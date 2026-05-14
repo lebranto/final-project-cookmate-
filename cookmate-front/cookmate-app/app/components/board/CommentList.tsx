@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import api from "@/app/lib/api";
 import { Comment } from "@/app/type/board";
@@ -12,9 +13,12 @@ interface Props {
   currentUserNo?: number;
 }
 
+const REPORT_TYPES = ["부적절한 레시피", "스팸/광고", "저작권 위반", "욕설/혐오", "허위정보"];
+
 export default function CommentList({ boardNo, currentUserNo }: Props) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [reportTo, setReportTo] = useState<number | null>(null);
   const { isLoggedIn } = useUserInfoActions();
 
   const fetchComments = useCallback(async () => {
@@ -46,6 +50,36 @@ export default function CommentList({ boardNo, currentUserNo }: Props) {
     }
   };
 
+  const handleReport = async (comment: Comment, reportType: string, reportReason: string) => {
+    if (!isLoggedIn || !currentUserNo) {
+      alert("로그인 후 신고할 수 있습니다.");
+      return;
+    }
+
+    if (currentUserNo === comment.userNo) {
+      alert("본인 댓글은 신고할 수 없습니다.");
+      return;
+    }
+
+    if (!reportType) {
+      alert("신고 유형을 선택해 주세요.");
+      return;
+    }
+
+    try {
+      const res = await api.post(`/comments/${comment.commentNo}/reports`, {
+        userNo: currentUserNo,
+        reportType,
+        reportReason: reportReason.trim().slice(0, 500),
+      });
+      alert(res.data || "댓글 신고가 접수되었습니다.");
+      setReportTo(null);
+    } catch (error) {
+      console.error("댓글 신고 실패:", error);
+      alert(getErrorMessage(error, "댓글 신고에 실패했습니다."));
+    }
+  };
+
   return (
     <div className={styles.commentList}>
       {comments.length === 0 && (
@@ -59,10 +93,15 @@ export default function CommentList({ boardNo, currentUserNo }: Props) {
             currentUserNo={currentUserNo}
             isLoggedIn={isLoggedIn}
             isReplyOpen={replyTo === comment.commentNo}
+            isReportOpen={reportTo === comment.commentNo}
             onReplyToggle={() =>
               setReplyTo(replyTo === comment.commentNo ? null : comment.commentNo)
             }
+            onReportToggle={() =>
+              setReportTo(reportTo === comment.commentNo ? null : comment.commentNo)
+            }
             onDelete={handleDelete}
+            onReport={handleReport}
             onReplySuccess={() => {
               void fetchComments();
               setReplyTo(null);
@@ -80,8 +119,13 @@ export default function CommentList({ boardNo, currentUserNo }: Props) {
                   isLoggedIn={isLoggedIn}
                   isReply
                   isReplyOpen={false}
+                  isReportOpen={reportTo === reply.commentNo}
                   onReplyToggle={() => undefined}
+                  onReportToggle={() =>
+                    setReportTo(reportTo === reply.commentNo ? null : reply.commentNo)
+                  }
                   onDelete={handleDelete}
+                  onReport={handleReport}
                   onReplySuccess={fetchComments}
                   boardNo={boardNo}
                 />
@@ -100,8 +144,11 @@ function CommentItem({
   isLoggedIn,
   isReply = false,
   isReplyOpen,
+  isReportOpen,
   onReplyToggle,
+  onReportToggle,
   onDelete,
+  onReport,
   onReplySuccess,
   boardNo,
 }: {
@@ -110,8 +157,11 @@ function CommentItem({
   isLoggedIn: boolean;
   isReply?: boolean;
   isReplyOpen: boolean;
+  isReportOpen: boolean;
   onReplyToggle: () => void;
+  onReportToggle: () => void;
   onDelete: (commentNo: number) => void;
+  onReport: (comment: Comment, reportType: string, reportReason: string) => void;
   onReplySuccess: () => void;
   boardNo: number;
 }) {
@@ -153,7 +203,11 @@ function CommentItem({
               답글
             </button>
           )}
-          <button type="button" className={styles.commentActionButton}>
+          <button
+            type="button"
+            className={styles.commentActionButton}
+            onClick={onReportToggle}
+          >
             신고
           </button>
           {canDelete && (
@@ -175,7 +229,77 @@ function CommentItem({
             onCancel={onReplyToggle}
           />
         )}
+
+        {isReportOpen && (
+          <CommentReportForm
+            comment={comment}
+            onSubmit={onReport}
+            onCancel={onReportToggle}
+          />
+        )}
       </div>
     </div>
   );
+}
+
+function CommentReportForm({
+  comment,
+  onSubmit,
+  onCancel,
+}: {
+  comment: Comment;
+  onSubmit: (comment: Comment, reportType: string, reportReason: string) => void;
+  onCancel: () => void;
+}) {
+  const [reportType, setReportType] = useState("");
+  const [reportReason, setReportReason] = useState("");
+
+  return (
+    <div className={styles.reportBox}>
+      <select
+        value={reportType}
+        onChange={(event) => setReportType(event.target.value)}
+        className={styles.reportSelect}
+      >
+        <option value="">신고 유형 선택</option>
+        {REPORT_TYPES.map((type) => (
+          <option key={type} value={type}>
+            {type}
+          </option>
+        ))}
+      </select>
+      <textarea
+        value={reportReason}
+        onChange={(event) => setReportReason(event.target.value)}
+        className={styles.reportTextarea}
+        rows={2}
+        maxLength={500}
+        placeholder="상세 사유를 입력해 주세요. (선택)"
+      />
+      <div className={styles.reportActions}>
+        <button type="button" className={styles.cancelButton} onClick={onCancel}>
+          취소
+        </button>
+        <button
+          type="button"
+          className={styles.submitButton}
+          onClick={() => onSubmit(comment, reportType, reportReason)}
+        >
+          신고 접수
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data;
+    if (typeof data === "string" && data.trim()) return data;
+    if (data && typeof data === "object" && "message" in data) {
+      return String(data.message);
+    }
+  }
+
+  return fallback;
 }

@@ -1,7 +1,9 @@
 package com.kh.cookmate.board.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import com.kh.cookmate.board.dto.CookStepDto.StepWrite;
 import com.kh.cookmate.board.dto.IngredientDto.IngDetail;
 import com.kh.cookmate.board.dto.IngredientDto.IngWrite;
 import com.kh.cookmate.board.dto.IngredientSetDto.SetWrite;
+import com.kh.cookmate.board.dto.ReportDto.CommentReportRequest;
 import com.kh.cookmate.board.model.vo.Board;
 import com.kh.cookmate.board.model.vo.Comment;
 import com.kh.cookmate.board.model.vo.CookStep;
@@ -342,6 +345,50 @@ public class BoardServiceImpl implements BoardService {
 	@Override
 	public int deleteComment(int commentNo) {
 		return boardDao.deleteComment(commentNo);
+	}
+
+	@Override
+	@Transactional
+	public int reportComment(int commentNo, CommentReportRequest request) {
+		if (request == null || request.getUserNo() <= 0) {
+			return -1;
+		}
+		if (!isValidReportType(request.getReportType())) {
+			return -5;
+		}
+
+		int reporteeNo = boardDao.selectCommentUserNo(commentNo);
+		int boardNo = boardDao.selectCommentBoardNo(commentNo);
+
+		if (reporteeNo <= 0 || boardNo <= 0) {
+			return -2;
+		}
+
+		if (reporteeNo == request.getUserNo()) {
+			return -3;
+		}
+
+		Map<String, Object> params = new HashMap<>();
+		params.put("userNo", request.getUserNo());
+		params.put("reporteeNo", reporteeNo);
+		params.put("commentNo", commentNo);
+		params.put("boardNo", boardNo);
+		params.put("reportReason", request.getReportReason());
+		params.put("reportType", request.getReportType());
+
+		if (boardDao.selectCommentReportCount(params) > 0) {
+			return -4;
+		}
+
+		return boardDao.insertCommentReport(params);
+	}
+
+	private boolean isValidReportType(String reportType) {
+		return "부적절한 레시피".equals(reportType)
+				|| "스팸/광고".equals(reportType)
+				|| "저작권 위반".equals(reportType)
+				|| "욕설/혐오".equals(reportType)
+				|| "허위정보".equals(reportType);
 	}
 
 	

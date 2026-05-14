@@ -25,6 +25,7 @@ PUBLIC_BASE_URL = os.environ.get(
 ALLOWED_DIRS = {
     "recipes/covers",
     "recipes/steps",
+    "users/profiles",
 }
 
 EXTENSIONS = {
