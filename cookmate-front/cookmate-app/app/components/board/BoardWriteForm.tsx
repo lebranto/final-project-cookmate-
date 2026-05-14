@@ -54,6 +54,11 @@ interface FormErrors {
 const CATEGORIES = ["한식", "중식", "일식", "양식", "셀러드", "디저트"];
 const DIFFICULTIES = ["쉬움", "보통", "어려움"];
 const COOK_TIMES = ["10분 이하", "10~20분", "20~30분", "30~45분", "45~60분", "1시간 이상"];
+const CALORY_OPTIONS: { value: Exclude<Calory, "">; range: string }[] = [
+  { value: "저칼로리", range: "~ 400kcal" },
+  { value: "보통", range: "400~700kcal" },
+  { value: "고칼로리", range: "700kcal ~" },
+];
 
 const newId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -664,18 +669,21 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
         </div>
 
         <div className={`${styles.caloryGrid} ${fieldErrors.calory ? styles.invalidChoiceGroup : ""}`}>
-          {(["저칼로리", "보통", "고칼로리"] as Calory[]).map((item) => (
-            <label key={item} className={styles.caloryOption}>
+          {CALORY_OPTIONS.map((item) => (
+            <label key={item.value} className={styles.caloryOption}>
               <input
                 type="radio"
                 name="calory"
-                checked={calory === item}
+                checked={calory === item.value}
                 onChange={() => {
-                  setCalory(item);
+                  setCalory(item.value);
                   setFieldErrors((errors) => ({ ...errors, calory: undefined }));
                 }}
               />
-              <span>{item}</span>
+              <span className={styles.caloryOptionText}>
+                <strong className={styles.caloryLabel}>{item.value}</strong>
+                <small className={styles.caloryRange}>{item.range}</small>
+              </span>
             </label>
           ))}
         </div>
