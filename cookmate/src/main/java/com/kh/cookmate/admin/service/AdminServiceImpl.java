@@ -156,13 +156,13 @@ public class AdminServiceImpl implements AdminService{
 	}
 
 	@Override
-	public boolean hideRecipe(int recipeId) {
-		return adminDao.hideRecipe(recipeId) > 0;
+	public boolean hideRecipe(int boardNo) {
+		return adminDao.hideRecipe(boardNo) > 0;
 	}
 
 	@Override
-	public boolean restoreRecipe(int recipeId) {
-		return adminDao.restoreRecipe(recipeId) > 0;
+	public boolean restoreRecipe(int boardNo) {
+		return adminDao.restoreRecipe(boardNo) > 0;
 	}
 
     @Override

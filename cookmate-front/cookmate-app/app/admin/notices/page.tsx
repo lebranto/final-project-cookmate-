@@ -29,7 +29,7 @@ type ViewMode = "list" | "create" | "edit";
 
 const ITEMS_PER_PAGE = 10;
 const PAGE_GROUP_SIZE = 5;
-const API_BASE = "http://localhost:8081/api/admin/notice";
+const API_BASE = "http://localhost:8081/api/admin/notices";
 
 const NOTICE_TYPES: NoticeType[] = ["중요", "안내", "점검", "업데이트", "이벤트"];
 

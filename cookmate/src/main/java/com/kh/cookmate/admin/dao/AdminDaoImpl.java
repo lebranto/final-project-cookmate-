@@ -181,13 +181,13 @@ public class AdminDaoImpl implements AdminDao{
 	}
 
 	@Override
-	public int hideRecipe(int recipeId) {
-		return session.update("admin.hideRecipe", recipeId);
+	public int hideRecipe(int boardNo) {
+		return session.update("admin.hideRecipe", boardNo);
 	}
 
 	@Override
-	public int restoreRecipe(int recipeId) {
-		return session.update("admin.restoreRecipe", recipeId);
+	public int restoreRecipe(int boardNo) {
+		return session.update("admin.restoreRecipe", boardNo);
 	}
 
 	@Override

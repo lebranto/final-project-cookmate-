@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import styles from "./CommonLayout.module.css";
+import styles from "../../app/components/CommonLayout.module.css"
 
 const NAV_ITEMS = [
   { label: "홈", path: "/" },
