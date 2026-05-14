@@ -83,6 +83,7 @@ public interface BoardDao {
 	int selectCommentBoardNo(int commentNo);
 	int selectCommentReportCount(Map<String, Object> params);
 	int insertCommentReport(Map<String, Object> params);
+	int insertCommentReportDetail(Map<String, Object> params);
 
 	List<Map<String, Object>> selectApiBoards();
 	int clearIntroduce(int boardNo);

@@ -380,7 +380,12 @@ public class BoardServiceImpl implements BoardService {
 			return -4;
 		}
 
-		return boardDao.insertCommentReport(params);
+		int result = boardDao.insertCommentReport(params);
+		if (result > 0) {
+			boardDao.insertCommentReportDetail(params);
+		}
+
+		return result;
 	}
 
 	private boolean isValidReportType(String reportType) {

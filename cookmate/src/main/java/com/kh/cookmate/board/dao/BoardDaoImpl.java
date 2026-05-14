@@ -214,6 +214,11 @@ public class BoardDaoImpl implements BoardDao{
 	}
 
 	@Override
+	public int insertCommentReportDetail(Map<String, Object> params) {
+		return session.insert("boardmapper.insertCommentReportDetail", params);
+	}
+
+	@Override
 	public List<Map<String, Object>> selectApiBoards() {
 	    return session.selectList("boardmapper.selectApiBoards");
 	}

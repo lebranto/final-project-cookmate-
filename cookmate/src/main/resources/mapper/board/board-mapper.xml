@@ -483,7 +483,11 @@
 		  AND COMMENT_NO = #{commentNo}
 	</select>
 
-	<insert id="insertCommentReport" parameterType="map">
+	<insert id="insertCommentReport"
+			parameterType="map"
+			useGeneratedKeys="true"
+			keyProperty="reportNo"
+			keyColumn="REPORT_NO">
 		INSERT INTO REPORT (
 			USER_NO,
 			REPORTEE_NO,
@@ -501,6 +505,21 @@
 			NOW(),
 			#{reportReason},
 			#{reportType}
+		)
+	</insert>
+
+	<insert id="insertCommentReportDetail" parameterType="map">
+		INSERT INTO REPORT_DETAIL (
+			USER_NO,
+			REPORT_NO,
+			REASON,
+			STATE
+		)
+		VALUES (
+			#{reporteeNo},
+			#{reportNo},
+			'접수 대기',
+			'W'
 		)
 	</insert>
 	
