@@ -78,23 +78,7 @@
             AND t.TYPE_NAME = #{category}
         </if>
         <if test="source != 'official' and cookTime != null and cookTime != ''">
-            AND
-            CASE
-                WHEN t.COOK_TIME IN ('10분 이하', '10분 이내') THEN 10
-                WHEN t.COOK_TIME IN ('10~20분', '20분 이내') THEN 20
-                WHEN t.COOK_TIME IN ('20~30분', '30분 이내') THEN 30
-                WHEN t.COOK_TIME IN ('30~45분', '45분 이내') THEN 45
-                WHEN t.COOK_TIME IN ('45~60분', '1시간 이내', '60분 이내') THEN 60
-                WHEN t.COOK_TIME IN ('1시간 이상', '60분 이상') THEN 9999
-                ELSE 9999
-            END
-            <![CDATA[ <= ]]>
-            CASE
-                WHEN #{cookTime} IN ('15분 이내', '15분 이하') THEN 15
-                WHEN #{cookTime} IN ('30분 이내', '30분 이하') THEN 30
-                WHEN #{cookTime} IN ('1시간 이내', '60분 이내', '1시간 이하') THEN 60
-                ELSE 9999
-            END
+            AND REPLACE(t.COOK_TIME, ' ', '') = REPLACE(#{cookTime}, ' ', '')
         </if>
         <if test="source != 'official' and difficult != null and difficult != ''">
             AND t.DIFFICULT = #{difficult}
