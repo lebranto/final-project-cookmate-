@@ -21,10 +21,9 @@ function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
 }
 
-// 🌟 1. '디저트' 대신 DB에 있는 '후식'으로 이름 통일 (또는 둘 다 넣기)
-const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '분식', '후식', '기타'];
-const PER_PAGE = 10;
-const PAGE_GROUP_SIZE = 10;
+const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '샐러드', '수프', '디저트'];
+const PER_PAGE = 12;
+const PAGE_GROUP_SIZE = 12;
 
 export default function MyScrapsPage() {
   const [isMounted, setIsMounted] = useState(false);
@@ -40,7 +39,6 @@ export default function MyScrapsPage() {
     setIsMounted(true);
   }, []);
 
-  // 🌟 2. 데이터를 '한 번만' 전체 다 가져오도록 수정 (의존성 배열에서 currentCategory 제거)
   useEffect(() => {
     if (!isMounted || !loginUserNo) {
       if (isMounted && !loginUserNo) setLoading(false);
@@ -50,7 +48,6 @@ export default function MyScrapsPage() {
     const fetchScraps = async () => {
       setLoading(true);
       try {
-        // category 파라미터 없이 무조건 유저의 전체 스크랩을 다 가져옵니다.
         const response = await api.get('/users/scraps', {
           params: { userNo: loginUserNo } 
         });
@@ -66,17 +63,14 @@ export default function MyScrapsPage() {
     fetchScraps();
   }, [loginUserNo, isMounted]);
 
-  // 🌟 3. 카테고리가 바뀔 때마다 1페이지로 리셋
   useEffect(() => {
     setCurrentPage(1);
   }, [currentCategory]);
 
-  // 🌟 4. 프론트엔드 자체 필터링 로직 추가! (서버에 요청 안 하고 여기서 거름)
   const filteredScraps = currentCategory === '전체' 
     ? scraps 
     : scraps.filter(scrap => scrap.category === currentCategory);
 
-  // 🌟 5. 페이징 계산을 scraps가 아닌 'filteredScraps' 기준으로 변경
   const totalPages = Math.max(1, Math.ceil(filteredScraps.length / PER_PAGE));
   const pageItems = filteredScraps.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
@@ -120,8 +114,7 @@ export default function MyScrapsPage() {
   return (
     <div className={styles.container}>
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>🤍 스크랩 목록</h2>
-        {/* 🌟 개수도 필터링된 개수로 표시 */}
+        <h2 className={styles.sectionTitle}>스크랩 목록</h2>
         <span className={styles.totalCount}>총 {filteredScraps.length}개</span>
       </div>
 
@@ -181,7 +174,7 @@ export default function MyScrapsPage() {
             ))
           ) : (
             <div className={styles.empty}>
-              <div className={styles.emptyIcon}>🤍</div>
+              <div className={styles.emptyIcon}></div>
               <p>해당 카테고리의 스크랩이 없습니다.</p>
             </div>
           )}

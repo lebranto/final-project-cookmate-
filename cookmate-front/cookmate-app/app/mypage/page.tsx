@@ -6,7 +6,6 @@ import api from '@/lib/axios';
 import styles from './mypage.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 
-// 1. 레시피 데이터 인터페이스 (imageUrl 추가)
 interface Recipe {
   boardNo: number;
   title: string;
@@ -16,10 +15,9 @@ interface Recipe {
   thumbClass: string;
   boardPostdate: string;
   open: string;
-  imageUrl?: string; // 🌟 이미지 필드 추가
+  imageUrl?: string; 
 }
 
-// 2. 문의 데이터 인터페이스
 interface Inquiry {
   inquiryNo: number;
   title: string;
@@ -27,13 +25,11 @@ interface Inquiry {
   status: string; 
 }
 
-// 🌟 이미지 경로 해결 함수
 function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
 }
 
 export default function MyPage() {
-  // 🌟 [핵심] 하이드레이션 에러 방지용 상태
   const [isMounted, setIsMounted] = useState(false);
 
   const [recentRecipes, setRecentRecipes] = useState<Recipe[]>([]);
@@ -43,12 +39,10 @@ export default function MyPage() {
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
 
-  // 1. 마운트 완료 체크
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 2. 데이터 로드
   useEffect(() => {
     if (!isMounted || !loginUserNo) {
       if (isMounted && !loginUserNo) setLoading(false);
@@ -75,9 +69,6 @@ export default function MyPage() {
     fetchMyPageData();
   }, [loginUserNo, isMounted]);
 
-  // ==========================================
-  // 🌟 조건부 렌더링 가드 (Hydration Fix 순서)
-  // ==========================================
   if (!isMounted) return null;
 
   if (!isLoggedIn || !loginUserNo) {
@@ -92,11 +83,9 @@ export default function MyPage() {
         <main className={styles.mainContent}>
           <div className={styles.mainSectionWrap}>
             
-            {/* 1. 내가 만든 레시피 요약 섹션 */}
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>내가 만든 레시피</h2>
-                {/* 🌟 레시피 작성 버튼 활성화 */}
                 <Link href="/boards/write">
                   <button className={styles.btnAction}>+ 레시피 작성</button>
                 </Link>
@@ -105,10 +94,8 @@ export default function MyPage() {
               <div className={styles.recipeGrid}>
                 {recentRecipes.length > 0 ? (
                   recentRecipes.map(recipe => (
-                    /* 🌟 레시피 상세 조회 링크 활성화 */
                     <Link href={`/boards/${recipe.boardNo}`} key={recipe.boardNo} className={styles.recipeCardLink}>
                       <div className={styles.recipeCard}>
-                        {/* 🌟 이모지 삭제 및 이미지/CookMate 로직 적용 */}
                         <div className={styles.recipeThumb} style={{ overflow: 'hidden', position: 'relative' }}>
                           <span className={styles.openBadge}>
                             {recipe.open === 'Y' ? '공개' : '비공개'}
@@ -148,7 +135,6 @@ export default function MyPage() {
               </div>
             </section>
 
-            {/* 2. 문의 내역 요약 섹션 */}
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>문의 내역</h2>

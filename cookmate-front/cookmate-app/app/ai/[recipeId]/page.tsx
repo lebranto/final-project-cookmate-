@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/app/lib/api";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
@@ -62,7 +62,16 @@ export default function AiRecipeDetailPage() {
   const params = useParams<{ recipeId?: string }>();
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const recipeId = params.recipeId ? decodeURIComponent(params.recipeId) : undefined;
-  const draft = useMemo(() => readDraft(recipeId), [recipeId]);
+  const [draft, setDraft] = useState<AiRecipeDraft | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
+  useEffect(() => {
+    setDraft(readDraft(recipeId));
+  }, [recipeId]);
+
+  if (!draft) {
+    return null;
+  }
   const mainIngredients = draft.ingredients.filter((ingredient) => ingredient.group === "주재료");
   const seasoningIngredients = draft.ingredients.filter((ingredient) => ingredient.group === "양념");
   const allergyIngredients = draft.ingredients.filter(hasAllergy);
@@ -70,9 +79,7 @@ export default function AiRecipeDetailPage() {
   const matchRate = Math.round((ownedMainCount / Math.max(mainIngredients.length, 1)) * 100);
   const introduce = `입력하신 재료(${draft.inputIngredients.join(", ")})를 기반으로 찾은 레시피예요.`;
   const aiTips = draft.cookSteps.map((step) => step.tip).filter(Boolean).join("\n");
-  const [saving, setSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
-
+  
   const moveWriteForm = () => {
     window.sessionStorage.setItem(AI_RECIPE_DRAFT_KEY, JSON.stringify(draft));
     router.push("/boards/write?from=ai");
@@ -234,8 +241,8 @@ export default function AiRecipeDetailPage() {
                 <h2>재료 매칭률</h2>
                 <strong>{matchRate}%</strong>
               </div>
-              {mainIngredients.map((ingredient) => (
-                <div className={styles.matchItem} key={`${ingredient.group}-${ingredient.name}`}>
+              {mainIngredients.map((ingredient, index) => (
+                <div className={styles.matchItem} key={`${ingredient.group}-${ingredient.name}-${index}`}>
                   <div>
                     <span>{ingredient.name}</span>
                     <em>{ingredient.owned ? "보유" : "필요"}</em>
@@ -290,8 +297,8 @@ function IngredientGroup({ title, ingredients }: { title: string; ingredients: A
   return (
     <div className={styles.ingredientGroup}>
       <h3>{title}</h3>
-      {ingredients.map((ingredient) => (
-        <div className={styles.ingredientRow} key={`${title}-${ingredient.name}`}>
+      {ingredients.map((ingredient, index) => (
+        <div className={styles.ingredientRow} key={`${title}-${ingredient.name}-${index}`}>
           <div className={styles.ingredientName}>
             {ingredient.allergy && <span className={styles.warningMark}>!</span>}
             <span>{ingredient.name}</span>

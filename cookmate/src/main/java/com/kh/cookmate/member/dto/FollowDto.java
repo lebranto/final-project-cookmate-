@@ -1,7 +1,5 @@
 package com.kh.cookmate.member.dto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,12 +9,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MemberUpdateDto {
+public class FollowDto {
+	
     private long userNo;
     private String nickname;
-    private String introduce;
+    private String userEmail;
     private String profileImageUrl;
-    
-    private List<String> allergies;
-    private String newPassword;     
+    private int recipeCount;   
+    private int followerCount;  
+    private boolean following;  
 }

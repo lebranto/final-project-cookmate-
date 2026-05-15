@@ -72,7 +72,8 @@
     SELECT 
         B.BOARD_NO as boardNo,
         B.BOARD_TITLE as title,
-        B.IMAGE_URL as imageUrl, T.TYPE_NAME as category,
+        B.IMAGE_URL as imageUrl, 
+        T.TYPE_NAME as category,
         T.COOK_TIME as cookTime,
         B.OPEN as open,
         B.LIKES_COUNT as likesCount,
@@ -80,13 +81,15 @@
     FROM BOARD B
     JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
     WHERE B.USER_NO = #{userNo} AND B.BOARD_DELETE = 'N'
-    </select>
+    ORDER BY B.BOARD_POSTDATE DESC
+	</select>
 
-<select id="selectMyScraps" parameterType="map" resultType="RecipeDto">
+	<select id="selectMyScraps" parameterType="map" resultType="RecipeDto">
     SELECT 
         B.BOARD_NO as boardNo,
         B.BOARD_TITLE as title,
-        B.IMAGE_URL as imageUrl, T.TYPE_NAME as category,
+        B.IMAGE_URL as imageUrl, 
+        T.TYPE_NAME as category,
         T.COOK_TIME as cookTime,
         B.LIKES_COUNT as likesCount,
         M.NICKNAME as authorNickname
@@ -95,6 +98,7 @@
     JOIN TAG T ON B.TYPE_NO = T.TYPE_NO 
     JOIN USER M ON B.USER_NO = M.USER_NO
     WHERE S.USER_NO = #{userNo} AND B.BOARD_DELETE = 'N'
+    ORDER BY B.BOARD_POSTDATE DESC
     </select>
 
     <select id="selectMyInquiries" parameterType="long" resultType="InquiryDto">
@@ -203,6 +207,63 @@
         ORDER BY c.COMMENT_POSTDATE DESC
     </select>
 
+	<select id="selectMyWrittenComments" parameterType="map" resultType="MyCommentDto">
+        SELECT 
+            c.COMMENT_NO as commentNo,
+            c.COMMENT_CONTENT as commentContent,
+            DATE_FORMAT(c.COMMENT_POSTDATE, '%Y-%m-%d %H:%i') as commentPostDate,
+            b.BOARD_NO as boardNo,
+            b.BOARD_TITLE as boardTitle,
+            (SELECT COUNT(*) 
+             FROM COMMENT r 
+             WHERE r.PARENT_COMMENT_NO = c.COMMENT_NO 
+               AND r.COMMENT_DELETE = 'N') as replyCount
+        FROM COMMENT c
+        JOIN BOARD b ON c.BOARD_NO = b.BOARD_NO
+        WHERE c.USER_NO = #{userNo}
+          AND c.COMMENT_DELETE = 'N'
+        <choose>
+            <when test="filter == 'popular'">
+                ORDER BY replyCount DESC, c.COMMENT_POSTDATE DESC
+            </when>
+            <when test="filter == 'oldest'">
+                ORDER BY c.COMMENT_POSTDATE ASC
+            </when>
+            <otherwise>
+                ORDER BY c.COMMENT_POSTDATE DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectCommentsOnMyBoards" parameterType="map" resultType="MyCommentDto">
+        SELECT 
+            c.COMMENT_NO as commentNo,
+            c.COMMENT_CONTENT as commentContent,
+            DATE_FORMAT(c.COMMENT_POSTDATE, '%Y-%m-%d %H:%i') as commentPostDate,
+            b.BOARD_NO as boardNo,
+            b.BOARD_TITLE as boardTitle,
+            u.NICKNAME as commenterNickname,
+            u.PROFILE_IMAGE_URL as commenterProfileUrl,
+            (SELECT COUNT(*) 
+             FROM COMMENT r 
+             WHERE r.PARENT_COMMENT_NO = c.COMMENT_NO 
+               AND r.COMMENT_DELETE = 'N') as replyCount
+        FROM COMMENT c
+        JOIN BOARD b ON c.BOARD_NO = b.BOARD_NO
+        JOIN USER u ON c.USER_NO = u.USER_NO
+        WHERE b.USER_NO = #{userNo}      AND c.USER_NO != #{userNo}    AND c.COMMENT_DELETE = 'N'
+        <choose>
+            <when test="filter == 'popular'">
+                ORDER BY replyCount DESC, c.COMMENT_POSTDATE DESC
+            </when>
+            <when test="filter == 'oldest'">
+                ORDER BY c.COMMENT_POSTDATE ASC
+            </when>
+            <otherwise>
+                ORDER BY c.COMMENT_POSTDATE DESC
+            </otherwise>
+        </choose>
+    </select>
 
     <select id="checkFollow" parameterType="map" resultType="int">
         SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
@@ -216,4 +277,42 @@
         DELETE FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
     </delete>
     
+    <select id="selectFollowingList" parameterType="map" resultType="FollowDto">
+    SELECT 
+        u.USER_NO, 
+        u.NICKNAME, 
+        u.USER_EMAIL, 
+        u.PROFILE_IMAGE_URL,
+        (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO) as recipeCount,
+        (SELECT COUNT(*) FROM FOLLOWING f2 WHERE f2.FOLLOWING_ID = u.USER_EMAIL) as followerCount,
+        1 as following
+    FROM FOLLOWING f
+    JOIN USER u ON f.FOLLOWING_ID = u.USER_EMAIL
+    WHERE f.USER_NO = #{userNo}
+    <choose>
+        <when test="filter == 'follower'"> ORDER BY followerCount DESC </when>
+        <when test="filter == 'recipe'"> ORDER BY recipeCount DESC </when>
+        <when test="filter == 'oldest'"> ORDER BY f.CREATE_AT ASC </when>
+        <otherwise> ORDER BY f.CREATE_AT DESC </otherwise> </choose>
+	</select>
+	
+	<select id="selectFollowerList" parameterType="map" resultType="FollowDto">
+	    SELECT 
+	        u.USER_NO, 
+	        u.NICKNAME, 
+	        u.USER_EMAIL, 
+	        u.PROFILE_IMAGE_URL,
+	        (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO) as recipeCount,
+	        (SELECT COUNT(*) FROM FOLLOWING f2 WHERE f2.FOLLOWING_ID = u.USER_EMAIL) as followerCount,
+	        (SELECT COUNT(*) FROM FOLLOWING f3 WHERE f3.USER_NO = #{loginUserNo} AND f3.FOLLOWING_ID = u.USER_EMAIL) as following
+	    FROM FOLLOWING f
+	    JOIN USER u ON f.USER_NO = u.USER_NO
+	    WHERE f.FOLLOWING_ID = #{loginUserEmail}
+	    <choose>
+	        <when test="filter == 'follower'"> ORDER BY followerCount DESC </when>
+	        <when test="filter == 'recipe'"> ORDER BY recipeCount DESC </when>
+	        <when test="filter == 'oldest'"> ORDER BY f.CREATE_AT ASC </when>
+	        <otherwise> ORDER BY f.CREATE_AT DESC </otherwise> </choose>
+	</select>
+
 </mapper>

@@ -14,8 +14,9 @@ const PROTECTED_PAGES = ["/mypage", "/profile", "/settings","/admin"];
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const token = request.cookies.get("accessToken")?.value;
-  const isLoggedIn = Boolean(token);
+  const accessToken = request.cookies.get("accessToken")?.value;
+  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const isLoggedIn = Boolean(accessToken || refreshToken);
 
   // 1) 로그인한 유저가 로그인/회원가입 접근 → 홈으로
   if (isLoggedIn && AUTH_ONLY_PAGES.some((p) => pathname.startsWith(p))) {

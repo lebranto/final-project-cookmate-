@@ -6,18 +6,6 @@ import { useRouter } from "next/navigation";
 import styles from "./login.module.css";
 
 
-// ── 타입 정의 ─────────────────────────────────────────────
-interface BrandTag {
-  label: string;
-}
-
-// ── 상수 ──────────────────────────────────────────────────
-const BRAND_TAGS: BrandTag[] = [
-  { label: "2.4만+ 레시피" },
-  { label: "18만+ 사용자" },
-  { label: "AI 맞춤 추천" },
-];
-
 // ── 왼쪽 브랜드 영역 ──────────────────────────────────────
 function AuthBrand(): JSX.Element {
   return (
@@ -30,15 +18,8 @@ function AuthBrand(): JSX.Element {
       </h2>
       <p>
         냉장고 속 재료를 입력하면<br />
-        GPT-4o가 맞춤 레시피를 추천해드립니다.
+        당신의 메이트가 맞춤 레시피를 추천해드립니다.
       </p>
-      <div className={styles.authBrandTags}>
-        {BRAND_TAGS.map((tag) => (
-          <span key={tag.label} className={styles.authBrandTag}>
-            {tag.label}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }
