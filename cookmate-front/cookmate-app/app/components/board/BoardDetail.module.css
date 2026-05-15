@@ -381,6 +381,45 @@
   opacity: 0.65;
 }
 
+.ingredientActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detailServingStepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  border: 1px solid #b8d9a0;
+  border-radius: 999px;
+  background: #e8f5e1;
+  padding: 3px 8px;
+}
+
+.detailServingStepper button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #2d5519;
+  cursor: pointer;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.detailServingStepper strong {
+  min-width: 42px;
+  color: #2d5519;
+  font-size: 12px;
+  text-align: center;
+}
+
 .ingredientColumns {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -529,6 +568,16 @@
   .headerCard,
   .sectionCard {
     padding: 18px;
+  }
+
+  .sectionTitle {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ingredientActions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .authorRow {

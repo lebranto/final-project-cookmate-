@@ -766,6 +766,7 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>재료</h2>
           <span className={styles.required}>필수</span>
+          <span className={styles.servingBadge}>1인분 기준</span>
         </div>
 
         <div className={`${styles.groupList} ${fieldErrors.ingredients ? styles.invalidSection : ""}`}>
