@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import api from "@/app/lib/api";
@@ -10,7 +10,7 @@ import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
 import styles from "./RecipeSearchPage.module.css";
 
 type Source = "user" | "official";
-type Sort = "popular" | "latest" | "likes" | "cookTime";
+type Sort = "popular" | "latest" | "likes";
 
 interface SearchRecipe {
   boardNo: number;
@@ -48,15 +48,19 @@ export default function RecipeSearchPage() {
   const searchParams = useSearchParams();
   const initialKeyword = searchParams.get("keyword")?.trim() ?? "";
   const initialCategory = searchParams.get("category")?.trim() ?? "";
+  const initialSource = parseSource(searchParams.get("source"));
+  const initialCookTime = searchParams.get("cookTime")?.trim() ?? "";
+  const initialDifficult = searchParams.get("difficult")?.trim() ?? "";
   const initialSort = parseSort(searchParams.get("sort"));
-  const [source, setSource] = useState<Source>("user");
+  const initialPage = parsePage(searchParams.get("page"));
+  const [source, setSource] = useState<Source>(initialSource);
   const [keyword, setKeyword] = useState(initialKeyword);
   const [submittedKeyword, setSubmittedKeyword] = useState(initialKeyword);
   const [category, setCategory] = useState(initialCategory);
-  const [cookTime, setCookTime] = useState("");
-  const [difficult, setDifficult] = useState("");
+  const [cookTime, setCookTime] = useState(initialCookTime);
+  const [difficult, setDifficult] = useState(initialDifficult);
   const [sort, setSort] = useState<Sort>(initialSort);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [filterOpen, setFilterOpen] = useState(false);
   const [data, setData] = useState<SearchResponse>({
     list: [],
@@ -71,6 +75,7 @@ export default function RecipeSearchPage() {
   const [scrapPendingBoardNos, setScrapPendingBoardNos] = useState<Set<number>>(new Set());
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const router = useRouter();
+  const pathname = usePathname();
 
   const categories = source === "official" ? OFFICIAL_CATEGORIES : USER_CATEGORIES;
   const activeFilters = useMemo(
@@ -116,6 +121,21 @@ export default function RecipeSearchPage() {
 
     return () => window.clearTimeout(timer);
   }, [fetchRecipes]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (source !== "user") params.set("source", source);
+    if (submittedKeyword) params.set("keyword", submittedKeyword);
+    if (category) params.set("category", category);
+    if (source === "user" && cookTime) params.set("cookTime", cookTime);
+    if (source === "user" && difficult) params.set("difficult", difficult);
+    if (sort !== "popular") params.set("sort", sort);
+    if (page > 1) params.set("page", String(page));
+
+    const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(nextUrl, { scroll: false });
+  }, [category, cookTime, difficult, page, pathname, router, sort, source, submittedKeyword]);
 
   useEffect(() => {
     if (!isLoggedIn || !userInfo || data.list.length === 0) {
@@ -396,7 +416,6 @@ export default function RecipeSearchPage() {
                 <option value="popular">인기순</option>
                 <option value="latest">최신순</option>
                 <option value="likes">좋아요순</option>
-                {source === "user" && <option value="cookTime">조리시간순</option>}
               </select>
             </div>
           </div>
@@ -557,5 +576,14 @@ function resolveRecipeImageUrl(imageUrl?: string | null) {
 }
 
 function parseSort(value: string | null): Sort {
-  return value === "latest" || value === "likes" || value === "cookTime" ? value : "popular";
+  return value === "latest" || value === "likes" ? value : "popular";
+}
+
+function parseSource(value: string | null): Source {
+  return value === "official" ? "official" : "user";
+}
+
+function parsePage(value: string | null) {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
 }
