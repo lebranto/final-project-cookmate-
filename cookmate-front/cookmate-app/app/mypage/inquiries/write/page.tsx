@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/axios';
 import styles from './write.module.css';
-import { useUserInfoActions } from '@/app/hooks/useUserInfoActions'; // 🌟 훅 임포트
+import { useUserInfoActions } from '@/app/hooks/useUserInfoActions'; 
 
 export default function InquiryWritePage() {
   const router = useRouter();
@@ -12,7 +12,6 @@ export default function InquiryWritePage() {
   const editId = searchParams.get('edit'); 
   const isEditMode = !!editId; 
 
-  // 🌟 [핵심] 하이드레이션 에러 방지용 상태
   const [isMounted, setIsMounted] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -21,19 +20,19 @@ export default function InquiryWritePage() {
     content: ''
   });
   
-  const [loading, setLoading] = useState(isEditMode); // 수정 모드일 때만 로딩 시작
+  const [loading, setLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 🌟 1. 훅을 사용하여 로그인 유저 정보 가져오기
+  // 훅을 사용하여 로그인 유저 정보 가져오기
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
 
-  // 2. 마운트 상태 체크
+  // 마운트 상태 체크
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 3. 수정 모드일 때 기존 데이터 불러오기
+  // 수정 모드일 때 기존 데이터 불러오기
   useEffect(() => {
     if (!isMounted || !isEditMode || !editId) return;
 
@@ -69,7 +68,7 @@ export default function InquiryWritePage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 4. 등록 및 수정 제출 핸들러
+  // 등록 및 수정 제출
   const handleSubmit = async () => {
     if (!loginUserNo) {
       alert("로그인 정보가 유효하지 않습니다.");
@@ -101,19 +100,14 @@ export default function InquiryWritePage() {
     }
   };
 
-  // ==========================================
-  // 🌟 조건부 렌더링 (Hydration 에러 방지 순서)
-  // ==========================================
-
-  // 1. 서버/클라이언트 불일치 방지
   if (!isMounted) return null;
 
-  // 2. 로그인 체크
+  // 로그인 체크
   if (!isLoggedIn || !loginUserNo) {
     return <div style={{ padding: '100px', textAlign: 'center' }}>로그인이 필요한 서비스입니다.</div>;
   }
 
-  // 3. 데이터 로딩 (수정 모드 시)
+  // 데이터 로딩 (수정 시)
   if (loading) {
     return <div style={{ padding: '100px', textAlign: 'center' }}>문의 정보를 불러오는 중입니다...</div>;
   }
@@ -122,7 +116,7 @@ export default function InquiryWritePage() {
     <div className={styles.mainInner}>
       <div className={styles.pageHeader}>
         <h2 className={styles.pageTitle}>
-          <span className={styles.pageTitleIcon}>💬</span> {isEditMode ? '문의 수정' : '문의 작성'}
+          <span className={styles.pageTitleIcon}></span> {isEditMode ? '문의 수정' : '문의 작성'}
         </h2>
       </div>
 

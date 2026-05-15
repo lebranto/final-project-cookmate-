@@ -7,9 +7,11 @@ import java.util.Map;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.kh.cookmate.member.dto.FollowDto;
 import com.kh.cookmate.member.dto.InquiryDto;
 import com.kh.cookmate.member.dto.MemberDto;
 import com.kh.cookmate.member.dto.MemberUpdateDto;
+import com.kh.cookmate.member.dto.MyCommentDto;
 import com.kh.cookmate.member.dto.RecipeDto;
 import com.kh.cookmate.member.vo.Member;
 
@@ -137,5 +139,25 @@ public class MemberDaoImpl implements MemberDao {
 	    map.put("allergyName", allergyName);
 	    
 	    session.insert("member.insertMemberAllergy", map);
+	}
+
+	@Override
+	public List<FollowDto> selectFollowingList(Map<String, Object> params) {
+		return session.selectList("member.selectFollowingList",params);
+	}
+
+	@Override
+	public List<FollowDto> selectFollowerList(Map<String, Object> params) {
+		return session.selectList("member.selectFollowerList",params);
+	}
+
+	@Override
+	public List<MyCommentDto> selectMyWrittenComments(Map<String, Object> params) {
+		return session.selectList("member.selectMyWrittenComments",params);
+	}
+
+	@Override
+	public List<MyCommentDto> selectCommentsOnMyBoards(Map<String, Object> params) {
+		return session.selectList("member.selectCommentsOnMyBoards",params);
 	}
 }

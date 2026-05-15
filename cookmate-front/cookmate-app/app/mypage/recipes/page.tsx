@@ -15,18 +15,16 @@ interface Recipe {
   likesCount: number;
   thumbClass: string;
   boardPostdate: string;
-  imageUrl?: string; // 🌟 이미지 URL 추가
+  imageUrl?: string; 
 }
 
-// 🌟 S3 이미지 처리 공통 함수
 function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
 }
 
-// 🌟 디저트를 후식으로 통일
-const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '분식', '후식', '기타'];
-const PER_PAGE = 10;
-const PAGE_GROUP_SIZE = 10;
+const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '샐러드', '수프', '디저트'];
+const PER_PAGE = 12;
+const PAGE_GROUP_SIZE = 12;
 
 export default function MyRecipesPage() {
   const [isMounted, setIsMounted] = useState(false);
@@ -42,7 +40,6 @@ export default function MyRecipesPage() {
     setIsMounted(true);
   }, []);
 
-  // 🌟 1. 전체 데이터를 한 번만 가져옵니다. (빠른 필터링을 위해)
   useEffect(() => {
     if (!isMounted || !loginUserNo) {
       if (isMounted && !loginUserNo) setLoading(false);
@@ -53,7 +50,7 @@ export default function MyRecipesPage() {
       setLoading(true);
       try {
         const response = await api.get('/users/recipes', {
-          params: { userNo: loginUserNo } // category 파라미터 제거
+          params: { userNo: loginUserNo } 
         });
         if (response.status === 200) {
           setRecipes(response.data);
@@ -67,17 +64,14 @@ export default function MyRecipesPage() {
     fetchRecipes();
   }, [loginUserNo, isMounted]);
 
-  // 카테고리 변경 시 1페이지로
   useEffect(() => {
     setCurrentPage(1);
   }, [currentCategory]);
 
-  // 🌟 2. 프론트엔드 자체 필터링
   const filteredRecipes = currentCategory === '전체' 
     ? recipes 
     : recipes.filter(recipe => recipe.category === currentCategory);
 
-  // 🌟 3. 필터링된 데이터 기준으로 페이징
   const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / PER_PAGE));
   const pageItems = filteredRecipes.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
@@ -118,8 +112,7 @@ export default function MyRecipesPage() {
   return (
     <div className={styles.container}>
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>📋 내가 만든 레시피</h2>
-        {/* 필터링된 개수 표시 기능 추가 */}
+        <h2 className={styles.sectionTitle}>내가 만든 레시피</h2>
         <span style={{marginLeft: '15px', color: '#666', fontSize: '14px'}}>총 {filteredRecipes.length}개</span>
         <Link href="/boards/write" style={{ marginLeft: 'auto' }}>
           <button className={styles.btnGreen}>+ 레시피 작성</button>
@@ -147,7 +140,6 @@ export default function MyRecipesPage() {
               <Link href={`/boards/${recipe.boardNo}`} key={recipe.boardNo} className={styles.recipeCardLink}>
                 <div className={styles.recipeCard}>
                   
-                  {/* 🌟 4. 이미지 및 대체 바탕 출력 (이모지 삭제) */}
                   <div className={styles.recipeThumb} style={{ overflow: 'hidden' }}>
                     {recipe.imageUrl ? (
                       <img 
@@ -186,7 +178,6 @@ export default function MyRecipesPage() {
             ))
           ) : (
             <div className={styles.empty}>
-              <div className={styles.emptyIcon}>🍽️</div>
               <p>해당 카테고리에 작성된 레시피가 없습니다.</p>
             </div>
           )}

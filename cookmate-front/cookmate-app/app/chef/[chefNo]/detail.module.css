@@ -1,8 +1,11 @@
-/* app/ranking/[chefNo]/detail.module.css */
+.mainInner {
+  max-width: 960px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
 
-.mainInner { max-width: 960px; width: 100%; box-sizing: border-box; margin: 0 auto; padding: 40px 24px; }
-
-/* 프로필 상단 카드 */
 .profileCard {
   background: #ffffff;
   border: 1px solid rgba(0,0,0,0.1);
@@ -16,75 +19,330 @@
   box-sizing: border-box;
 }
 
-.avatar { width: 90px; height: 90px; border-radius: 50%; background: #f5e6c8; display: flex; align-items: center; justify-content: center; font-size: 40px; flex-shrink: 0; }
+.avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: #f5e6c8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  flex-shrink: 0;
+}
 
 .profileInfo { flex: 1; }
-.nameRow { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 
-/* 🌟 닉네임과 가입일 간격 10px -> 4px로 예쁘게 조정 */
-.nameWrap { display: flex; flex-direction: column; gap: 4px; }
-.chefName { font-size: 24px; font-weight: 700; color: #1a1a1a; }
-.chefMeta { font-size: 13px; color: #888; font-weight: 400; }
+.nameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
 
-.btnFollow { background: #3a6e22; color: #fff; border: none; padding: 9px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+.nameWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chefName {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.chefMeta {
+  font-size: 13px;
+  color: #888;
+  font-weight: 400;
+}
+
+.btnFollow {
+  background: #3a6e22;
+  color: #fff;
+  border: none;
+  padding: 9px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
 .btnFollow:hover { opacity: 0.85; }
-.btnFollow.following { background: #f0f0f0; color: #1a1a1a; border: 1px solid rgba(0,0,0,0.1); }
 
-.bio { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 16px; max-width: 600px; }
+.btnFollow.following {
+  background: #f0f0f0;
+  color: #1a1a1a;
+  border: 1px solid rgba(0,0,0,0.1);
+}
 
-.tags { display: flex; gap: 8px; margin-bottom: 24px; }
-.tag { background: #e8f5e1; color: #2d5519; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.bio {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  max-width: 600px;
+}
 
-.statsRow { display: flex; gap: 32px; }
-.statItem { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-.statNum { font-size: 18px; font-weight: 700; color: #1a1a1a; }
-.statLabel { font-size: 12px; color: #888; }
+.tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
 
-/* 탭 메뉴 */
-.tabs { display: flex; gap: 24px; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 24px; }
-.tab { padding: 12px 4px; font-size: 15px; font-weight: 600; color: #888; cursor: pointer; position: relative; border: none; background: none; }
+.tag {
+  background: #e8f5e1;
+  color: #2d5519;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.statsRow {
+  display: flex;
+  gap: 32px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.statNum {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #888;
+}
+
+.tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  margin-bottom: 24px;
+}
+
+.tab {
+  padding: 12px 4px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #888;
+  cursor: pointer;
+  position: relative;
+  border: none;
+  background: none;
+}
+
 .tab.active { color: #3a6e22; }
-.tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 3px; background: #3a6e22; border-radius: 3px 3px 0 0; }
-.tabCount { font-size: 13px; color: #aaa; margin-left: 4px; font-weight: 500; }
 
-/* 공개 레시피 그리드 */
-.recipeGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
-.recipeCard { background: #ffffff; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-.recipeCard:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #3a6e22;
+  border-radius: 3px 3px 0 0;
+}
 
-.recipeThumb { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+.tabCount {
+  font-size: 13px;
+  color: #aaa;
+  margin-left: 4px;
+  font-weight: 500;
+}
+
+.recipeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.recipeCard {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.recipeCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+.recipeThumb {
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
 .bgGreen { background: #b8d9a0; }
 .bgSalmon { background: #f0a898; }
 .bgPeach { background: #fde8c8; }
 .bgBlue { background: #a8c8e8; }
 
 .recipeInfo { padding: 14px; }
-.recipeTitle { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
-.recipeMeta { font-size: 12px; color: #777; display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+
+.recipeTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.recipeMeta {
+  font-size: 12px;
+  color: #777;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
 .star { color: #f1c40f; }
 
-.recipeFooter { display: flex; align-items: center; gap: 8px; }
-.recipeTag { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: #e8f5e1; color: #2d5519; font-weight: 500; }
-.recipeLikes { font-size: 12px; color: #e05252; margin-left: auto; font-weight: 600; }
+.recipeFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-/* 🌟 새로 추가된 댓글 리스트 스타일 */
-.commentList { display: flex; flex-direction: column; gap: 12px; }
-.commentItem { 
-  background: #fff; padding: 18px 24px; border-radius: 12px; 
-  border: 1px solid rgba(0,0,0,0.08); 
+.recipeTag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #e8f5e1;
+  color: #2d5519;
+  font-weight: 500;
 }
-.commentHeader { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.commentAvatar { 
-  width: 32px; height: 32px; border-radius: 50%; background: #f0f0f0; 
-  display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden;
-}
-.commentAvatar img { width: 100%; height: 100%; object-fit: cover; }
-.commenter { font-weight: 700; font-size: 14px; color: #1a1a1a; display: block; }
-.commentDate { font-size: 11px; color: #aaa; }
 
-.commentContent { font-size: 14px; line-height: 1.6; color: #444; margin-bottom: 14px; }
-.commentTarget { 
-  font-size: 12px; color: #3a6e22; padding-top: 12px; 
-  border-top: 1px dashed rgba(0,0,0,0.1); 
+.recipeLikes {
+  font-size: 12px;
+  color: #e05252;
+  margin-left: auto;
+  font-weight: 600;
 }
-.emptyMsg { padding: 60px; text-align: center; color: #888; font-size: 14px; }
+
+.commentList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.commentItem {
+  background: #fff;
+  padding: 18px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.commentHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.commentAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  overflow: hidden;
+}
+
+.commentAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.commenter {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1a1a1a;
+  display: block;
+}
+
+.commentDate {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.commentContent {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+  margin-bottom: 14px;
+}
+
+.commentTarget {
+  font-size: 12px;
+  color: #3a6e22;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(0,0,0,0.1);
+}
+
+.emptyMsg {
+  padding: 60px;
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding-bottom: 20px;
+}
+
+.pageButton, .navButton {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  transition: all 0.2s ease-in-out;
+}
+
+.pageButton:hover:not(.activePage), .navButton:hover:not(:disabled) { background: #f5f5f5; }
+
+.pageButton.activePage {
+  background: #3a6e22;
+  color: #fff;
+  border-color: #3a6e22;
+  font-weight: bold;
+}
+
+.navButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+  background: #fafafa;
+}
