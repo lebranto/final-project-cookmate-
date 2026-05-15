@@ -27,8 +27,15 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        await api.post("/auth/refresh");
-        return api(originalRequest);
+        const refreshResponse = await api.post("/auth/refresh");
+        const nextToken = refreshResponse.data?.accessToken;
+
+        if (nextToken) {
+        localStorage.setItem("accessToken", nextToken);
+        }
+
+      return api(originalRequest);
+      
       } catch (refreshError) {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("authUser");
@@ -46,19 +53,20 @@ api.interceptors.response.use(
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
-      // 로컬 스토리지에서 먼저 찾아보고, 없으면(||) 쿠키에서 찾습니다!
-      const token = getCookie('accessToken') || localStorage.getItem('accessToken') ;
-      
-      // 토큰을 찾았다면 헤더에 장착!
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+      const isRefreshRequest = config.url === '/auth/refresh';
+
+      if (!isRefreshRequest) {
+        const token = getCookie('accessToken') || localStorage.getItem('accessToken');
+
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
       }
     }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default api;

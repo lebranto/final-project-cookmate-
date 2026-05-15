@@ -84,13 +84,13 @@ public class MemberDaoImpl implements MemberDao {
     }
 
     @Override
-    public void insertFollow(Map<String, Object> params) {
-        session.insert("member.insertFollow", params);
+    public int insertFollow(Map<String, Object> params) {
+        return session.insert("member.insertFollow", params);
     }
 
     @Override
-    public void deleteFollow(Map<String, Object> params) {
-        session.delete("member.deleteFollow", params);
+    public int deleteFollow(Map<String, Object> params) {
+        return session.delete("member.deleteFollow", params);
     }
     
     @Override
@@ -159,5 +159,35 @@ public class MemberDaoImpl implements MemberDao {
 	@Override
 	public List<MyCommentDto> selectCommentsOnMyBoards(Map<String, Object> params) {
 		return session.selectList("member.selectCommentsOnMyBoards",params);
+	}
+
+	@Override
+	public String getKakaoAccessToken(long userNo) {
+		return session.selectOne("member.getKakaoAccessToken",userNo);
+	}
+
+	@Override
+	public int deleteUserIdentity(long userNo) {
+		return session.delete("member.deleteUserIdentity",userNo);
+	}
+
+	@Override
+	public int deleteUserAuthorities(long userNo) {
+		return session.delete("member.deleteUserAuthorities",userNo);
+	}
+
+	@Override
+	public int deleteUserCredentials(long userNo) {
+		return session.delete("member.deleteUserCredentials",userNo);
+	}
+
+	@Override
+	public int deleteAllScraps(long userNo) {
+		return session.delete("member.deleteAllScraps",userNo);
+	}
+
+	@Override
+	public int deleteAllFollowing(Map<String, Object> followParams) {
+		return session.delete("member.deleteAllFollowing",followParams);
 	}
 }

@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,10 +75,17 @@ public class MemberController {
 
     //팔로우
     @PostMapping("/follow")
-    public ResponseEntity<Boolean> toggleFollow(
+    public ResponseEntity<?> toggleFollow(
             @RequestParam long loginUserNo,
             @RequestParam String targetEmail) {
-        return ResponseEntity.ok(memberService.toggleFollow(loginUserNo, targetEmail));
+        
+        try {
+            boolean isFollowing = memberService.toggleFollow(loginUserNo, targetEmail);
+            return ResponseEntity.ok(isFollowing);
+            
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
     @GetMapping("/follow/list")
@@ -179,16 +188,25 @@ public class MemberController {
     }
     
     //회원 탈퇴 (소프트 딜리트)
-    @PostMapping("/withdraw")
-    public ResponseEntity<String> withdrawMember(@RequestParam long userNo) {
-    	log.info("회원 탈퇴 요청 - 유저번호: {}", userNo);
-    	int result = memberService.withdrawMember(userNo);
-    	
-    	if (result > 0) {
-    		return ResponseEntity.ok("탈퇴 처리가 완료되었습니다.");
-    	} else {
-    		return ResponseEntity.badRequest().body("탈퇴 처리에 실패했습니다.");
-    	}
+    @PostMapping("/withdraw/{userNo}")
+    public ResponseEntity<String> withdrawMember(@PathVariable long userNo) { 
+        log.info("일반 회원 탈퇴 요청 - 유저번호: {}", userNo);
+        
+        int result = memberService.withdrawMember(userNo);
+        
+        if (result > 0) {
+        	ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "") 
+                    .maxAge(0)    
+                    .path("/")     
+                    // .secure(true)    // HTTPS 환경일때 주석해제
+                    .httpOnly(true)  
+                    .build();
+            return ResponseEntity.ok()
+            		.header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+            		.body("탈퇴 처리가 완료되었습니다.");
+        } else {
+            return ResponseEntity.badRequest().body("탈퇴 처리에 실패했습니다.");
+        }
     }
     
     @GetMapping("/profile/{userNo}")
@@ -241,6 +259,7 @@ public class MemberController {
     }
     
     //3. 현재 비밀번호 확인
+    @PostMapping("/profile/verify-password")
     public ResponseEntity<Map<String, Boolean>> verifyPassword(@RequestBody Map<String, Object> payload) {
         Object userNoObj = payload.get("userNo");
         String password = (String) payload.get("password");
@@ -274,7 +293,15 @@ public class MemberController {
         String result = memberService.withdrawKakaoUser(userNo, accessToken);
 
         if ("SUCCESS".equals(result)) {
-            return ResponseEntity.ok("탈퇴가 완료되었습니다.");
+        	ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "") 
+                    .maxAge(0)    
+                    .path("/")     
+                    // .secure(true)    // HTTPS 환경일때 주석해제
+                    .httpOnly(true)  
+                    .build();
+            return ResponseEntity.ok()
+            		.header(HttpHeaders.SET_COOKIE, deleteCookie.toString())
+            		.body("탈퇴 처리가 완료되었습니다.");
         } else if ("TOKEN_EXPIRED".equals(result)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("TOKEN_EXPIRED");
         } else {
