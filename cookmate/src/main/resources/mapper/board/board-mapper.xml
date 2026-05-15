@@ -437,6 +437,10 @@
 	<select id="selectBoardUserNo" parameterType="int" resultType="int">
 	    SELECT USER_NO FROM BOARD WHERE BOARD_NO = #{boardNo}
 	</select>
+	
+	<select id="selectBoardOpen" parameterType="int" resultType="char">
+    	SELECT OPEN FROM BOARD WHERE BOARD_NO = #{boardNo}
+	</select>
 
     <select id="selectBoardIsApiData" parameterType="int" resultType="char">
         SELECT IS_API_DATA FROM BOARD WHERE BOARD_NO = #{boardNo}

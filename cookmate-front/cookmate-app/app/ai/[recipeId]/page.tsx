@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/app/lib/api";
 import { useUserInfoActions } from "@/app/hooks/useUserInfoActions";
@@ -24,6 +24,10 @@ const fallbackDraft = createAiRecipeDraft({
   calories: 360,
   method: "손질한 재료에 산뜻한 드레싱을 더해 가볍게 버무립니다.",
 });
+
+type ProfileResponse = {
+  allergies?: string[];
+};
 
 function normalizeDraftImage(draft: AiRecipeDraft) {
   return {
@@ -53,8 +57,34 @@ function readDraft(recipeId?: string) {
   }
 }
 
-function hasAllergy(ingredient: AiIngredient) {
-  return Boolean(ingredient.allergy);
+function normalizeForMatch(value?: string | null) {
+  return (value ?? "").replace(/\s/g, "").toLowerCase();
+}
+
+function findIngredientAllergy(ingredientName: string, allergies: string[]) {
+  const normalizedIngredientName = normalizeForMatch(ingredientName);
+
+  if (!normalizedIngredientName) {
+    return "";
+  }
+
+  return (
+    allergies.find((allergy) => {
+      const normalizedAllergy = normalizeForMatch(allergy);
+      return (
+        normalizedAllergy &&
+        (normalizedIngredientName.includes(normalizedAllergy) ||
+          normalizedAllergy.includes(normalizedIngredientName))
+      );
+    }) ?? ""
+  );
+}
+
+function withAllergyFlags(ingredients: AiIngredient[], allergies: string[]) {
+  return ingredients.map((ingredient) => ({
+    ...ingredient,
+    allergy: Boolean(findIngredientAllergy(ingredient.name, allergies)),
+  }));
 }
 
 export default function AiRecipeDetailPage() {
@@ -62,19 +92,36 @@ export default function AiRecipeDetailPage() {
   const params = useParams<{ recipeId?: string }>();
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const recipeId = params.recipeId ? decodeURIComponent(params.recipeId) : undefined;
-  const [draft, setDraft] = useState<AiRecipeDraft | null>(null);
+  const draft = useMemo(() => readDraft(recipeId), [recipeId]);
+  const [userAllergies, setUserAllergies] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
-  useEffect(() => {
-    setDraft(readDraft(recipeId));
-  }, [recipeId]);
 
-  if (!draft) {
-    return null;
-  }
-  const mainIngredients = draft.ingredients.filter((ingredient) => ingredient.group === "주재료");
-  const seasoningIngredients = draft.ingredients.filter((ingredient) => ingredient.group === "양념");
-  const allergyIngredients = draft.ingredients.filter(hasAllergy);
+  useEffect(() => {
+    if (!isLoggedIn || !userInfo) {
+      return;
+    }
+
+    const fetchUserAllergies = async () => {
+      try {
+        const res = await api.get<ProfileResponse>(`/users/profile/${userInfo.userNo}`);
+        setUserAllergies(res.data.allergies ?? []);
+      } catch (error) {
+        console.error("알레르기 정보 조회 실패:", error);
+        setUserAllergies([]);
+      }
+    };
+
+    void fetchUserAllergies();
+  }, [isLoggedIn, userInfo]);
+
+  const ingredientsWithAllergy = useMemo(
+    () => withAllergyFlags(draft.ingredients, isLoggedIn ? userAllergies : []),
+    [draft.ingredients, isLoggedIn, userAllergies]
+  );
+  const mainIngredients = ingredientsWithAllergy.filter((ingredient) => ingredient.group === "주재료");
+  const seasoningIngredients = ingredientsWithAllergy.filter((ingredient) => ingredient.group === "양념");
+  const allergyIngredients = ingredientsWithAllergy.filter((ingredient) => ingredient.allergy);
   const ownedMainCount = mainIngredients.filter((ingredient) => ingredient.owned).length;
   const matchRate = Math.round((ownedMainCount / Math.max(mainIngredients.length, 1)) * 100);
   const introduce = `입력하신 재료(${draft.inputIngredients.join(", ")})를 기반으로 찾은 레시피예요.`;
