@@ -24,7 +24,7 @@ function resolveRecipeImageUrl(imageUrl?: string | null) {
 
 const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '샐러드', '수프', '디저트'];
 const PER_PAGE = 12;
-const PAGE_GROUP_SIZE = 12;
+const PAGE_GROUP_SIZE = 10;
 
 export default function MyRecipesPage() {
   const [isMounted, setIsMounted] = useState(false);

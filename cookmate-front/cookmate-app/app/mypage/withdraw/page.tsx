@@ -76,9 +76,7 @@ export default function WithdrawPage() {
           return;
         }
 
-        const withdrawResponse = await api.post('/users/withdraw', null, {
-          params: { userNo: loginUserNo }
-        });
+        const withdrawResponse = await api.post(`/users/withdraw/${loginUserNo}`);
 
         if (withdrawResponse.status === 200) {
           isWithdrawSuccess = true;
@@ -86,36 +84,38 @@ export default function WithdrawPage() {
       }
 
       if (isWithdrawSuccess) {
-        alert('탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
         
         const STORAGE_USER_KEYS = ["user", "loginUser", "member", "authUser", "accessToken", "role"];
         STORAGE_USER_KEYS.forEach(key => window.localStorage.removeItem(key));
-
-        const COOKIE_KEYS = ["accessToken", "refreshToken", "userRoles"];
+        
+        const COOKIE_KEYS = ["accessToken", "userRoles"];
         COOKIE_KEYS.forEach(name => {
           document.cookie = `${name}=; Max-Age=0; path=/;`;
         });
-
+        
         window.dispatchEvent(new Event("auth-state-changed"));
-        window.location.href = '/'; 
+        
+        alert('탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
+        setTimeout(() => window.location.replace('/'), 0);
       }
 
     } catch (err: any) {
       console.error("탈퇴 실패", err);
       // 401 에러 처리
       if (err.response?.status === 401) {
-        alert("보안을 위해 다시 로그인한 후 탈퇴를 진행해 주세요.");
         const STORAGE_USER_KEYS = ["user", "loginUser", "member", "authUser", "accessToken", "role"];
         STORAGE_USER_KEYS.forEach(key => window.localStorage.removeItem(key));
-
-        const COOKIE_KEYS = ["accessToken", "refreshToken", "userRoles"];
+        
+        const COOKIE_KEYS = ["accessToken",  "userRoles"];
         COOKIE_KEYS.forEach(name => {
           document.cookie = `${name}=; Max-Age=0; path=/;`;
         });
-
-        window.dispatchEvent(new Event("auth-state-changed"));
         
-        window.location.href = '/login';
+        window.dispatchEvent(new Event("auth-state-changed"));
+
+        alert("보안을 위해 다시 로그인한 후 탈퇴를 진행해 주세요.");
+        
+        setTimeout(() => window.location.replace('/login'), 0);
       } else {
         alert("탈퇴 처리 중 오류가 발생했습니다.");
       }

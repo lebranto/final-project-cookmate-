@@ -82,9 +82,14 @@ export default function RankingPage() {
           return newData;
         });
       }
-    } catch (err) {
+    } catch (err: any) { 
       console.error("팔로우 실패", err);
-      alert("팔로우 처리에 실패했습니다.");
+      
+      if (err.response && err.response.status === 400) {
+        alert(err.response.data); 
+      } else {
+        alert("팔로우 처리에 실패했습니다.");
+      }
     }
   };
 

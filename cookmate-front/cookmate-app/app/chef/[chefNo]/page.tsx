@@ -113,8 +113,14 @@ export default function ChefDetailPage() {
           followerCount: prev.following ? prev.followerCount - 1 : prev.followerCount + 1
         } : null);
       }
-    } catch (err) {
-      alert("팔로우 처리에 실패했습니다.");
+    } catch (err: any) {
+      console.error("팔로우 실패", err);
+      
+      if (err.response && err.response.status === 400) {
+        alert(err.response.data); 
+      } else {
+        alert("팔로우 처리에 실패했습니다.");
+      }
     }
   };
 

@@ -53,9 +53,9 @@ public interface MemberDao {
     
     int checkFollow(Map<String, Object> params);
     
-    void insertFollow(Map<String, Object> params);
+    int insertFollow(Map<String, Object> params);
     
-    void deleteFollow(Map<String, Object> params);
+    int deleteFollow(Map<String, Object> params);
 
 	List<FollowDto> selectFollowingList(Map<String, Object> params);
 
@@ -64,4 +64,16 @@ public interface MemberDao {
 	List<MyCommentDto> selectMyWrittenComments(Map<String, Object> params);
 
 	List<MyCommentDto> selectCommentsOnMyBoards(Map<String, Object> params);
+
+	String getKakaoAccessToken(long userNo);
+
+	int deleteUserIdentity(long userNo);
+
+	int deleteUserAuthorities(long userNo);
+
+	int deleteUserCredentials(long userNo);
+
+	int deleteAllScraps(long userNo);
+
+	int deleteAllFollowing(Map<String, Object> followParams);
 }

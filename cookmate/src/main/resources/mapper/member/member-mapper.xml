@@ -15,12 +15,15 @@
     </select>
 
     <select id="getMemberStats" parameterType="long" resultType="MemberDto">
-        SELECT 
-            (SELECT COUNT(*) FROM BOARD WHERE USER_NO = #{userNo} AND BOARD_DELETE = 'N') as recipeCount,
-            (SELECT COUNT(*) FROM SCRAP WHERE USER_NO = #{userNo}) as scrapCount,
-            (SELECT COUNT(*) FROM INQUIRY WHERE USER_NO = #{userNo}) as inquiryCount
-        FROM DUAL
-    </select>
+	    SELECT 
+	        (SELECT COUNT(*) FROM BOARD WHERE USER_NO = #{userNo} AND BOARD_DELETE = 'N') as recipeCount,
+	        (SELECT COUNT(*) 
+	         FROM SCRAP S 
+	         JOIN BOARD B ON S.BOARD_NO = B.BOARD_NO 
+	         WHERE S.USER_NO = #{userNo} AND B.BOARD_DELETE = 'N') as scrapCount,
+	        (SELECT COUNT(*) FROM INQUIRY WHERE USER_NO = #{userNo}) as inquiryCount
+	    FROM DUAL
+	</select>
 
     <select id="selectUserAllergies" parameterType="long" resultType="string">
         SELECT ALLERGY_NAME 
@@ -51,9 +54,7 @@
         WHERE USER_NO = #{userNo}
     </update>
 
-    <delete id="deleteMemberAllergies" parameterType="long">
-        DELETE FROM ALLERGY WHERE USER_NO = #{userNo}
-    </delete>
+    
 
     <insert id="insertMemberAllergy" parameterType="map">
         INSERT INTO ALLERGY (ALLERGY_NAME, USER_NO)
@@ -62,12 +63,48 @@
 
 
     <update id="withdrawMember" parameterType="long">
-        UPDATE USER 
-        SET WITHDRAW = 'Y' 
-        WHERE USER_NO = #{userNo}
-    </update>
+	    UPDATE USER 
+	    SET 
+	        WITHDRAW = 'Y',
+	        USER_EMAIL = CONCAT('withdrawn_', #{userNo}, '@cookmate.com'),
+	        NICKNAME = '탈퇴한 사용자', 
+	        PROFILE_IMAGE_URL = NULL, 
+	        INTRODUCE = NULL,
+	        ADDRESS = NULL,
+	        LAST_LOGIN = NOW()
+	    WHERE USER_NO = #{userNo}
+	</update>
 
+	<delete id="deleteUserAuthorities" parameterType="long">
+	    DELETE FROM AUTHORITY 
+	    WHERE USER_NO = #{userNo}
+	</delete>
+	
+	<delete id="deleteUserIdentity" parameterType="long">
+	    DELETE FROM USER_IDENTITIES 
+	    WHERE USER_NO = #{userNo}
+	</delete>
+	
+	<delete id="deleteUserCredentials" parameterType="long">
+	    DELETE FROM USER_CREDENTIALS 
+	    WHERE USER_NO = #{userNo}
+	</delete>
+	
+	<delete id="deleteMemberAllergies" parameterType="long">
+        DELETE FROM ALLERGY WHERE USER_NO = #{userNo}
+    </delete>
+    
+    <delete id="deleteAllFollowing" parameterType="map">
+	    DELETE FROM FOLLOWING 
+	    WHERE USER_NO = #{userNo}
+	    OR FOLLOWING_ID = #{userId}
+	</delete>
 
+	<delete id="deleteAllScraps" parameterType="long">
+	    DELETE FROM SCRAP 
+	    WHERE USER_NO = #{userNo}
+	</delete>
+	
     <select id="selectMyRecipes" parameterType="map" resultType="RecipeDto">
     SELECT 
         B.BOARD_NO as boardNo,
@@ -150,27 +187,30 @@
 
 
     <select id="selectChefRanking" parameterType="map" resultType="MemberDto">
-        SELECT 
-            u.USER_NO as userNo,
-            u.NICKNAME as nickname,
-            u.PROFILE_IMAGE_URL as profileImageUrl,
-            u.USER_EMAIL as userEmail,
-            DATE_FORMAT(u.USER_ENROLL_DATE, '%Y.%m.%d') as enrollDate,
-            (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO AND b.BOARD_DELETE = 'N') as recipeCount,
-            (SELECT COUNT(*) FROM SCRAP s JOIN BOARD b ON s.BOARD_NO = b.BOARD_NO WHERE b.USER_NO = u.USER_NO) as scrapCount,
-            (SELECT COUNT(*) FROM FOLLOWING f WHERE f.FOLLOWING_ID = u.USER_EMAIL) as followerCount
-            <if test="loginUserNo != null">
-            , (SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = u.USER_EMAIL) > 0 as isFollowing
-            </if>
-        FROM USER u
-        WHERE u.WITHDRAW = 'N' AND u.USER_STATUS = 'N'
-        ORDER BY 
-            <choose>
-                <when test="filter == 'scrap'">scrapCount DESC</when>
-                <when test="filter == 'follower'">followerCount DESC</when>
-                <otherwise>recipeCount DESC</otherwise>
-            </choose>
-    </select>
+	    SELECT 
+	        u.USER_NO as userNo,
+	        u.NICKNAME as nickname,
+	        u.PROFILE_IMAGE_URL as profileImageUrl,
+	        u.USER_EMAIL as userEmail,
+	        DATE_FORMAT(u.USER_ENROLL_DATE, '%Y.%m.%d') as enrollDate,
+	        (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO AND b.BOARD_DELETE = 'N') as recipeCount,
+	        (SELECT COUNT(*) 
+	         FROM SCRAP s 
+	         JOIN BOARD b ON s.BOARD_NO = b.BOARD_NO 
+	         WHERE b.USER_NO = u.USER_NO AND b.BOARD_DELETE = 'N') as scrapCount,
+	        (SELECT COUNT(*) FROM FOLLOWING f WHERE f.FOLLOWING_ID = u.USER_EMAIL) as followerCount
+	        <if test="loginUserNo != null">
+	        , (SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = u.USER_EMAIL) > 0 as isFollowing
+	        </if>
+	    FROM USER u
+	    WHERE u.WITHDRAW = 'N' AND u.USER_STATUS = 'N'
+	    ORDER BY 
+	        <choose>
+	            <when test="filter == 'scrap'">scrapCount DESC</when>
+	            <when test="filter == 'follower'">followerCount DESC</when>
+	            <otherwise>recipeCount DESC</otherwise>
+	        </choose>
+	</select>
 
     <select id="selectChefDetail" parameterType="map" resultType="MemberDto">
         SELECT 
@@ -266,15 +306,23 @@
     </select>
 
     <select id="checkFollow" parameterType="map" resultType="int">
-        SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
+        SELECT COUNT(*) 
+        FROM FOLLOWING 
+        WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
     </select>
 
     <insert id="insertFollow" parameterType="map">
-        INSERT INTO FOLLOWING (USER_NO, FOLLOWING_ID, CREATE_AT) VALUES (#{loginUserNo}, #{targetEmail}, NOW())
-    </insert>
+	    INSERT INTO FOLLOWING (USER_NO, FOLLOWING_ID, CREATE_AT) 
+	    SELECT #{loginUserNo}, #{targetEmail}, NOW()
+	    FROM USER 
+	    WHERE USER_EMAIL = #{targetEmail} 
+	      AND WITHDRAW = 'N'
+	      AND USER_STATUS = 'N'
+	</insert>
 
     <delete id="deleteFollow" parameterType="map">
-        DELETE FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
+        DELETE FROM FOLLOWING 
+        WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = #{targetEmail}
     </delete>
     
     <select id="selectFollowingList" parameterType="map" resultType="FollowDto">
@@ -314,5 +362,12 @@
 	        <when test="filter == 'oldest'"> ORDER BY f.CREATE_AT ASC </when>
 	        <otherwise> ORDER BY f.CREATE_AT DESC </otherwise> </choose>
 	</select>
+	
+	<select id="getKakaoAccessToken" resultType="string">
+    SELECT ACCESS_TOKEN 
+    FROM USER_IDENTITIES 
+    WHERE USER_NO = #{userNo} 
+      AND PROVIDER = 'Kakao' 
+    </select>
 
 </mapper>
