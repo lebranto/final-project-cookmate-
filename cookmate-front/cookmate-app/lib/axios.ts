@@ -14,11 +14,38 @@ function getCookie(name: string) {
   return null;
 }
 
+
+//401 발생할 때 refreshToken을 호출하는 코드
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        await api.post("/auth/refresh");
+        return api(originalRequest);
+      } catch (refreshError) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("authUser");
+        window.dispatchEvent(new Event("auth-state-changed"));
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+
+
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       // 로컬 스토리지에서 먼저 찾아보고, 없으면(||) 쿠키에서 찾습니다!
-      const token = localStorage.getItem('accessToken') || getCookie('accessToken');
+      const token = getCookie('accessToken') || localStorage.getItem('accessToken') ;
       
       // 토큰을 찾았다면 헤더에 장착!
       if (token) {
