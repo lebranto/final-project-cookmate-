@@ -13,7 +13,7 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  padding-bottom: 0;
+  padding-bottom: 40px;
 }
 
 .page img {
@@ -706,7 +706,8 @@
   text-decoration: none;
 }
 
-.chefItem span {
+.chefAvatar,
+.chefItem > span {
   display: grid;
   width: 42px;
   height: 42px;
@@ -715,10 +716,50 @@
   background: var(--green-soft);
   color: var(--green);
   font-weight: 900;
+  flex: 0 0 42px;
 }
 
 .chefItem strong {
+  display: block;
   font-size: 13px;
+}
+
+.chefItem p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.chefEmpty {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 14px 0;
+}
+
+.chefSkeleton {
+  pointer-events: none;
+}
+
+.chefSkeleton > span,
+.chefSkeleton strong,
+.chefSkeleton p {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f1ece2 0%, #faf8f3 50%, #f1ece2 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+.chefSkeleton strong {
+  width: 96px;
+  height: 13px;
+}
+
+.chefSkeleton p {
+  width: 132px;
+  height: 11px;
 }
 
 .outlineButton {
@@ -784,38 +825,6 @@
 .aiBanner a {
   flex: 0 0 auto;
   border: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.scrollTopButton {
-  position: fixed;
-  right: 28px;
-  bottom: 28px;
-  z-index: 60;
-  width: 46px;
-  height: 46px;
-  border: 1px solid rgba(45, 106, 38, 0.18);
-  border-radius: 50%;
-  background: var(--green);
-  color: #fff;
-  cursor: pointer;
-  font-size: 22px;
-  font-weight: 900;
-  line-height: 1;
-  opacity: 0;
-  pointer-events: none;
-  box-shadow: 0 10px 28px rgba(42, 36, 32, 0.18);
-  transform: translateY(10px);
-  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
-}
-
-.scrollTopButton:hover {
-  background: #24561f;
-}
-
-.scrollTopVisible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
 }
 
 @media (max-width: 1024px) {
@@ -971,11 +980,4 @@
     font-size: 26px;
   }
 
-  .scrollTopButton {
-    right: 16px;
-    bottom: 86px;
-    width: 42px;
-    height: 42px;
-    font-size: 20px;
-  }
 }

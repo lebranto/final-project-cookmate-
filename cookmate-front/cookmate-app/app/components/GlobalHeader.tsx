@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./CommonLayout.module.css";
 import UserAvatar from '@/app/components/UserAvatar';
+import api from "@/app/lib/api";
+
 
 type UserRole = "ROLE_USER" | "ROLE_ADMIN";
 
@@ -162,49 +164,43 @@ export default function GlobalHeader() {
   }, [canOpenAdminPage, canOpenMyPage, isLoggedIn]);
 
   useEffect(() => {
-    const fetchAuthUser = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          credentials: "include",
-        });
+   const fetchAuthUser = async () => {
+  try {
+    const response = await api.get("/auth/me");
 
-        if (!response.ok) {
-          clearStoredAuth();
-          setRoles([]);
-          setCurrentUser(null);
-          setIsLoggedIn(false);
-          return;
-        }
+    const user = response.data as StoredUser;
+    
+      window.localStorage.setItem("authUser", JSON.stringify(user));
+      setCurrentUser(user);
+      setRoles(getStoredRoles());
+      setIsLoggedIn(true);
+    } catch (error) {
+      console.error("사용자 정보 조회 실패:", error);
+      clearStoredAuth();
+      setRoles([]);
+      setCurrentUser(null);
+      setIsLoggedIn(false);
+  }
+};
 
-        const user = (await response.json()) as StoredUser;
-        window.localStorage.setItem("authUser", JSON.stringify(user));
-        setCurrentUser(user);
-      } catch (error) {
-        console.error("사용자 정보 조회 실패:", error);
-      }
-    };
 
     const syncAuthState = () => {
       const nextHasToken = hasAccessToken();
-
-      if (!nextHasToken) {
-        clearStoredAuth();
-        setRoles([]);
-        setCurrentUser(null);
-        setIsLoggedIn(false);
-        return;
-      }
-
-      const nextRoles = getStoredRoles();
       const nextUser = getStoredUser();
+      const nextRoles = getStoredRoles();
 
-      setRoles(nextRoles);
-      setCurrentUser(nextUser);
-      setIsLoggedIn(true);
+    if (!nextHasToken && !nextUser) {
+      setRoles([]);
+      setCurrentUser(null);
+      setIsLoggedIn(false);
+    return;
+    }
 
-      if (!nextUser) {
-        void fetchAuthUser();
-      }
+    setRoles(nextRoles);
+    setCurrentUser(nextUser);
+    setIsLoggedIn(true);
+
+    void fetchAuthUser();
     };
 
     syncAuthState();
