@@ -706,7 +706,8 @@
   text-decoration: none;
 }
 
-.chefItem span {
+.chefAvatar,
+.chefItem > span {
   display: grid;
   width: 42px;
   height: 42px;
@@ -715,10 +716,50 @@
   background: var(--green-soft);
   color: var(--green);
   font-weight: 900;
+  flex: 0 0 42px;
 }
 
 .chefItem strong {
+  display: block;
   font-size: 13px;
+}
+
+.chefItem p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.chefEmpty {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+  padding: 14px 0;
+}
+
+.chefSkeleton {
+  pointer-events: none;
+}
+
+.chefSkeleton > span,
+.chefSkeleton strong,
+.chefSkeleton p {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f1ece2 0%, #faf8f3 50%, #f1ece2 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+.chefSkeleton strong {
+  width: 96px;
+  height: 13px;
+}
+
+.chefSkeleton p {
+  width: 132px;
+  height: 11px;
 }
 
 .outlineButton {

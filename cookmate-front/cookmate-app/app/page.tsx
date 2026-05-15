@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/app/lib/api";
+import UserAvatar from "@/app/components/UserAvatar";
 import styles from "./page.module.css";
 
 interface MainRecipe {
@@ -21,6 +22,16 @@ interface MainRecipe {
 
 interface SearchResponse {
   list: MainRecipe[];
+}
+
+interface MainChef {
+  userNo: number;
+  nickname: string;
+  userEmail: string;
+  recipeCount: number;
+  scrapCount: number;
+  followerCount: number;
+  profileImageUrl?: string;
 }
 
 const categories = [
@@ -63,12 +74,6 @@ const categories = [
   },
 ];
 
-const chefs = [
-  { name: "김민준 셰프", desc: "한식 · 레시피 84개" },
-  { name: "박수진 셰프", desc: "양식 · 레시피 62개" },
-  { name: "이서연 셰프", desc: "디저트 · 레시피 103개" },
-];
-
 export default function Home() {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
@@ -78,6 +83,8 @@ export default function Home() {
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [weeklyPopularRecipes, setWeeklyPopularRecipes] = useState<MainRecipe[]>([]);
   const [weeklyPopularLoading, setWeeklyPopularLoading] = useState(true);
+  const [chefs, setChefs] = useState<MainChef[]>([]);
+  const [chefsLoading, setChefsLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const handleSearch = (event: FormEvent<HTMLFormElement>) => {
@@ -155,6 +162,26 @@ export default function Home() {
     };
 
     void fetchWeeklyPopularRecipes();
+  }, []);
+
+  useEffect(() => {
+    const fetchChefs = async () => {
+      try {
+        setChefsLoading(true);
+        const res = await api.get<MainChef[]>("/users/chef", {
+          params: { filter: "recipe" },
+        });
+
+        setChefs((res.data ?? []).slice(0, 3));
+      } catch (error) {
+        console.error("셰프 데이터 조회 실패:", error);
+        setChefs([]);
+      } finally {
+        setChefsLoading(false);
+      }
+    };
+
+    void fetchChefs();
   }, []);
 
   useEffect(() => {
@@ -370,15 +397,37 @@ export default function Home() {
         <aside className={styles.sidebar}>
           <div className={styles.widget}>
             <div className={styles.kicker}>Chef Pick</div>
-            {chefs.map((chef) => (
-              <Link href="/chef" className={styles.chefItem} key={chef.name}>
-                <span>{chef.name.slice(0, 1)}</span>
-                <div>
-                  <strong>{chef.name}</strong>
-                  <p>{chef.desc}</p>
-                </div>
-              </Link>
-            ))}
+            {chefsLoading
+              ? Array.from({ length: 3 }, (_, index) => (
+                  <div className={`${styles.chefItem} ${styles.chefSkeleton}`} key={index}>
+                    <span />
+                    <div>
+                      <strong />
+                      <p />
+                    </div>
+                  </div>
+                ))
+              : chefs.map((chef) => (
+                  <Link href={`/chef/${chef.userNo}`} className={styles.chefItem} key={chef.userNo}>
+                    <div className={styles.chefAvatar}>
+                      <UserAvatar
+                        imageUrl={chef.profileImageUrl}
+                        name={chef.userEmail || chef.nickname}
+                        size="100%"
+                      />
+                    </div>
+                    <div>
+                      <strong>{chef.nickname}</strong>
+                      <p>
+                        레시피 {chef.recipeCount?.toLocaleString() ?? 0}개 · 팔로워{" "}
+                        {chef.followerCount?.toLocaleString() ?? 0}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+            {!chefsLoading && chefs.length === 0 && (
+              <div className={styles.chefEmpty}>보여줄 셰프가 없습니다.</div>
+            )}
             <Link href="/chef" className={styles.outlineButton}>
               셰프 전체 보기
             </Link>
