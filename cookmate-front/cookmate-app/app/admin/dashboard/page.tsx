@@ -384,12 +384,12 @@ export default function DashboardPage() {
                     <td>
                       <span
                         className={
-                          report.status === "N"
+                          report.status === "W"
                             ? styles.pendingStatus
                             : styles.completeStatus
                         }
                       >
-                        {report.status === "N"
+                        {report.status === "W"
                           ? "미처리"
                           : "처리완료"}
                       </span>

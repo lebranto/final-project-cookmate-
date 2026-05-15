@@ -43,6 +43,7 @@ public class AdminDto {
 
         private Long reportId;
         private String reportType;     // 신고 유형
+        private String reporterNickname; // 신고자 닉네임 추가
         private String targetId;       // 신고 대상 (유저 or 게시글)
         private String targetNickname;
         private String reporterId;  // 신고자 ID 추가

@@ -10,7 +10,7 @@ interface Report {
   reportType: string;
   targetId: string;
   targetNickname?: string | null;
-  reporterId: string;
+  reporterNickname?: string | null;
   reason: string;
   status: string;
   createdAt: string;
@@ -324,7 +324,7 @@ export default function ReportsPage() {
                     <td className={styles.number}>#{report.reportId}</td>
                     <td><span className={getTypeBadge(report.reportType)}>{report.reportType}</span></td>
                     <td>{report.reason}</td>
-                    <td>{report.reporterId}</td>
+                    <td>{report.reporterNickname}</td>
                     <td className={styles.target}>{report.targetNickname || report.targetId}</td>
                     <td>{report.createdAt}</td>
                     <td><span className={statusClass(report.status)}>{statusText}</span></td>
