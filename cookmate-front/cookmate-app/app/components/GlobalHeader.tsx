@@ -17,7 +17,7 @@ type StoredUser = {
 
 const HEADER_MENU_ITEMS = [
   { label: "레시피", path: "/boards" },
-  { label: "AI추천", path: "/" },
+  { label: "AI추천", path: "/ai" },
   { label: "장보기", path: "/shop" },
   { label: "셰프", path: "/chef" },
   { label: "공지사항", path: "/notice" },
