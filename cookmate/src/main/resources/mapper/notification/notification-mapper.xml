@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="notification">
+    <select id="selectNotifications" parameterType="long" resultType="NotificationDto">
+        SELECT
+            n.NOTIFICATION_NO AS notificationNo,
+            n.USER_NO AS userNo,
+            n.ACTOR_USER_NO AS actorUserNo,
+            u.NICKNAME AS actorNickname,
+            u.PROFILE_IMAGE_URL AS actorProfileImageUrl,
+            n.NOTIFICATION_TYPE AS notificationType,
+            n.MESSAGE AS message,
+            n.BOARD_NO AS boardNo,
+            n.COMMENT_NO AS commentNo,
+            n.READ_YN AS readYn,
+            DATE_FORMAT(n.CREATED_AT, '%Y-%m-%d %H:%i:%s') AS createdAt
+        FROM NOTIFICATION n
+        LEFT JOIN USER u ON n.ACTOR_USER_NO = u.USER_NO
+        WHERE n.USER_NO = #{userNo}
+        ORDER BY n.CREATED_AT DESC, n.NOTIFICATION_NO DESC
+    </select>
+
+    <select id="selectUnreadCount" parameterType="long" resultType="int">
+        SELECT COUNT(*)
+        FROM NOTIFICATION
+        WHERE USER_NO = #{userNo}
+          AND READ_YN = 'N'
+    </select>
+
+    <update id="markAsRead" parameterType="map">
+        UPDATE NOTIFICATION
+        SET READ_YN = 'Y', READ_AT = NOW()
+        WHERE NOTIFICATION_NO = #{notificationNo}
+          AND USER_NO = #{userNo}
+    </update>
+
+    <update id="markAllAsRead" parameterType="long">
+        UPDATE NOTIFICATION
+        SET READ_YN = 'Y', READ_AT = NOW()
+        WHERE USER_NO = #{userNo}
+          AND READ_YN = 'N'
+    </update>
+
+    <insert id="insertLikeNotification" parameterType="map">
+        INSERT INTO NOTIFICATION (
+            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+        )
+        SELECT
+            b.USER_NO,
+            #{actorUserNo},
+            'LIKE',
+            CONCAT(a.NICKNAME, '님이 회원님의 레시피에 좋아요를 눌렀습니다'),
+            b.BOARD_NO,
+            NULL,
+            'N',
+            NOW()
+        FROM BOARD b
+        JOIN USER a ON a.USER_NO = #{actorUserNo}
+        WHERE b.BOARD_NO = #{boardNo}
+          AND b.USER_NO != #{actorUserNo}
+    </insert>
+
+    <insert id="insertScrapNotification" parameterType="map">
+        INSERT INTO NOTIFICATION (
+            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+        )
+        SELECT
+            b.USER_NO,
+            #{actorUserNo},
+            'SCRAP',
+            CONCAT(a.NICKNAME, '님이 회원님의 레시피를 스크랩했습니다'),
+            b.BOARD_NO,
+            NULL,
+            'N',
+            NOW()
+        FROM BOARD b
+        JOIN USER a ON a.USER_NO = #{actorUserNo}
+        WHERE b.BOARD_NO = #{boardNo}
+          AND b.USER_NO != #{actorUserNo}
+    </insert>
+
+    <insert id="insertCommentNotification" parameterType="map">
+        INSERT INTO NOTIFICATION (
+            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+        )
+        SELECT
+            b.USER_NO,
+            #{actorUserNo},
+            'COMMENT',
+            CONCAT(a.NICKNAME, '님이 ''', b.BOARD_TITLE, '''에 댓글을 달았습니다'),
+            b.BOARD_NO,
+            #{commentNo},
+            'N',
+            NOW()
+        FROM BOARD b
+        JOIN USER a ON a.USER_NO = #{actorUserNo}
+        WHERE b.BOARD_NO = #{boardNo}
+          AND b.USER_NO != #{actorUserNo}
+    </insert>
+
+    <insert id="insertReplyNotification" parameterType="map">
+        INSERT INTO NOTIFICATION (
+            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+        )
+        SELECT
+            parent.USER_NO,
+            #{actorUserNo},
+            'REPLY',
+            CONCAT(a.NICKNAME, '님이 회원님의 댓글에 답글을 달았습니다'),
+            #{boardNo},
+            #{commentNo},
+            'N',
+            NOW()
+        FROM COMMENT parent
+        JOIN USER a ON a.USER_NO = #{actorUserNo}
+        WHERE parent.COMMENT_NO = #{parentCommentNo}
+          AND parent.USER_NO != #{actorUserNo}
+    </insert>
+
+    <insert id="insertFollowNotification" parameterType="map">
+        INSERT INTO NOTIFICATION (
+            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+        )
+        SELECT
+            target.USER_NO,
+            #{actorUserNo},
+            'FOLLOW',
+            CONCAT(a.NICKNAME, '님이 회원님을 팔로우하기 시작했습니다'),
+            NULL,
+            NULL,
+            'N',
+            NOW()
+        FROM USER target
+        JOIN USER a ON a.USER_NO = #{actorUserNo}
+        WHERE target.USER_EMAIL = #{targetEmail}
+          AND target.USER_NO != #{actorUserNo}
+    </insert>
+
+    <insert id="insertRecipeNotifications" parameterType="map">
+        INSERT INTO NOTIFICATION (
+            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+        )
+        SELECT
+            f.USER_NO,
+            #{actorUserNo},
+            'RECIPE',
+            CONCAT(a.NICKNAME, '님의 새 레시피 ''', b.BOARD_TITLE, '''가 올라왔습니다'),
+            b.BOARD_NO,
+            NULL,
+            'N',
+            NOW()
+        FROM BOARD b
+        JOIN USER a ON a.USER_NO = #{actorUserNo}
+        JOIN FOLLOWING f ON f.FOLLOWING_ID = a.USER_EMAIL
+        WHERE b.BOARD_NO = #{boardNo}
+          AND b.OPEN = 'Y'
+          AND f.USER_NO != #{actorUserNo}
+          AND NOT EXISTS (
+              SELECT 1
+              FROM NOTIFICATION n
+              WHERE n.NOTIFICATION_TYPE = 'RECIPE'
+                AND n.BOARD_NO = b.BOARD_NO
+                AND n.USER_NO = f.USER_NO
+          )
+    </insert>
+</mapper>

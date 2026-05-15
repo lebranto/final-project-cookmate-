@@ -30,6 +30,8 @@ import com.kh.cookmate.board.model.vo.IngredientSet;
 import com.kh.cookmate.board.model.vo.Likes;
 import com.kh.cookmate.board.model.vo.Scrap;
 import com.kh.cookmate.board.model.vo.Tag;
+import com.kh.cookmate.notification.service.NotificationService;
+
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 public class BoardServiceImpl implements BoardService {
 	
 	private final BoardDao boardDao;
+	private final NotificationService notificationService;
 	
 	@Override
 	@Transactional
@@ -107,6 +110,11 @@ public class BoardServiceImpl implements BoardService {
                 }).collect(Collectors.toList());
             boardDao.insertCookSteps(steps);
         }
+        
+        // 공개로 할 때만 알림이 오게 하는 코드
+        if (result > 0 && board.getOpen() == 'Y') {
+            notificationService.notifyRecipeCreated(board.getBoardNo(), dto.getUserNo());
+        }
 
         return result;
     }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
@@ -157,6 +165,8 @@ public class BoardServiceImpl implements BoardService {
     @Override
     @Transactional
     public int updateRecipe(int boardNo, BoardDto.BoardPut dto) {
+    	
+    	char previousOpen = boardDao.selectBoardOpen(boardNo);
 
         // 1. BOARD 기본 정보 수정
         Board board = new Board();
@@ -270,6 +280,15 @@ public class BoardServiceImpl implements BoardService {
             if (!toUpdate.isEmpty()) boardDao.updateCookSteps(toUpdate);
             if (!toInsert.isEmpty()) boardDao.insertCookSteps(toInsert);
         }
+        
+        
+        // 알림이 공개일때만 알림이 가도록 하는 코드
+        if (previousOpen != 'Y' && dto.getOpen() == 'Y') {
+            BoardDetail detail = boardDao.getBoardDetail(boardNo);
+            if (detail != null) {
+                notificationService.notifyRecipeCreated(boardNo, detail.getUserNo());
+            }
+        }
 
         return 1;
     }
@@ -305,6 +324,7 @@ public class BoardServiceImpl implements BoardService {
 	        // 좋아요 추가
 	        boardDao.insertLikes(likes);
 	        boardDao.increaseLikes(boardNo);
+	        notificationService.notifyLike(boardNo, userNo);
 	        return 1; // 추가
 	    }
 	}
@@ -331,6 +351,7 @@ public class BoardServiceImpl implements BoardService {
 	        return 0; // 취소
 	    } else {
 	        boardDao.insertScrap(scrap);
+	        notificationService.notifyScrap(boardNo, userNo);
 	        return 1; // 추가
 	    }
 	}
@@ -351,7 +372,21 @@ public class BoardServiceImpl implements BoardService {
 	    comment.setParentCommentNo(dto.getParentCommentNo());
 	    comment.setUserNo(dto.getUserNo());
 	    comment.setCommentContent(dto.getCommentContent());
-	    return boardDao.insertComment(comment);
+
+	    int result = boardDao.insertComment(comment);
+	    if (result > 0) {
+	        if (dto.getParentCommentNo() == null) {
+	            notificationService.notifyComment(dto.getBoardNo(), comment.getCommentNo(), dto.getUserNo());
+	        } else {
+	            notificationService.notifyReply(
+	                    dto.getBoardNo(),
+	                    dto.getParentCommentNo(),
+	                    comment.getCommentNo(),
+	                    dto.getUserNo()
+	            );
+	        }
+	    }
+	    return result;
 	}
 
 	@Override

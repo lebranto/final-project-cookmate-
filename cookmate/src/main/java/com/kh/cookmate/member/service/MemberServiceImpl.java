@@ -24,6 +24,7 @@ import com.kh.cookmate.member.dto.MemberUpdateDto;
 import com.kh.cookmate.member.dto.MyCommentDto;
 import com.kh.cookmate.member.dto.RecipeDto;
 import com.kh.cookmate.member.vo.Member;
+import com.kh.cookmate.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,8 @@ public class MemberServiceImpl implements MemberService {
 
     private final MemberDao memberDao; 
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
+    
     
     @Override
     public MemberDto selectUserByNo(long userNo) {
@@ -72,6 +75,7 @@ public class MemberServiceImpl implements MemberService {
             int insertResult = memberDao.insertFollow(params);
             
             if (insertResult > 0) {
+            	notificationService.notifyFollow(loginUserNo, targetEmail);
                 return true; 
             } else {
                 throw new IllegalStateException("탈퇴하거나 정지된 회원은 팔로우할 수 없습니다.");

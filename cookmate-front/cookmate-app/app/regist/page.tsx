@@ -134,7 +134,6 @@ function AgreeStep({ onNext }: StepProps) {
                   className={`${styles.checkbox} ${agrees[item.key] ? styles.checked : ""}`}
                   onClick={() => toggle(item.key)}
                   aria-label={`${item.label} 체크`}
-                  style={{ border: 0 }}
                 >
                   {agrees[item.key] && "✓"}
                 </button>

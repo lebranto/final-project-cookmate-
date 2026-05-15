@@ -78,7 +78,17 @@
   font-weight: 700;
 }
 
+.ghNav button:hover,
+.ghNav .ghNavActive {
+  color: #e05a2b;
+}
+
+.ghNav .ghNavActive {
+  font-weight: 900;
+}
+
 .ghBell {
+  position: relative;
   width: 36px;
   height: 36px;
   border: 0;
@@ -89,6 +99,126 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+.ghNotificationWrap {
+  position: relative;
+}
+
+.ghNotificationBadge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e05a2b;
+  color: #fff;
+  border: 2px solid #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.notificationPanel {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  width: 320px;
+  max-height: 360px;
+  overflow: hidden;
+  border: 1px solid #eee3d8;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(46, 38, 30, 0.16);
+  z-index: 80;
+}
+
+.notificationHeader {
+  height: 58px;
+  padding: 0 18px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.notificationHeader strong {
+  color: #2c2925;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.notificationHeader button {
+  border: 0;
+  background: transparent;
+  color: #2c2925;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.notificationList {
+  max-height: 302px;
+  overflow-y: auto;
+}
+
+.notificationItem {
+  width: 100%;
+  min-height: 84px;
+  border: 0;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  cursor: pointer;
+  padding: 14px 18px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.notificationItem:hover {
+  background: #fafaf8;
+}
+
+.notificationUnread {
+  background: #eef8ee;
+}
+
+.notificationUnread:hover {
+  background: #e6f3e5;
+}
+
+.notificationMessage {
+  color: #2c2925;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.notificationMessage strong {
+  font-weight: 900;
+}
+
+.notificationTime {
+  color: #9b8c82;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.notificationLoginRequired,
+.notificationEmpty {
+  padding: 44px 20px;
+  color: #8b8177;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 800;
 }
 
 .ghUserSummary {
@@ -130,6 +260,12 @@
   background: #fff;
   color: #333;
   border: 1px solid #eee;
+}
+
+.ghActionActive {
+  border-color: #e05a2b;
+  color: #e05a2b;
+  background: #fff4ed;
 }
 
 .ghStart {
@@ -355,6 +491,27 @@
     margin-left: auto;
   }
 
+  .ghMobileBell {
+    display: flex;
+  }
+
+  .ghNotificationWrap {
+    display: block;
+  }
+
+  .notificationPanel {
+    position: fixed;
+    top: 66px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: min(360px, calc(100vh - 86px));
+  }
+
+  .notificationList {
+    max-height: min(302px, calc(100vh - 144px));
+  }
+
   .ghMobileMenu {
     display: block;
   }
@@ -381,6 +538,11 @@
     font-size: 14px;
     font-weight: 800;
     color: #4a3329;
+  }
+
+  .ghMobileNav .ghMobileActive {
+    background: #e05a2b;
+    color: #fff;
   }
 
   .bottomNav {
@@ -457,4 +619,5 @@
     width: 42px;
     height: 42px;
   }
+
 }

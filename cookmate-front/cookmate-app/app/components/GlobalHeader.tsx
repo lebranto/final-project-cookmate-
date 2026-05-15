@@ -10,12 +10,21 @@ import api from "@/app/lib/api";
 type UserRole = "ROLE_USER" | "ROLE_ADMIN";
 
 type StoredUser = {
+  userNo?: number;
   userEmail?: string;
   nickname?: string;
   profileImageUrl?: string;
   role?: string;
   roles?: string[];
   authorities?: Array<string | { authority?: string }>;
+};
+
+type NotificationItem = {
+  notificationNo: number;
+  message: string;
+  boardNo?: number | null;
+  readYn: "Y" | "N";
+  createdAt: string;
 };
 
 const HEADER_MENU_ITEMS = [
@@ -137,8 +146,38 @@ function clearStoredAuth() {
   removeCookie(ROLE_COOKIE_KEY);
 }
 
+function formatElapsedTime(createdAt: string): string {
+  const createdTime = new Date(createdAt.replace(" ", "T")).getTime();
+
+  if (Number.isNaN(createdTime)) {
+    return "";
+  }
+
+  const diffSeconds = Math.max(Math.floor((Date.now() - createdTime) / 1000), 0);
+  const minute = 60;
+  const hour = minute * 60;
+  const day = hour * 24;
+
+  if (diffSeconds < minute) {
+    return "방금 전";
+  }
+
+  if (diffSeconds < hour) {
+    return `${Math.floor(diffSeconds / minute)}분 전`;
+  }
+
+  if (diffSeconds < day) {
+    return `${Math.floor(diffSeconds / hour)}시간 전`;
+  }
+
+  return `${Math.floor(diffSeconds / day)}일 전`;
+}
+
 export default function GlobalHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
@@ -149,6 +188,7 @@ export default function GlobalHeader() {
   const goRegist = () => router.push("/regist");
   const canOpenMyPage = roles.includes("ROLE_USER") || roles.includes("ROLE_ADMIN");
   const canOpenAdminPage = roles.includes("ROLE_ADMIN");
+  const currentUserNo = currentUser?.userNo;
 
   const mobileMenuItems = useMemo(() => {
     if (!isLoggedIn) {
@@ -226,6 +266,41 @@ export default function GlobalHeader() {
     };
   }, [pathname]);
 
+  useEffect(() => {
+    if (!isLoggedIn || !currentUserNo) {
+      return;
+    }
+
+    const fetchNotifications = async () => {
+      try {
+        const response = await api.get("/notifications", {
+          params: { userNo: currentUserNo },
+        });
+        setNotifications(response.data.notifications ?? []);
+        setUnreadCount(response.data.unreadCount ?? 0);
+      } catch (error) {
+        console.error("알림 조회 실패:", error);
+      }
+    };
+
+    void fetchNotifications();
+    const timer = window.setInterval(fetchNotifications, 30000);
+    return () => window.clearInterval(timer);
+  }, [currentUserNo, isLoggedIn]);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 768px)");
+    const closeOverlaysOnMobile = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setNotificationOpen(false);
+        setMenuOpen(false);
+      }
+    };
+
+    mobileQuery.addEventListener("change", closeOverlaysOnMobile);
+    return () => mobileQuery.removeEventListener("change", closeOverlaysOnMobile);
+  }, []);
+
   const handleLogout = async () => {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -245,10 +320,67 @@ export default function GlobalHeader() {
       setIsLoggedIn(false);
       setRoles([]);
       setCurrentUser(null);
+      setNotifications([]);
+      setUnreadCount(0);
+      setNotificationOpen(false);
       setMenuOpen(false);
       router.push("/");
       router.refresh();
     }
+  };
+
+  const handleBellClick = () => {
+    setNotificationOpen((prev) => !prev);
+  };
+
+  const handleNotificationClick = async (notification: NotificationItem) => {
+    if (!currentUserNo) return;
+
+    if (notification.readYn === "N") {
+      setNotifications((prev) =>
+        prev.map((item) =>
+          item.notificationNo === notification.notificationNo
+            ? { ...item, readYn: "Y" }
+            : item,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(prev - 1, 0));
+
+      try {
+        const response = await api.patch(
+          `/notifications/${notification.notificationNo}/read`,
+          null,
+          { params: { userNo: currentUserNo } },
+        );
+        setUnreadCount(response.data.unreadCount ?? 0);
+      } catch (error) {
+        console.error("알림 읽음 처리 실패:", error);
+      }
+    }
+
+    if (notification.boardNo) {
+      setNotificationOpen(false);
+      router.push(`/boards/${notification.boardNo}`);
+    }
+  };
+
+  const handleReadAll = async () => {
+    if (!currentUserNo || unreadCount === 0) return;
+
+    setNotifications((prev) => prev.map((item) => ({ ...item, readYn: "Y" })));
+    setUnreadCount(0);
+
+    try {
+      await api.patch("/notifications/read-all", null, {
+        params: { userNo: currentUserNo },
+      });
+    } catch (error) {
+      console.error("알림 전체 읽음 처리 실패:", error);
+    }
+  };
+
+  const isActivePath = (targetPath: string) => {
+    return pathname === targetPath || pathname.startsWith(`${targetPath}/`);
   };
 
   return (
@@ -264,6 +396,8 @@ export default function GlobalHeader() {
               <button
                 key={item.path}
                 type="button"
+                className={isActivePath(item.path) ? styles.ghNavActive : ""}
+                aria-current={isActivePath(item.path) ? "page" : undefined}
                 onClick={() => router.push(item.path)}
               >
                 {item.label}
@@ -271,13 +405,64 @@ export default function GlobalHeader() {
             ))}
           </nav>
 
-          <button type="button" className={styles.ghBell} aria-label="알림">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              <circle cx="18" cy="6" r="4" fill="#e05a2b" />
-            </svg>
-          </button>
+          <div className={styles.ghNotificationWrap}>
+            <button
+              type="button"
+              className={`${styles.ghBell} ${styles.ghMobileBell}`}
+              aria-label="알림"
+              aria-expanded={notificationOpen}
+              onClick={handleBellClick}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className={styles.ghNotificationBadge}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {notificationOpen && (
+              <div className={styles.notificationPanel}>
+                <div className={styles.notificationHeader}>
+                  <strong>알림</strong>
+                  {isLoggedIn && (
+                    <button type="button" onClick={handleReadAll}>
+                      모두 읽음
+                    </button>
+                  )}
+                </div>
+
+                {!isLoggedIn ? (
+                  <div className={styles.notificationLoginRequired}>로그인이 필요합니다.</div>
+                ) : notifications.length === 0 ? (
+                  <div className={styles.notificationEmpty}>새 알림이 없습니다.</div>
+                ) : (
+                  <div className={styles.notificationList}>
+                    {notifications.map((notification) => (
+                      <button
+                        key={notification.notificationNo}
+                        type="button"
+                        className={`${styles.notificationItem} ${
+                          notification.readYn === "N" ? styles.notificationUnread : ""
+                        }`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <span className={styles.notificationMessage}>
+                          {notification.message}
+                        </span>
+                        <span className={styles.notificationTime}>
+                          {formatElapsedTime(notification.createdAt)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {isLoggedIn ? (
             <>
@@ -294,7 +479,8 @@ export default function GlobalHeader() {
               {canOpenMyPage && (
                 <button
                   type="button"
-                  className={styles.ghLoginBtn}
+                  className={`${styles.ghLoginBtn} ${isActivePath("/mypage") ? styles.ghActionActive : ""}`}
+                  aria-current={isActivePath("/mypage") ? "page" : undefined}
                   onClick={() => router.push("/mypage")}
                 >
                   마이페이지
@@ -303,7 +489,8 @@ export default function GlobalHeader() {
               {canOpenAdminPage && (
                 <button
                   type="button"
-                  className={styles.ghLoginBtn}
+                  className={`${styles.ghLoginBtn} ${isActivePath("/admin") ? styles.ghActionActive : ""}`}
+                  aria-current={isActivePath("/admin") ? "page" : undefined}
                   onClick={() => router.push("/admin")}
                 >
                   관리자 페이지
@@ -338,6 +525,8 @@ export default function GlobalHeader() {
           <button
             key={item.label}
             type="button"
+            className={item.path !== "/logout" && isActivePath(item.path) ? styles.ghMobileActive : ""}
+            aria-current={item.path !== "/logout" && isActivePath(item.path) ? "page" : undefined}
             onClick={() => {
               if (item.path === "/logout") {
                 void handleLogout();

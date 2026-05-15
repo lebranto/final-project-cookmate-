@@ -92,6 +92,9 @@ public interface BoardDao {
 	List<Map<String, Object>> selectApiBoards();
 	int clearIntroduce(int boardNo);
 	
+	//알림
+	char selectBoardOpen(int boardNo);
+	
 
 
 }

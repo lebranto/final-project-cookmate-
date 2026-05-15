@@ -239,5 +239,12 @@ public class BoardDaoImpl implements BoardDao{
 	    return session.update("boardmapper.clearIntroduce", boardNo);
 	}
     
+	//알림
+	@Override
+	public char selectBoardOpen(int boardNo) {
+	    Character open = session.selectOne("boardmapper.selectBoardOpen", boardNo);
+	    return open == null ? 'N' : open;
+	}
+	
   
 }
