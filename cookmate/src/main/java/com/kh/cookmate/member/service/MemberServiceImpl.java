@@ -67,10 +67,15 @@ public class MemberServiceImpl implements MemberService {
 
         if (memberDao.checkFollow(params) > 0) {
             memberDao.deleteFollow(params);
-            return false;
+            return false; 
         } else {
-            memberDao.insertFollow(params);
-            return true;
+            int insertResult = memberDao.insertFollow(params);
+            
+            if (insertResult > 0) {
+                return true; 
+            } else {
+                throw new IllegalStateException("탈퇴하거나 정지된 회원은 팔로우할 수 없습니다.");
+            }
         }
     }
     
@@ -140,11 +145,7 @@ public class MemberServiceImpl implements MemberService {
         return memberDao.selectMyInquiries(userNo); 
     }
 
-
-    @Override
-    public int withdrawMember(long userNo) {
-        return memberDao.withdrawMember(userNo); 
-    }
+    
     
     @Override
     public InquiryDto selectInquiryDetail(long inquiryNo) {
@@ -212,11 +213,39 @@ public class MemberServiceImpl implements MemberService {
     }
     
     @Override
+    @Transactional
+    public int withdrawMember(long userNo) {
+    	
+    	memberDao.deleteUserAuthorities(userNo);
+    	memberDao.deleteUserCredentials(userNo);
+    	memberDao.deleteMemberAllergies(userNo);
+    	memberDao.deleteAllScraps(userNo);
+    	
+    	Member member = memberDao.selectUserByNo(userNo); 
+        Map<String, Object> followParams = new HashMap<>();
+        followParams.put("userNo", userNo);
+        followParams.put("userId", member.getUserEmail()); 
+        
+        memberDao.deleteAllFollowing(followParams);
+    	
+        return memberDao.withdrawMember(userNo); 
+    }
+    
+    @Override
+    @Transactional
     public String withdrawKakaoUser(long userNo, String accessToken) {
+    	
         String reqURL = "https://kapi.kakao.com/v1/user/unlink";
         
+        String kakaoToken = memberDao.getKakaoAccessToken(userNo); 
+        
+        if (kakaoToken == null || kakaoToken.isEmpty()) {
+            System.err.println("DB에 해당 유저의 토큰이 없습니다.");
+            return "FAIL";
+        }
+
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + accessToken); 
+        headers.add("Authorization", "Bearer " + kakaoToken); 
 
         HttpEntity<String> request = new HttpEntity<>(headers);
         RestTemplate restTemplate = new RestTemplate();
@@ -226,16 +255,31 @@ public class MemberServiceImpl implements MemberService {
                     reqURL, HttpMethod.POST, request, String.class);
             
             if (response.getStatusCode().is2xxSuccessful()) {
-                int result = memberDao.withdrawMember(userNo);
-                return result > 0 ? "SUCCESS" : "FAIL";
+            	
+            	memberDao.deleteUserIdentity(userNo);
+            	memberDao.deleteUserAuthorities(userNo); 
+            	memberDao.deleteMemberAllergies(userNo);
+            	memberDao.deleteAllScraps(userNo);
+            	
+            	Member member = memberDao.selectUserByNo(userNo);
+                Map<String, Object> followParams = new HashMap<>();
+                followParams.put("userNo", userNo);
+                followParams.put("userId", member.getUserEmail()); 
+                
+                memberDao.deleteAllFollowing(followParams);
+            	
+                memberDao.withdrawMember(userNo);
+                
+                return "SUCCESS";
             }
             
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                System.out.println("카카오 엑세스 토큰 만료 (401)");
+                // 토큰이 만료된 경우 이때는 재로그인 필요
+                System.out.println("엑세스 토큰이 만료되었습니다 (401)");
                 return "TOKEN_EXPIRED"; 
             }
-            System.err.println("카카오 API 호출 에러: " + e.getMessage());
+            System.err.println("카카오 API 호출 에러: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             System.err.println("서버 내부 에러: " + e.getMessage());
         }
