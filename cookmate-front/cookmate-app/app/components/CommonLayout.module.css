@@ -612,8 +612,6 @@
     align-items: flex-start;
     padding-bottom: 92px;
   }
-<<<<<<< HEAD
-=======
 
   .scrollTopButton {
     right: 16px;
@@ -621,5 +619,5 @@
     width: 42px;
     height: 42px;
   }
->>>>>>> main
+
 }
