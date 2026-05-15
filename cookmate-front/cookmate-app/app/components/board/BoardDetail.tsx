@@ -34,9 +34,11 @@ export default function BoardDetail({ boardNo }: Props) {
   const [isScrapped, setIsScrapped] = useState(false);
   const [followVersion, setFollowVersion] = useState(0);
   const [shoppingAdding, setShoppingAdding] = useState(false);
+  const [selectedServingCount, setSelectedServingCount] = useState(1);
   const [userAllergies, setUserAllergies] = useState<string[]>([]);
   const loadingRef = useRef(loading);
   const didInitialLoadRef = useRef(false);
+  const servingBoardNoRef = useRef<number | null>(null);
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const router = useRouter();
 
@@ -46,6 +48,10 @@ export default function BoardDetail({ boardNo }: Props) {
       setErrorMessage("");
       const res = await api.get(`/boards/${boardNo}`);
       setBoard(res.data);
+      if (servingBoardNoRef.current !== boardNo) {
+        setSelectedServingCount(1);
+        servingBoardNoRef.current = boardNo;
+      }
     } catch (error) {
       console.error("레시피 조회 실패:", error);
       setErrorMessage(getErrorMessage(error, "레시피를 불러오지 못했습니다."));
@@ -137,6 +143,7 @@ export default function BoardDetail({ boardNo }: Props) {
   const isOfficialPost = board?.isApiData === "Y" || board?.userNo === 0;
   const canFollowAuthor = isLoggedIn && !isOwner && !isOfficialPost;
   const youtubeVideoId = useMemo(() => getYoutubeVideoId(board?.url), [board?.url]);
+  const ingredientScale = selectedServingCount;
   const effectiveAllergies = useMemo(
     () => (isLoggedIn ? userAllergies : []),
     [isLoggedIn, userAllergies]
@@ -433,14 +440,33 @@ export default function BoardDetail({ boardNo }: Props) {
             <SectionTitle
               title="재료"
               action={
-                <button
-                  type="button"
-                  onClick={handleAddShoppingList}
-                  className={styles.cartButton}
-                  disabled={shoppingAdding}
-                >
-                  {shoppingAdding ? "추가 중" : "장보기 추가"}
-                </button>
+                <div className={styles.ingredientActions}>
+                  <div className={styles.detailServingStepper} aria-label="재료 인분 조절">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedServingCount((value) => Math.max(1, value - 1))}
+                      aria-label="인분 줄이기"
+                    >
+                      -
+                    </button>
+                    <strong>{selectedServingCount}인분</strong>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedServingCount((value) => Math.min(5, value + 1))}
+                      aria-label="인분 늘리기"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddShoppingList}
+                    className={styles.cartButton}
+                    disabled={shoppingAdding}
+                  >
+                    {shoppingAdding ? "추가 중" : "장보기 추가"}
+                  </button>
+                </div>
               }
             />
 
@@ -467,7 +493,9 @@ export default function BoardDetail({ boardNo }: Props) {
                     >
                       <span className={styles.ingredientName}>{ingredient.ingredientName}</span>
                       <span className={styles.ingredientAmount}>
-                        {[ingredient.quantity, ingredient.unit].filter(Boolean).join(" ")}
+                        {[formatScaledQuantity(ingredient.quantity, ingredientScale), ingredient.unit]
+                          .filter(Boolean)
+                          .join(" ")}
                       </span>
                     </div>
                   ))}
@@ -623,6 +651,44 @@ function formatCaloryValue(value?: string | null) {
 
   const range = CALORY_RANGES[value];
   return range ? `${value} · ${range}` : value;
+}
+
+function formatScaledQuantity(quantity?: string | null, scale = 1) {
+  const value = quantity?.trim() ?? "";
+  if (!value || scale === 1) return value;
+
+  const match = value.match(/^(\d+(?:\.\d+)?|\d+\s+\d+\/\d+|\d+\/\d+)(.*)$/);
+  if (!match) return value;
+
+  const parsed = parseQuantity(match[1]);
+  if (parsed == null) return value;
+
+  const scaled = parsed * scale;
+  const formatted = Number.isInteger(scaled)
+    ? String(scaled)
+    : Number(scaled.toFixed(2)).toString();
+
+  return `${formatted}${match[2] ?? ""}`;
+}
+
+function parseQuantity(value: string) {
+  const mixed = value.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixed) {
+    const whole = Number(mixed[1]);
+    const numerator = Number(mixed[2]);
+    const denominator = Number(mixed[3]);
+    return denominator === 0 ? null : whole + numerator / denominator;
+  }
+
+  const fraction = value.match(/^(\d+)\/(\d+)$/);
+  if (fraction) {
+    const numerator = Number(fraction[1]);
+    const denominator = Number(fraction[2]);
+    return denominator === 0 ? null : numerator / denominator;
+  }
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 function getYoutubeVideoId(url?: string | null) {

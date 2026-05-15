@@ -432,6 +432,40 @@
   color: #2d6a26;
 }
 
+.scrollTopButton {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(45, 106, 38, 0.2);
+  border-radius: 50%;
+  background: #2d6a26;
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 12px 24px rgba(45, 106, 38, 0.22);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+
+.scrollTopButton:hover {
+  background: #24551f;
+}
+
+.scrollTopVisible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 @media (max-width: 768px) {
   .ghInner {
     height: 60px;
@@ -578,4 +612,14 @@
     align-items: flex-start;
     padding-bottom: 92px;
   }
+<<<<<<< HEAD
+=======
+
+  .scrollTopButton {
+    right: 16px;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    width: 42px;
+    height: 42px;
+  }
+>>>>>>> main
 }

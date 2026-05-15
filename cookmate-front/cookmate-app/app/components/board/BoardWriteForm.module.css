@@ -69,6 +69,16 @@
   color: var(--green-text);
 }
 
+.servingBadge {
+  border: 1px solid var(--green-mid);
+  border-radius: 999px;
+  background: #f4fbef;
+  color: var(--green-text);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+}
+
 .coverUpload {
   position: relative;
   display: flex;
