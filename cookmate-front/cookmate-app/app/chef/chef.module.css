@@ -5,7 +5,6 @@
     padding: 0 24px; 
 }
 
-/* 타이틀 */
 .pageTitle { 
     font-size: 22px; 
     font-weight: 700; 
@@ -18,7 +17,6 @@
     margin-bottom: 24px; 
 }
 
-/* 컨트롤 (검색, 필터) */
 .controls { 
     display: flex; 
     align-items: center; 
@@ -74,7 +72,6 @@
     white-space: nowrap; 
 }
 
-/* 리스트 및 카드 */
 .chefList { 
     display: flex; 
     flex-direction: column; 
@@ -96,7 +93,6 @@
 .chefCard:last-child { border-bottom: none; }
 .chefCard:hover { background: #e8f5e1; }
 
-/* 카드 내부 요소 */
 .chefRank { 
     font-size: 22px; 
     font-weight: 800; 
@@ -181,7 +177,6 @@
     border: 1px solid rgba(0,0,0,0.1); 
 }
 
-/* 페이징 */
 .pagination { 
     display: flex; 
     justify-content: center; 

@@ -57,6 +57,9 @@ export default function ChefDetailPage() {
   const [activeTab, setActiveTab] = useState('recipe'); 
   const [loading, setLoading] = useState(true);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const RECIPES_PER_PAGE = 12; 
+  const PAGES_PER_BLOCK = 10;
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
 
@@ -88,6 +91,10 @@ export default function ChefDetailPage() {
     fetchChefData();
   }, [chefNo, loginUserNo, isMounted]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
+
   const handleFollow = async () => {
     if (!isLoggedIn || !loginUserNo) {
       alert("로그인이 필요한 기능입니다.");
@@ -111,13 +118,38 @@ export default function ChefDetailPage() {
     }
   };
 
+  const totalPages = Math.ceil(recipes.length / RECIPES_PER_PAGE);
+  const indexOfLastRecipe = currentPage * RECIPES_PER_PAGE;
+  const indexOfFirstRecipe = indexOfLastRecipe - RECIPES_PER_PAGE;
+  const currentRecipes = recipes.slice(indexOfFirstRecipe, indexOfLastRecipe);
+
+  const currentBlock = Math.ceil(currentPage / PAGES_PER_BLOCK);
+  const startPage = (currentBlock - 1) * PAGES_PER_BLOCK + 1;
+  const endPage = Math.min(startPage + PAGES_PER_BLOCK - 1, totalPages);
+
+  const pageNumbers = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pageNumbers.push(i);
+  }
+
+  const handlePrevBlock = () => {
+    if (startPage > 1) {
+      setCurrentPage(startPage - 1);
+    }
+  };
+
+  const handleNextBlock = () => {
+    if (endPage < totalPages) {
+      setCurrentPage(endPage + 1);
+    }
+  };
+
   if (!isMounted) return null;
   if (loading) return <div style={{padding: '100px', textAlign: 'center'}}>셰프 정보를 불러오는 중...</div>;
   if (!chef) return <div style={{padding: '100px', textAlign: 'center'}}>존재하지 않는 셰프입니다.</div>;
 
   return (
     <main className={styles.mainInner}>
-      {/* 1. 프로필 상단 영역 */}
       <div className={styles.profileCard}>
         <div className={styles.avatar}>
           <UserAvatar 
@@ -175,48 +207,80 @@ export default function ChefDetailPage() {
       </div>
 
       {activeTab === 'recipe' && (
-        <div className={styles.recipeGrid}>
-          {recipes.length > 0 ? (
-            recipes.map(recipe => (
-              <Link href={`/boards/${recipe.boardNo}`} key={recipe.boardNo} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div className={styles.recipeCard}>
-                  <div className={styles.recipeThumb} style={{ overflow: 'hidden' }}>
-                    {recipe.imageUrl ? (
-                      <img 
-                        src={resolveRecipeImageUrl(recipe.imageUrl)} 
-                        alt={recipe.title}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: '100%', height: '100%', backgroundColor: '#c4dba4', color: '#1e381b',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: '900', fontSize: '1.2rem', letterSpacing: '1px'
-                      }}>
-                        CookMate
+        <>
+          <div className={styles.recipeGrid}>
+            {currentRecipes.length > 0 ? (
+              currentRecipes.map(recipe => (
+                <Link href={`/boards/${recipe.boardNo}`} key={recipe.boardNo} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className={styles.recipeCard}>
+                    <div className={styles.recipeThumb} style={{ overflow: 'hidden' }}>
+                      {recipe.imageUrl ? (
+                        <img 
+                          src={resolveRecipeImageUrl(recipe.imageUrl)} 
+                          alt={recipe.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: '100%', height: '100%', backgroundColor: '#c4dba4', color: '#1e381b',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: '900', fontSize: '1.2rem', letterSpacing: '1px'
+                        }}>
+                          CookMate
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className={styles.recipeInfo}>
+                      <div className={styles.recipeMeta}>
+                        <span>{recipe.boardPostdate.split('T')[0]}</span>
                       </div>
-                    )}
-                  </div>
-                  
-                  <div className={styles.recipeInfo}>
-                    <div className={styles.recipeMeta}>
-                      <span>{recipe.boardPostdate.split('T')[0]}</span>
-                    </div>
-                    <div className={styles.recipeTitle}>{recipe.title}</div>
-                    <div className={styles.recipeFooter}>
-                      <span className={styles.recipeTag}>{recipe.category}</span>
-                      <span className={styles.recipeLikes}>❤️ {recipe.likesCount}</span>
+                      <div className={styles.recipeTitle}>{recipe.title}</div>
+                      <div className={styles.recipeFooter}>
+                        <span className={styles.recipeTag}>{recipe.category}</span>
+                        <span className={styles.recipeLikes}>❤️ {recipe.likesCount}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <div style={{gridColumn: '1/-1', padding: '40px', textAlign: 'center', color: '#888'}}>
-              등록된 공개 레시피가 없습니다.
+                </Link>
+              ))
+            ) : (
+              <div style={{gridColumn: '1/-1', padding: '40px', textAlign: 'center', color: '#888'}}>
+                등록된 공개 레시피가 없습니다.
+              </div>
+            )}
+          </div>
+
+          {totalPages > 0 && (
+            <div className={styles.pagination}>
+              <button 
+                className={styles.navButton} 
+                onClick={handlePrevBlock} 
+                disabled={startPage === 1}
+              >
+                &lt;
+              </button>
+              
+              {pageNumbers.map(num => (
+                <button
+                  key={num}
+                  className={`${styles.pageButton} ${currentPage === num ? styles.activePage : ''}`}
+                  onClick={() => setCurrentPage(num)}
+                >
+                  {num}
+                </button>
+              ))}
+
+              <button 
+                className={styles.navButton} 
+                onClick={handleNextBlock} 
+                disabled={endPage === totalPages}
+              >
+                &gt;
+              </button>
             </div>
           )}
-        </div>
+        </>
       )}
 
       {activeTab === 'comment' && (
@@ -240,7 +304,7 @@ export default function ChefDetailPage() {
                 <div className={styles.commentContent}>{c.commentContent}</div>
                 
                 <div className={styles.commentTarget}>
-                  📌 원문: 
+                  원문: 
                   <Link href={`/boards/${c.boardNo}`} style={{ marginLeft: '4px', color: '#4a7c59', textDecoration: 'none' }}>
                     <strong>{c.boardTitle}</strong>
                   </Link>

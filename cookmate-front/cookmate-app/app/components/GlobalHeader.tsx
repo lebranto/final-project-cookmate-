@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./CommonLayout.module.css";
+import UserAvatar from '@/app/components/UserAvatar';
 
 type UserRole = "ROLE_USER" | "ROLE_ADMIN";
 
@@ -285,19 +286,11 @@ export default function GlobalHeader() {
           {isLoggedIn ? (
             <>
               <div className={styles.ghUserSummary}>
-                {currentUser?.profileImageUrl ? (
-                  <span
-                    aria-hidden="true"
-                    className={styles.ghUserAvatar}
-                    style={{ backgroundImage: `url(${currentUser.profileImageUrl})` }}
-                  />
-                ) : (
-                 <span
-                    aria-hidden="true"
-                    className={styles.ghUserAvatar}
-                    style={{ backgroundImage: "url(/default-profile.png)" }}
-                  />
-                )}
+                <UserAvatar 
+                  imageUrl={currentUser?.profileImageUrl} 
+                  name={currentUser?.nickname || currentUser?.userEmail || "사용자"} 
+                  size={30} 
+                />
                 <span className={styles.ghUserName}>
                   {currentUser?.nickname ?? currentUser?.userEmail ?? "사용자"}
                 </span>

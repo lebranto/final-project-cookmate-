@@ -1,0 +1,199 @@
+.main { padding-bottom: 60px; }
+
+.inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.pageTitle {
+  margin-bottom: 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.pageSubtitle {
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #888;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+}
+
+.tab {
+  padding: 8px 18px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  border-color: #3a6e22;
+  background: #e8f5e1;
+  color: #3a6e22;
+  font-weight: 700;
+}
+
+.tabCount {
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.filterSelect { 
+    padding: 8px 32px 8px 14px; 
+    border: 1px solid rgba(0, 0, 0, 0.1); 
+    border-radius: 10px; 
+    font-size: 13px; 
+    font-family: inherit; 
+    background: #ffffff; 
+    color: #1a1a1a; 
+    appearance: none; 
+    -webkit-appearance: none; 
+    -moz-appearance: none;
+    cursor: pointer; 
+    outline: none; 
+    transition: border-color .15s; 
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); 
+    background-repeat: no-repeat; 
+    background-position: right 12px center; 
+    background-size: 10px 6px;
+}
+
+.filterSelect:focus { border-color: #3a6e22; }
+
+.commentList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.commentCard {
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  background: #fff;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.commentCard:hover { border-color: #3a6e22; }
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.avatarWrap { flex-shrink: 0; }
+
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nickname {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.date {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.commentContent {
+  margin-bottom: 16px;
+  padding-left: 2px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+  white-space: pre-wrap;
+}
+
+.cardDivider {
+  margin-bottom: 14px;
+  border-top: 1px dashed #eee;
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.sourceLabel {
+  color: #888;
+  font-weight: 500;
+}
+
+.boardLink {
+  color: #3a6e22;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.boardLink:hover { text-decoration: underline; }
+
+.replyBadge {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.emptyBox {
+  padding: 80px 0;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 30px;
+}
+
+.pageBtn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.pageBtn.active {
+  border-color: #3a6e22;
+  background: #3a6e22;
+  color: #fff;
+}

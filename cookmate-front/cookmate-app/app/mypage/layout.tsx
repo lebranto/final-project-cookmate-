@@ -67,8 +67,11 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
   const menuItems = [
     { name: '내가 만든 레시피', href: '/mypage/recipes' },
     { name: '스크랩 목록', href: '/mypage/scraps' },
+    { name: '팔로우 관리', href: '/mypage/follows' },
+    { name: '댓글 관리', href: '/mypage/comments' },
     { name: '문의 내역', href: '/mypage/inquiries' },
     { name: '회원 정보 수정', href: '/mypage/profile' },
+    
   ];
 
   if (!isMounted) return null;

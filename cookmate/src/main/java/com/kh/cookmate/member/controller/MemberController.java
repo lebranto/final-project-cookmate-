@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kh.cookmate.member.dto.FollowDto;
 import com.kh.cookmate.member.dto.InquiryDto;
 import com.kh.cookmate.member.dto.MemberDto;
 import com.kh.cookmate.member.dto.MemberUpdateDto;
+import com.kh.cookmate.member.dto.MyCommentDto;
 import com.kh.cookmate.member.dto.RecipeDto;
 import com.kh.cookmate.member.service.MemberService;
 
@@ -75,6 +77,16 @@ public class MemberController {
             @RequestParam long loginUserNo,
             @RequestParam String targetEmail) {
         return ResponseEntity.ok(memberService.toggleFollow(loginUserNo, targetEmail));
+    }
+    
+    @GetMapping("/follow/list")
+    public ResponseEntity<Map<String, List<FollowDto>>> getFollowList(
+            @RequestParam long userNo,
+            @RequestParam(defaultValue = "newest") String filter) {
+        
+        Map<String, List<FollowDto>> followData = memberService.getFollowList(userNo, filter);
+        
+        return ResponseEntity.ok(followData);
     }
     
     //마이페이지 상단 통계 조회 (레시피, 스크랩, 문의 개수)
@@ -190,7 +202,6 @@ public class MemberController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        // Map에 담아 반환 (이미 만들어두신 구조 유지)
         Map<String, Object> response = new HashMap<>();
         response.put("userNo", member.getUserNo());
         response.put("userEmail", member.getUserEmail());
@@ -203,10 +214,18 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * 2. 회원 정보 통합 수정 (프로필 + 비밀번호 + 알레르기)
-     * POST /users/profile/update
-     */
+    @GetMapping("/comments/list")
+    public ResponseEntity<Map<String, List<MyCommentDto>>> getMyCommentList(
+            @RequestParam long userNo,
+            @RequestParam(defaultValue = "newest") String filter) {
+        
+        // 서비스 호출하여 데이터 가져오기
+        Map<String, List<MyCommentDto>> commentData = memberService.getCommentList(userNo, filter);
+        
+        return ResponseEntity.ok(commentData);
+    }
+    
+    // 회원 정보 통합 수정 (프로필 + 비밀번호 + 알레르기)
     @PostMapping("/profile/update")
     public ResponseEntity<String> updateProfile(@RequestBody MemberUpdateDto updateDto) {
         log.info("회원 통합 수정 요청: {}", updateDto);
@@ -221,13 +240,8 @@ public class MemberController {
         }
     }
     
-    /**
-     * 3. 현재 비밀번호 확인 (수정 전 검증용)
-     * POST /users/profile/verify-password
-     */
-    @PostMapping("/profile/verify-password")
+    //3. 현재 비밀번호 확인
     public ResponseEntity<Map<String, Boolean>> verifyPassword(@RequestBody Map<String, Object> payload) {
-        // null 체크 및 형변환 예외 방지
         Object userNoObj = payload.get("userNo");
         String password = (String) payload.get("password");
 
@@ -251,18 +265,14 @@ public class MemberController {
             @PathVariable long userNo, 
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         
-        // 1. 헤더에 토큰이 잘 들어왔는지 검사 (방어 로직)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("토큰이 존재하지 않거나 형식이 잘못되었습니다.");
         }
 
-        // 2. "Bearer " (7글자)를 잘라내고 순수 엑세스 토큰 문자열만 추출
         String accessToken = authHeader.substring(7);
 
-        // 3. 서비스로 유저 번호와 토큰을 넘겨서 비즈니스 로직 실행
         String result = memberService.withdrawKakaoUser(userNo, accessToken);
 
-        // 4. 서비스에서 돌아온 결과에 따라 프론트엔드에 응답 쏴주기
         if ("SUCCESS".equals(result)) {
             return ResponseEntity.ok("탈퇴가 완료되었습니다.");
         } else if ("TOKEN_EXPIRED".equals(result)) {

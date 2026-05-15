@@ -1,0 +1,218 @@
+.main { padding-bottom: 60px; } 
+.inner { 
+    max-width: 860px; 
+    margin: 0 auto; 
+    padding: 0 24px; 
+}
+
+.pageTitle { 
+    font-size: 22px; 
+    font-weight: 700; 
+    margin-bottom: 4px; 
+    color: #1a1a1a; 
+}
+.pageSubtitle { 
+    font-size: 13px; 
+    color: #888; 
+    margin-bottom: 24px; 
+}
+
+.tabs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 9px 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    background-color: #ffffff;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+.tab:hover {
+    border-color: #3a6e22;
+    background-color: #f9fbf8;
+}
+
+.tab.active {
+    color: #3a6e22;
+    background-color: #e8f5e1;
+    border-color: #3a6e22;
+    font-weight: 700;
+}
+
+.tabCount {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+.resultCount { 
+    font-size: 13px; 
+    color: #888; 
+    margin-left: auto; 
+    white-space: nowrap; 
+}
+
+.chefList { 
+    display: flex; 
+    flex-direction: column; 
+    background: #ffffff; 
+    border-radius: 14px; 
+    border: 1px solid rgba(0,0,0,0.1); 
+    overflow: hidden; 
+}
+
+.chefCard { 
+    display: flex; 
+    align-items: center; 
+    gap: 20px; 
+    padding: 22px 24px; 
+    border-bottom: 1px solid rgba(0,0,0,0.1); 
+    transition: background .15s; 
+    color: #1a1a1a; 
+    text-decoration: none; 
+}
+
+.chefCard:last-child { border-bottom: none; }
+.chefCard:hover { background: #f9fbf8; }
+
+.chefRank { 
+    font-size: 20px; 
+    font-weight: 800; 
+    color: #ccc; 
+    min-width: 30px; 
+    text-align: center; 
+    flex-shrink: 0; 
+}
+
+.chefAvatar { 
+    width: 62px; 
+    height: 62px; 
+    border-radius: 50%; 
+    border: 1px solid rgba(0,0,0,0.08); 
+    flex-shrink: 0; 
+    overflow: hidden;
+}
+
+.chefInfo { flex: 1; min-width: 0; }
+.chefNameRow { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 8px; 
+}
+.chefName { 
+    font-size: 16px; 
+    font-weight: 700; 
+    color: #3a6347; 
+}
+
+.btnFollow { 
+    padding: 5px 14px; 
+    border-radius: 20px; 
+    font-size: 12px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: all .15s; 
+    border: 1.5px solid #3a6e22; 
+    background: #ffffff; 
+    color: #3a6e22; 
+}
+
+.btnFollow:hover, .following { 
+    background: #3a6e22; 
+    color: white; 
+}
+
+.chefStats { 
+    display: flex; 
+    gap: 20px; 
+}
+.chefStat { 
+    display: flex; 
+    align-items: center; 
+    gap: 5px; 
+    font-size: 13px; 
+    color: #888; 
+}
+.chefStatNum { 
+    font-weight: 600; 
+    color: #1a1a1a; 
+}
+
+.chefEmpty { 
+    padding: 60px 0; 
+    text-align: center; 
+    color: #999; 
+    background: #ffffff; 
+    border-radius: 14px; 
+    border: 1px solid rgba(0,0,0,0.1); 
+}
+
+.pagination { 
+    display: flex; 
+    justify-content: center; 
+    gap: 6px; 
+    margin-top: 28px; 
+}
+.pageBtn { 
+    width: 36px; 
+    height: 36px; 
+    border-radius: 10px; 
+    border: 1px solid rgba(0,0,0,0.1); 
+    background: #ffffff; 
+    font-size: 13px; 
+    cursor: pointer; 
+    transition: all .15s; 
+}
+.pageBtn.active { 
+    background: #3a6e22; 
+    color: white; 
+    border-color: #3a6e22; 
+}
+.pageBtn:disabled { 
+    opacity: 0.3; 
+    cursor: not-allowed; 
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.filterSelect { 
+    padding: 8px 32px 8px 14px; 
+    border: 1px solid rgba(0, 0, 0, 0.1); 
+    border-radius: 10px; 
+    font-size: 13px; 
+    font-family: inherit; 
+    background: #ffffff; 
+    color: #1a1a1a; 
+    appearance: none; 
+    -webkit-appearance: none; 
+    -moz-appearance: none;
+    cursor: pointer; 
+    outline: none; 
+    transition: border-color .15s; 
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23888888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); 
+    background-repeat: no-repeat; 
+    background-position: right 12px center; 
+    background-size: 10px 6px;
+}
+
+.filterSelect:focus { border-color: #3a6e22; }

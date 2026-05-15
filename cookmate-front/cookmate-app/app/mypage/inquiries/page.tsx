@@ -19,7 +19,6 @@ const PER_PAGE = 10;
 export default function InquiriesPage() {
   const router = useRouter();
   
-  // 🌟 [핵심] 하이드레이션 에러 방지용 상태
   const [isMounted, setIsMounted] = useState(false);
   
   const [inquiries, setInquiries] = useState<Inquiry[]>([]); 
@@ -29,14 +28,11 @@ export default function InquiriesPage() {
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
 
-  // 1. 마운트 상태 체크
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // 2. 데이터 페칭 로직
   useEffect(() => {
-    // 마운트 전이거나 로그인 정보가 없으면 실행 안 함
     if (!isMounted || !loginUserNo) {
       if (isMounted && !loginUserNo) setLoading(false);
       return;
@@ -61,7 +57,6 @@ export default function InquiriesPage() {
     fetchInquiries();
   }, [loginUserNo, isMounted]);
 
-  // 페이징 로직
   const totalPages = Math.max(1, Math.ceil(inquiries.length / PER_PAGE));
   const pageItems = inquiries.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
@@ -92,28 +87,20 @@ export default function InquiriesPage() {
     );
   };
 
-  // ==========================================
-  // 🌟 조건부 렌더링 순서 (이 순서가 에러를 잡는 핵심입니다)
-  // ==========================================
-
-  // 1. 마운트 전에는 아무것도 렌더링하지 않음 (서버 HTML과 클라이언트 초기 결과 일치 유도)
   if (!isMounted) return null;
 
-  // 2. 로그인 여부 체크
   if (!isLoggedIn || !loginUserNo) {
     return <div style={{ padding: '60px', textAlign: 'center' }}>로그인이 필요한 서비스입니다.</div>;
   }
 
-  // 3. 데이터 로딩 중 표시
   if (loading) {
     return <div style={{ padding: '60px', textAlign: 'center' }}>문의 내역을 불러오는 중...</div>;
   }
 
-  // 4. 최종 리스트 화면
   return (
     <div>
       <div className={styles.sectionHeader}>
-        <h2 className={styles.sectionTitle}>💬 문의 내역</h2>
+        <h2 className={styles.sectionTitle}>문의 내역</h2>
         <button className={styles.btnOutline} onClick={handleWriteClick}>+ 문의하기</button>
       </div>
 
@@ -137,7 +124,7 @@ export default function InquiriesPage() {
           })
         ) : (
           <div className={styles.empty}>
-            <div className={styles.emptyIcon}>💬</div>
+            <div className={styles.emptyIcon}></div>
             <p>등록된 문의 내역이 없습니다.</p>
           </div>
         )}

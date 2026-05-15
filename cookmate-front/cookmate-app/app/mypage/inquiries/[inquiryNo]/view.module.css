@@ -1,39 +1,162 @@
-/* app/mypage/inquiries/[inquiryNo]/view.module.css */
+.mainInner {
+  max-width: 760px;
+  margin: 0 auto;
+}
 
-.mainInner { max-width: 760px; margin: 0 auto; }
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
 
-.pageHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
-.pageTitle { font-size: 20px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.pageTitle {
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-.card { background: #ffffff; border-radius: 12px; border: 1px solid rgba(0,0,0,0.1); margin-bottom: 16px; overflow: hidden; }
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
 
-/* 문의 헤더 영역 */
-.inquiryHeader { padding: 24px 28px 20px; border-bottom: 1px solid rgba(0,0,0,0.1); }
-.inquiryMeta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.inquiryHeader {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
 
-.badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.badgeAccount { background: #e8f0eb; color: #4a7c59; }
-.badgeRecipe { background: #fef0e6; color: #e8914a; }
-.badgeDone { background: #e8f5e1; color: #2d5519; }
-.badgePending { background: #fff8e1; color: #a07800; }
+.inquiryMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
 
-.inquiryDate { font-size: 12px; color: #888; }
-.inquiryTitle { font-size: 18px; font-weight: 700; line-height: 1.4; color: #1a1a1a; }
+.badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
 
-/* 문의 본문 영역 */
+.badgeAccount { 
+    background: #e8f0eb; 
+    color: #4a7c59; 
+}
+.badgeRecipe { 
+    background: #fef0e6; 
+    color: #e8914a; 
+}
+.badgeDone { 
+    background: #e8f5e1; 
+    color: #2d5519; 
+}
+.badgePending { 
+    background: #fff8e1; 
+    color: #a07800; 
+}
+
+.inquiryDate { 
+    font-size: 12px; 
+    color: #888; 
+}
+
+.inquiryTitle {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #1a1a1a;
+}
+
 .inquiryBody { padding: 24px 28px; }
-.inquiryContent { font-size: 14px; line-height: 1.8; color: #2d2d2d; white-space: pre-wrap; }
 
-/* 관리자 답변 영역 */
-.answerSection { padding: 24px 28px; background: #e8f5e1; border-top: 1px solid rgba(0,0,0,0.1); }
-.answerLabel { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #3a6e22; margin-bottom: 14px; }
-.answerContent { font-size: 14px; line-height: 1.8; color: #2d2d2d; background: #ffffff; border-radius: 8px; padding: 16px; border: 1px solid rgba(0,0,0,0.1); }
-.answerDate { font-size: 11px; color: #888; margin-top: 8px; text-align: right; }
-.noAnswer { font-size: 13px; color: #888; padding: 10px 0; }
+.inquiryContent {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #2d2d2d;
+  white-space: pre-wrap;
+}
 
-/* 하단 버튼 영역 */
-.actionFooter { display: flex; justify-content: flex-end; gap: 10px; padding: 20px 28px; border-top: 1px solid rgba(0,0,0,0.1); }
-.btn { padding: 9px 22px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .15s; }
-.btnBack { background: #ffffff; border: 1px solid rgba(0,0,0,0.1); color: #2d2d2d; text-decoration: none; display: inline-flex; align-items: center; }
-.btnEdit { background: #ffffff; border: 1px solid #3a6e22; color: #3a6e22; }
-.btnDelete { background: #ffffff; border: 1px solid #e05252; color: #e05252; }
+.answerSection {
+  padding: 24px 28px;
+  background: #e8f5e1;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.answerLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3a6e22;
+  margin-bottom: 14px;
+}
+
+.answerContent {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #2d2d2d;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.answerDate {
+  font-size: 11px;
+  color: #888;
+  margin-top: 8px;
+  text-align: right;
+}
+
+.noAnswer {
+  font-size: 13px;
+  color: #888;
+  padding: 10px 0;
+}
+
+.actionFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 20px 28px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.btn {
+  padding: 9px 22px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .15s;
+}
+
+.btnBack {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.1);
+  color: #2d2d2d;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btnEdit {
+  background: #ffffff;
+  border: 1px solid #3a6e22;
+  color: #3a6e22;
+}
+
+.btnDelete {
+  background: #ffffff;
+  border: 1px solid #e05252;
+  color: #e05252;
+}
