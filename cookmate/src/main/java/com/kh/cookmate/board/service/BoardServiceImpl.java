@@ -288,7 +288,8 @@ public class BoardServiceImpl implements BoardService {
         }
         
         
-        // 알림이 공개일때만 알림이 가도록 하는 코드
+        // 비공개로 글을 올리고 공개로 올릴때 알림
+		// 공개 -> 비공개 -> 공개는 알림이 안오도록
         if (previousOpen != 'Y' && dto.getOpen() == 'Y') {
         	
         	Map<String, Object> params = new HashMap<>();
