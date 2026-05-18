@@ -22,5 +22,6 @@ public class Board {
     private char open;            // N: 비공개, Y: 공개
 	private char isApiData;
 	private String apiRecipeId;
+	private String userEmail;
 	
 }

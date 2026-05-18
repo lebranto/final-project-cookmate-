@@ -469,7 +469,8 @@ export default function GlobalHeader() {
               <div className={styles.ghUserSummary}>
                 <UserAvatar 
                   imageUrl={currentUser?.profileImageUrl} 
-                  name={currentUser?.nickname || currentUser?.userEmail || "사용자"} 
+                  name={currentUser?.nickname} 
+                  email={currentUser?.userEmail}
                   size={30} 
                 />
                 <span className={styles.ghUserName}>

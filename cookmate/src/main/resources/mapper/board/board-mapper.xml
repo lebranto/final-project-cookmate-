@@ -28,6 +28,9 @@
         <result property="recipeCount"  column="RECIPE_COUNT"/>
         <result property="followerCount" column="FOLLOWER_COUNT"/>
         <result property="followingCount" column="FOLLOWING_COUNT"/>
+        <result property="userEmail" column="USER_EMAIL"/>
+        <result property="following" column="FOLLOWING" javaType="boolean"/>
+        <result property="profileImageUrl" column="PROFILE_IMAGE_URL" />
         <collection property="ingredientSets"
                     column="BOARD_NO"
                     select="selectIngredientSetDetail"/>
@@ -219,12 +222,24 @@
     </insert>
 
     <!-- 레시피 상세 조회 -->
-    <select id="getBoardDetail" parameterType="int" resultMap="boardDetailMap">
+    <select id="getBoardDetail" parameterType="map" resultMap="boardDetailMap">
         SELECT
             b.BOARD_NO, b.USER_NO, b.TYPE_NO, b.BOARD_TITLE,
-            COALESCE(u.NICKNAME, b.NICKNAME) AS NICKNAME, b.INTRODUCE, b.IMAGE_URL, b.URL,
+            COALESCE(u.NICKNAME, b.NICKNAME) AS NICKNAME,
+             b.INTRODUCE, b.IMAGE_URL, b.URL,u.USER_EMAIL,u.PROFILE_IMAGE_URL,
             b.OPEN, b.IS_API_DATA, b.LIKES_COUNT, DATE_FORMAT(b.BOARD_POSTDATE, '%Y년 %c월 %e일') AS BOARD_POSTDATE,
             t.TYPE_NAME, t.DIFFICULT, t.COOK_TIME, t.CALORY, t.AI,
+            
+            CASE
+	            WHEN b.IS_API_DATA = 'Y' OR u.USER_EMAIL IS NULL OR #{loginUserNo} IS NULL OR #{loginUserNo} = '' THEN 0
+	            ELSE (
+	                SELECT COUNT(*)
+	                FROM FOLLOWING f
+	                WHERE f.USER_NO = #{loginUserNo}
+	                  AND f.FOLLOWING_ID = u.USER_EMAIL
+	            )
+        	END AS FOLLOWING,
+        
             CASE
                 WHEN b.IS_API_DATA = 'Y' THEN (
                     SELECT COUNT(*)

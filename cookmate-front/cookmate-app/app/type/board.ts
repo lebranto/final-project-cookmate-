@@ -21,7 +21,9 @@ export interface Board {
   followingCount?: number;
   ingredientSets: IngredientSet[];
   cookSteps: CookStep[];
-
+  userEmail: string;
+  following: boolean;
+  
   boardPostdate: string;
 }
 

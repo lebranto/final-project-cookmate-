@@ -160,7 +160,8 @@ export default function ChefDetailPage() {
         <div className={styles.avatar}>
           <UserAvatar 
             imageUrl={chef.profileImageUrl} 
-            name={chef.userEmail || chef.nickname} 
+            name={chef.nickname} 
+            email={chef.userEmail}
             size={120} 
           />
         </div>

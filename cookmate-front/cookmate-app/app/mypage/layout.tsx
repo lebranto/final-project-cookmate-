@@ -93,7 +93,8 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
             <div className={styles.avatar}>
               <UserAvatar 
                 imageUrl={userData?.profileImageUrl} 
-                name={userData?.userEmail || userData?.nickname || 'user'} 
+                name={userData?.nickname} 
+                email={userData?.userEmail}
                 size="100%" 
               />
             </div>

@@ -168,7 +168,8 @@ export default function RankingPage() {
                   <div className={styles.chefAvatar}>
                     <UserAvatar 
                       imageUrl={chef.profileImageUrl} 
-                      name={chef.userEmail || chef.nickname} 
+                      name={chef.nickname} 
+                      email={chef.userEmail}
                       size="100%" 
                     />
                   </div>

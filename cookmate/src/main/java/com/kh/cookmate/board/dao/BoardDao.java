@@ -35,7 +35,7 @@ public interface BoardDao {
 
 	int countApiRecipeDuplicate(Map<String, Object> params);
 
-	BoardDetail getBoardDetail(int boardNo);
+	BoardDetail getBoardDetail(Map<String, Object> params);
 
 	List<BoardSearchResult> searchBoards(BoardSearchRequest request);
 

@@ -21,6 +21,7 @@ public class BoardDto {
         private char open;          // Y: 공개, N: 비공개
         private char isApiData;     // ← 추가 Y: 공식API, N: 사용자
         
+        
         // TAG
         private String typeName;    // 한식/중식/일식/양식/샐러드/디저트
         private String difficult;   // 쉬움/보통/어려움
@@ -62,6 +63,9 @@ public class BoardDto {
         private int followingCount;
         private List<IngredientSetDto.SetDetail> ingredientSets;
         private List<CookStepDto.StepDetail> cookSteps;
+        private String userEmail; // 프로필 용
+        private boolean following;
+        private String profileImageUrl;//프로필 이미지
     }
     
     // 레시피 수정

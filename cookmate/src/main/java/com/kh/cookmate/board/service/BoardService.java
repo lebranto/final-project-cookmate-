@@ -16,7 +16,7 @@ public interface BoardService{
 
 	int insertRecipe(BoardWrite dto);
 
-	BoardDetail getBoardDetail(int boardNo);
+	BoardDetail getBoardDetail(int boardNo, Integer loginUserNo);
 
 	BoardSearchResponse searchBoards(BoardSearchRequest request);
 
