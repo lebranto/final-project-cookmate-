@@ -6,11 +6,15 @@ const AVATAR_COLORS = ["#92A1C6", "#146A7C", "#F0AB3D", "#C271B4", "#C20D90"];
 
 interface UserAvatarProps {
   imageUrl?: string | null; // DB에서 가져온 이미지 URL (또는 boring: 식별자)
-  name: string;             // 이미지가 없을 때 시드로 쓸 값 (이메일이나 닉네임)
+  name?: string | null;    // 이미지가 없을 때 시드로 쓸 값 (이메일이나 닉네임)
+  email?: string | null;
   size?: number | string;   // 아바타 크기 (기본값 40)
 }
 
-export default function UserAvatar({ imageUrl, name, size = 40 }: UserAvatarProps) {
+export default function UserAvatar({ imageUrl, name, email, size = 40 }: UserAvatarProps) {
+  const rawSeed = name || email || "User";
+  const seedName = rawSeed.trim().toLowerCase();
+
   // imageUrl이 존재하면서 && "boring:"으로 시작하는지 확인
   const isBoringAvatar = imageUrl && imageUrl.startsWith("boring:");
 
@@ -58,7 +62,7 @@ export default function UserAvatar({ imageUrl, name, size = 40 }: UserAvatarProp
     <div style={wrapperStyle}>
       <Avatar 
         size="100%" 
-        name={name} 
+        name={seedName} 
         variant="beam" 
         colors={AVATAR_COLORS} 
       />

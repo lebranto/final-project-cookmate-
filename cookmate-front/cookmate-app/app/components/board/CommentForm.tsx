@@ -60,7 +60,7 @@ export default function CommentForm({
         <div className={styles.commentAvatar}>
           <UserAvatar 
             imageUrl={userInfo?.profileImageUrl} 
-            name={userInfo?.nickname ||  "guest"} 
+            name={userInfo?.nickname}
             size="100%" 
           />
         </div>

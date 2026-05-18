@@ -244,30 +244,22 @@
   object-fit: cover;
 }
 
-.followButton {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  border: 0;
-  border-radius: 18px;
-  background: #3a6e22;
-  color: #fff;
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 14px;
-  transition: opacity 0.2s ease;
-}
 
-.followButton:hover {
-  opacity: 0.85;
+.btnFollow { 
+    padding: 5px 14px; 
+    border-radius: 20px; 
+    font-size: 12px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: all .15s; 
+    border: 1.5px solid #3a6e22; 
+    background: #ffffff; 
+    color: #3a6e22; 
+    white-space: nowrap; 
 }
-
-.followButtonActive {
-  border: 1px solid #3a6e22;
-  background: #fff;
-  color: #2d5519;
+.btnFollow:hover, .following { 
+    background: #3a6e22; 
+    color: white; 
 }
 
 .dateText {

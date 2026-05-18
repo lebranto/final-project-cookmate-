@@ -241,7 +241,8 @@ export default function ProfileEditPage() {
           <div className={styles.avatarBig}>
             <UserAvatar 
               imageUrl={displayValue} 
-              name={member.userEmail || "user"} 
+              name={member.nickname} 
+              email={member.userEmail}
               size={90} 
             />
           </div>

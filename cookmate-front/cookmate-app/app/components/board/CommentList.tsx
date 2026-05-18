@@ -172,8 +172,8 @@ function CommentItem({
     <div className={isReply ? styles.replyItem : styles.commentItem}>
       <div className={isReply ? styles.replyAvatar : styles.commentAvatar}>
         <UserAvatar
-          imageUrl={comment.profileImageUrl}
-          name={comment.nickname || "user"}
+          imageUrl={comment.profileImageUrl} 
+          name={comment.nickname}
           size="100%"
         />
       </div>

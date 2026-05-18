@@ -120,8 +120,14 @@ public class BoardServiceImpl implements BoardService {
     }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
 
 	@Override
-    public BoardDetail getBoardDetail(int boardNo) {
-        return boardDao.getBoardDetail(boardNo);
+    public BoardDetail getBoardDetail(int boardNo,Integer loginUserNo) {
+		
+		Map<String, Object> params = new HashMap<>();
+	    
+	    params.put("boardNo", boardNo);
+	    params.put("loginUserNo", loginUserNo);
+	    
+        return boardDao.getBoardDetail(params);
     }
 
 	@Override
@@ -284,7 +290,12 @@ public class BoardServiceImpl implements BoardService {
         
         // 알림이 공개일때만 알림이 가도록 하는 코드
         if (previousOpen != 'Y' && dto.getOpen() == 'Y') {
-            BoardDetail detail = boardDao.getBoardDetail(boardNo);
+        	
+        	Map<String, Object> params = new HashMap<>();
+            params.put("boardNo", boardNo);
+            params.put("loginUserNo", null);
+            
+            BoardDetail detail = boardDao.getBoardDetail(params);
             if (detail != null) {
                 notificationService.notifyRecipeCreated(boardNo, detail.getUserNo());
             }

@@ -68,8 +68,8 @@ public class BoardDaoImpl implements BoardDao{
 	}
 
 	@Override
-	public BoardDetail getBoardDetail(int boardNo) {
-		return session.selectOne("boardmapper.getBoardDetail", boardNo);
+	public BoardDetail getBoardDetail(Map<String, Object> params) {
+		return session.selectOne("boardmapper.getBoardDetail", params);
 	}
 
 	@Override

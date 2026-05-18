@@ -32,7 +32,9 @@ export default function BoardDetail({ boardNo }: Props) {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [isScrapped, setIsScrapped] = useState(false);
-  const [followVersion, setFollowVersion] = useState(0);
+  
+  const [isFollowing, setIsFollowing] = useState(false);
+  
   const [shoppingAdding, setShoppingAdding] = useState(false);
   const [selectedServingCount, setSelectedServingCount] = useState(1);
   const [userAllergies, setUserAllergies] = useState<string[]>([]);
@@ -40,14 +42,20 @@ export default function BoardDetail({ boardNo }: Props) {
   const didInitialLoadRef = useRef(false);
   const servingBoardNoRef = useRef<number | null>(null);
   const { userInfo, isLoggedIn } = useUserInfoActions();
+  const loginUserNo = userInfo?.userNo;
   const router = useRouter();
 
   const fetchBoard = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMessage("");
-      const res = await api.get(`/boards/${boardNo}`);
+      const res = await api.get(`/boards/${boardNo}`, {
+        params: { loginUserNo: loginUserNo || "" }
+      });
       setBoard(res.data);
+      
+      setIsFollowing(res.data.following || false);
+      
       if (servingBoardNoRef.current !== boardNo) {
         setSelectedServingCount(1);
         servingBoardNoRef.current = boardNo;
@@ -58,7 +66,7 @@ export default function BoardDetail({ boardNo }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [boardNo]);
+  }, [boardNo, loginUserNo]);
 
   useEffect(() => {
     loadingRef.current = loading;
@@ -148,11 +156,7 @@ export default function BoardDetail({ boardNo }: Props) {
     () => (isLoggedIn ? userAllergies : []),
     [isLoggedIn, userAllergies]
   );
-  const isFollowing = useMemo(() => {
-    void followVersion;
-    if (!isLoggedIn || !userInfo || !board) return false;
-    return window.localStorage.getItem(getFollowStorageKey(userInfo.userNo, board.userNo)) === "Y";
-  }, [board, followVersion, isLoggedIn, userInfo]);
+  
   const allergyMatches = useMemo(
     () => findAllergyMatches(board, effectiveAllergies),
     [board, effectiveAllergies]
@@ -231,19 +235,27 @@ export default function BoardDetail({ boardNo }: Props) {
     }
   };
 
-  const handleFollow = () => {
-    if (!isLoggedIn || !userInfo || !board) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
+  const handleFollow = async () => {
+  if (!isLoggedIn || !loginUserNo || !board) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
 
-    const next = !isFollowing;
-    window.localStorage.setItem(
-      getFollowStorageKey(userInfo.userNo, board.userNo),
-      next ? "Y" : "N"
-    );
-    setFollowVersion((version) => version + 1);
-  };
+  try {
+    const res = await api.post('/users/follow', null, {
+      params: { loginUserNo: loginUserNo, targetEmail: board.userEmail }
+    });
+
+    if (res.status === 200) {
+      const newStatus = res.data; 
+      setIsFollowing(newStatus);
+      setBoard(prev => prev ? { ...prev, followerCount: (prev.followerCount ?? 0) + (newStatus ? 1 : -1) } : null);
+    }
+  } catch (err: any) {
+    if (err.response?.status === 400) alert(err.response.data);
+    else alert("팔로우 처리에 실패했습니다.");
+  }
+};
 
   const handleDelete = async () => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
@@ -391,11 +403,16 @@ export default function BoardDetail({ boardNo }: Props) {
             <h1 className={styles.title}>{board.boardTitle}</h1>
 
             <div className={styles.authorRow}>
-              <div className={styles.authorLink}>
-                {/* UserAvatar*/}
+              
+              <Link 
+                href={`/chef/${board.userNo}`} 
+                className={styles.authorLink} 
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              > 
                 <UserAvatar
-                  imageUrl={board.profileImageUrl}
-                  name={board.nickname || "user"}
+                  imageUrl={board.profileImageUrl} 
+                  name={board.nickname}
+                  email={board.userEmail}
                   size={48} 
                 />
                 <div className={styles.authorInfo}>
@@ -405,17 +422,15 @@ export default function BoardDetail({ boardNo }: Props) {
                     {!isOfficialPost && ` · 팔로워 ${board.followerCount ?? 0}`}
                   </span>
                 </div>
-              </div>
+              </Link>
 
               {canFollowAuthor && (
                 <button
                   type="button"
                   onClick={handleFollow}
-                  className={`${styles.followButton} ${
-                    isFollowing ? styles.followButtonActive : ""
-                  }`}
+                  className={`${styles.btnFollow} ${isFollowing ? styles.following : ""}`}
                 >
-                  {isFollowing ? "팔로우 중" : "팔로우"}
+                  {isFollowing ? "팔로잉" : "팔로우"}
                 </button>
               )}
 

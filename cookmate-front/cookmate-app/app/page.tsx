@@ -395,8 +395,9 @@ export default function Home() {
                   <Link href={`/chef/${chef.userNo}`} className={styles.chefItem} key={chef.userNo}>
                     <div className={styles.chefAvatar}>
                       <UserAvatar
-                        imageUrl={chef.profileImageUrl}
-                        name={chef.userEmail || chef.nickname}
+                        imageUrl={chef.profileImageUrl} 
+                        name={chef.nickname} 
+                        email={chef.userEmail}
                         size="100%"
                       />
                     </div>

@@ -44,8 +44,11 @@ public class BoardController {
     }
 
     @GetMapping("/boards/{boardNo}")
-    public ResponseEntity<?> getBoardDetail(@PathVariable int boardNo) {
-        BoardDto.BoardDetail detail = service.getBoardDetail(boardNo);
+    public ResponseEntity<?> getBoardDetail(
+    		@PathVariable int boardNo,
+    		@RequestParam(required = false) Integer loginUserNo) {
+    	
+        BoardDto.BoardDetail detail = service.getBoardDetail(boardNo,loginUserNo);
         if (detail == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(detail);
     }
