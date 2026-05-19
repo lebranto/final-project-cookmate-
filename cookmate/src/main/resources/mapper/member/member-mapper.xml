@@ -244,6 +244,7 @@
         JOIN USER u ON c.USER_NO = u.USER_NO
         WHERE b.USER_NO = #{chefNo}
           AND c.COMMENT_DELETE = 'N'
+          AND b.BOARD_DELETE = 'N'
         ORDER BY c.COMMENT_POSTDATE DESC
     </select>
 
@@ -262,6 +263,7 @@
         JOIN BOARD b ON c.BOARD_NO = b.BOARD_NO
         WHERE c.USER_NO = #{userNo}
           AND c.COMMENT_DELETE = 'N'
+          AND b.BOARD_DELETE = 'N'
         <choose>
             <when test="filter == 'popular'">
                 ORDER BY replyCount DESC, c.COMMENT_POSTDATE DESC
@@ -291,7 +293,10 @@
         FROM COMMENT c
         JOIN BOARD b ON c.BOARD_NO = b.BOARD_NO
         JOIN USER u ON c.USER_NO = u.USER_NO
-        WHERE b.USER_NO = #{userNo}      AND c.USER_NO != #{userNo}    AND c.COMMENT_DELETE = 'N'
+        WHERE b.USER_NO = #{userNo}      
+        	AND c.USER_NO != #{userNo}    
+        	AND c.COMMENT_DELETE = 'N'
+        	AND b.BOARD_DELETE = 'N'
         <choose>
             <when test="filter == 'popular'">
                 ORDER BY replyCount DESC, c.COMMENT_POSTDATE DESC
