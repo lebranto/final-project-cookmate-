@@ -592,7 +592,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
           <div className={styles.modalBox} onClick={e => e.stopPropagation()}>
             <div className={styles.modalIconWithdraw}>⊘</div>
             <h2 className={styles.modalTitle}>회원을 강제 탈퇴할까요?</h2>
-            <p className={styles.modalDesc}>탈퇴된 회원의 작성 레시피, 댓글이 모두 삭제됩니다.</p>
+            {/*<p className={styles.modalDesc}>탈퇴된 회원의 작성 레시피, 댓글이 모두 삭제됩니다.</p>*/}
             <div className={styles.modalUserInfo}>
               <p><span>번호</span>#{user.userId}</p>
               <p><span>닉네임</span>{user.nickname}</p>
@@ -611,7 +611,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
                 checked={withdrawConfirmed}
                 onChange={e => setWithdrawConfirmed(e.target.checked)}
               />
-              위 회원의 모든 데이터가 삭제됨을 확인했습니다
+              위 회원을 탈퇴시킴을 확인했습니다
             </label>
             <p className={styles.irreversible}>⚠ 이 작업은 되돌릴 수 없습니다</p>
             <div className={styles.modalBtns}>

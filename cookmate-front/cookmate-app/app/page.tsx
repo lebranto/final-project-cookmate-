@@ -423,8 +423,8 @@ export default function Home() {
       <section className={styles.aiBanner}>
         <div>
           <span>AI 추천</span>
-          <h2>냉장고 재료로 만드는 오늘의 레시피</h2>
-          <p>갖고 있는 재료를 입력하면 만들 수 있는 레시피를 추천하는 영역입니다.</p>
+          <h2>냉장고에 숨겨진 레시피는 뭐가 있을까?</h2>
+          <p>갖고 있는 재료를 입력하면, AI가 만들 수 있는 요리를 추천해 드려요.</p>
         </div>
         <Link href="/find">AI 추천 받으러 가기</Link>
       </section>

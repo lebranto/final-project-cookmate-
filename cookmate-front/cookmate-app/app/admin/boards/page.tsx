@@ -482,13 +482,13 @@ export default function RecipeManagePage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th
+                {/* <th
                   className={
                     styles.checkboxCol
                   }
                 >
                   <input type="checkbox" />
-                </th>
+                </th> */}
 
                 <th>번호</th>
 
@@ -539,9 +539,9 @@ export default function RecipeManagePage() {
                     <tr
                       key={recipe.boardNo}
                     >
-                      <td>
+                      {/* <td>
                         <input type="checkbox" />
-                      </td>
+                      </td> */}
 
                       <td
                         className={
