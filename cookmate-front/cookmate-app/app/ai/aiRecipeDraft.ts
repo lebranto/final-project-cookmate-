@@ -51,14 +51,17 @@ export function createAiRecipeImage(title: string, seed: string) {
   return "/ai-recipe-placeholder.svg";
 }
 
-export function createAiRecipeDraft(recipe: {
-  id: string;
-  title: string;
-  ingredients: string[];
-  time: number;
-  calories: number;
-  method: string;
-}): AiRecipeDraft {
+export function createAiRecipeDraft(
+ recipe: {
+    id: string;
+    title: string;
+    ingredients: string[];
+    time: number;
+    calories: number;
+    method: string;
+  },
+  inputIngredients: string[] = recipe.ingredients
+  ): AiRecipeDraft {
   const seasonings = [
     { name: "올리브오일", quantity: "1", unit: "큰술" },
     { name: "소금", quantity: "1", unit: "꼬집" },
@@ -72,7 +75,11 @@ export function createAiRecipeDraft(recipe: {
     quantity: index === 0 ? "1" : "1/2",
     unit: index === 0 ? "개" : "개",
     group: "주재료" as const,
-    owned: true,
+    owned: inputIngredients.some(
+    (input) =>
+      input.replace(/\s/g, "").toLowerCase() ===
+      ingredient.replace(/\s/g, "").toLowerCase()
+    ),
     allergy: false,
   }));
 
@@ -80,7 +87,7 @@ export function createAiRecipeDraft(recipe: {
     id: recipe.id,
     title: recipe.title,
     imageUrl: createAiRecipeImage(recipe.title, recipe.id),
-    inputIngredients: recipe.ingredients,
+    inputIngredients,
     usedIngredients: recipe.ingredients,
     cookTimeMinutes: recipe.time,
     calories: recipe.calories,

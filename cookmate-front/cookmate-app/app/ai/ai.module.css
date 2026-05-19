@@ -337,6 +337,51 @@
   opacity: 0.7;
 }
 
+.panelHeader p.warning {
+  color : red;
+  font-weight: bold;
+  font-size: large;
+}
+
+.loadingState {
+  border: 1px dashed #ccccca;
+  border-radius: 8px;
+  padding: 42px 20px;
+  text-align: center;
+}
+
+.loadingState strong {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 5px;
+  color: #5c5c5a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.loadingState p {
+  margin: 0;
+  color: #9c9c9a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border: 6px solid #d5d5d2;
+  border-top-color: #1a1a18;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 860px) {
   .layout {
     grid-template-columns: 1fr;

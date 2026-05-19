@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect ,useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AI_RECIPE_DRAFT_KEY, AI_RECIPE_DRAFTS_KEY, createAiRecipeDraft } from "./aiRecipeDraft";
+import api from "@/app/lib/api";
 import styles from "./ai.module.css";
 
 type Recipe = {
@@ -14,6 +15,9 @@ type Recipe = {
   description: string;
   method: string;
 };
+
+const AI_RECIPE_RESULTS_KEY = "cookmate-ai-recipe-results";
+const AI_RECIPE_SEARCH_STATE_KEY = "cookmate-ai-recipe-search-state";
 
 const TIME_OPTIONS = [
   { label: "상관없음", value: "all" },
@@ -29,68 +33,26 @@ const CALORIE_OPTIONS = [
   { label: "700kcal 초과", value: "over700" },
 ] as const;
 
-const RECIPE_STYLES = [
-  { name: "샐러드", method: "손질한 재료에 산뜻한 드레싱을 더해 가볍게 버무립니다.", time: 12, calories: 230 },
-  { name: "브런치 볼", method: "재료를 한입 크기로 썰어 곡물 토핑과 함께 담아냅니다.", time: 18, calories: 360 },
-  { name: "오픈 토스트", method: "구운 빵 위에 재료를 올리고 짭짤한 소스로 균형을 맞춥니다.", time: 25, calories: 430 },
-  { name: "가벼운 무침", method: "얇게 썬 재료를 양념에 잠깐 재워 식감을 살립니다.", time: 20, calories: 280 },
-  { name: "따뜻한 볶음", method: "센 불에 빠르게 볶아 단맛과 향을 살린 뒤 마무리합니다.", time: 34, calories: 520 },
-  { name: "든든한 플레이트", method: "단백질과 곁들임을 더해 한 끼 식사처럼 구성합니다.", time: 45, calories: 650 },
-] as const;
+type RecipeSearchState = {
+  ingredients: string[];
+  timeFilter: (typeof TIME_OPTIONS)[number]["value"];
+  calorieFilter: (typeof CALORIE_OPTIONS)[number]["value"];
+  recipes: Recipe[];
+};
 
-function buildCombinations(items: string[]) {
-  const combinations: string[][] = [];
+function readStoredDraft(recipeId: string) {
+  try {
+    const rawDrafts = window.localStorage.getItem(AI_RECIPE_DRAFTS_KEY);
+    if (!rawDrafts) {
+      return null;
+    }
 
-  for (let size = 1; size <= items.length; size += 1) {
-    const pick = (start: number, selected: string[]) => {
-      if (selected.length === size) {
-        combinations.push(selected);
-        return;
-      }
-
-      for (let index = start; index < items.length; index += 1) {
-        pick(index + 1, [...selected, items[index]]);
-      }
-    };
-
-    pick(0, []);
+    const drafts = JSON.parse(rawDrafts) as ReturnType<typeof createAiRecipeDraft>[];
+    return drafts.find((draft) => draft.id === recipeId) ?? null;
+  } catch {
+    window.localStorage.removeItem(AI_RECIPE_DRAFTS_KEY);
+    return null;
   }
-
-  return combinations;
-}
-
-function makeRecipes(ingredients: string[], timeFilter: string, calorieFilter: string) {
-  const uniqueIngredients = Array.from(new Set(ingredients.map((item) => item.trim()).filter(Boolean)));
-  const combinations = uniqueIngredients.length > 0 ? buildCombinations(uniqueIngredients) : [];
-  const timeLimit = timeFilter === "all" ? Infinity : Number(timeFilter);
-
-  return combinations
-    .flatMap((combination, index) => {
-      const style = RECIPE_STYLES[index % RECIPE_STYLES.length];
-      const time = style.time + Math.max(combination.length - 1, 0) * 4;
-      const calories = style.calories + Math.max(combination.length - 1, 0) * 55;
-
-      return {
-        id: `${combination.join("-")}-${style.name}`,
-        title: `${combination.join(" · ")} ${style.name}`,
-        ingredients: combination,
-        time,
-        calories,
-        description: `${combination.join(", ")} 조합으로 만들 수 있는 ${style.name} 레시피입니다.`,
-        method: style.method,
-      };
-    })
-    .filter((recipe) => {
-      const matchesCalories =
-        calorieFilter === "all"
-          ? true
-          : calorieFilter === "over700"
-            ? recipe.calories > 700
-            : recipe.calories <= Number(calorieFilter);
-
-      return recipe.time <= timeLimit && matchesCalories;
-    })
-    .slice(0, 6);
 }
 
 export default function AiRecipePage() {
@@ -103,8 +65,38 @@ export default function AiRecipePage() {
   const [searched, setSearched] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const visibleRecipes = useMemo(() => (showAll ? recipes : recipes.slice(0, 3)), [recipes, showAll]);
+
+  // 상세 보기 누르고 뒤로 가기 할때 리스트가 없어지는 현상
+  useEffect(() => {
+  try {
+    const rawState = window.localStorage.getItem(AI_RECIPE_SEARCH_STATE_KEY);
+
+    if (rawState) {
+      const savedState = JSON.parse(rawState) as RecipeSearchState;
+      const savedRecipes = savedState.recipes ?? [];
+
+      setIngredients(savedState.ingredients ?? []);
+      setTimeFilter(savedState.timeFilter ?? "all");
+      setCalorieFilter(savedState.calorieFilter ?? "all");
+      setRecipes(savedRecipes);
+      setSearched(savedRecipes.length > 0);
+      return;
+    }
+
+    const raw = window.localStorage.getItem(AI_RECIPE_RESULTS_KEY);
+    if (!raw) return;
+
+    const savedRecipes = JSON.parse(raw) as Recipe[];
+    setRecipes(savedRecipes);
+    setSearched(savedRecipes.length > 0);
+  } catch {
+    window.localStorage.removeItem(AI_RECIPE_SEARCH_STATE_KEY);
+    window.localStorage.removeItem(AI_RECIPE_RESULTS_KEY);
+  }
+  }, []);
 
   const addIngredient = () => {
     const nextIngredient = inputValue.trim();
@@ -122,18 +114,41 @@ export default function AiRecipePage() {
     setIngredients((prev) => prev.filter((item) => item !== ingredient));
   };
 
-  const searchRecipes = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const searchRecipes = async (event: FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
 
-    const nextRecipes = makeRecipes(ingredients, timeFilter, calorieFilter);
-    const nextDrafts = nextRecipes.map((recipe) => createAiRecipeDraft(recipe));
+  try {
+    setIsSearching(true);
 
+    const response = await api.post("/ai/recipes", {
+      ingredients,
+      timeFilter,
+      calorieFilter,
+    });
+
+    const nextRecipes = response.data.recipes as Recipe[];
+    const nextDrafts = nextRecipes.map((recipe: Recipe) => createAiRecipeDraft(recipe , ingredients));
+    const nextSearchState: RecipeSearchState = {
+      ingredients,
+      timeFilter,
+      calorieFilter,
+      recipes: nextRecipes,
+    };
+
+    window.localStorage.setItem(AI_RECIPE_RESULTS_KEY, JSON.stringify(nextRecipes));
+    window.localStorage.setItem(AI_RECIPE_SEARCH_STATE_KEY, JSON.stringify(nextSearchState));
     window.localStorage.setItem(AI_RECIPE_DRAFTS_KEY, JSON.stringify(nextDrafts));
     setRecipes(nextRecipes);
     setSearched(true);
     setShowAll(false);
-    setLoadingMore(false);
-  };
+  } catch (error) {
+    console.error("AI 레시피 추천 실패:", error);
+    setRecipes([]);
+    setSearched(true);
+  } finally {
+    setIsSearching(false);
+  }
+};
 
   const loadMoreRecipes = () => {
     setLoadingMore(true);
@@ -145,7 +160,7 @@ export default function AiRecipePage() {
   };
 
   const openRecipeDetail = (recipe: Recipe) => {
-    const draft = createAiRecipeDraft(recipe);
+    const draft = readStoredDraft(recipe.id) ?? createAiRecipeDraft(recipe, ingredients);
     window.sessionStorage.setItem(AI_RECIPE_DRAFT_KEY, JSON.stringify(draft));
     router.push(`/ai/${encodeURIComponent(recipe.id)}`);
   };
@@ -163,9 +178,11 @@ export default function AiRecipePage() {
           <form className={styles.panel} onSubmit={searchRecipes}>
             <div className={styles.panelHeader}>
               <h2>재료를 입력해주세요</h2>
-              <p>가지고 있는 재료를 모두 추가할수록 조합이 더 다양해집니다.</p>
+              <p>가지고 있는 재료를 모두 추가할수록 조합이 더 다양해집니다.</p><br/>
+              <p className={styles.warning}>주의!</p>
+              <p>재료를 입력하실 때 따로 입력하지 않으면 필요한 음식을 정확히 파악할 수 없습니다 </p>
+              <p>꼭 낱개로 입력해주세요!</p>
             </div>
-
             <div className={styles.ingredientBox} aria-label="추가된 재료">
               {ingredients.length > 0 ? (
                 ingredients.map((ingredient) => (
@@ -245,21 +262,29 @@ export default function AiRecipePage() {
               {searched && <span>{recipes.length}개 발견</span>}
             </div>
 
-            {!searched && (
+            {isSearching && (
+              <div className={styles.loadingState}>
+                <div className={styles.spinner} aria-hidden="true" />
+                <strong>잠시만 기다려 주세요</strong>
+                <p>AI가 입력한 재료로 레시피를 찾고 있습니다.</p>
+              </div>
+            )}
+
+            {!isSearching && !searched &&(
               <div className={styles.emptyState}>
                 <strong>아직 검색 전입니다.</strong>
                 <p>재료를 추가하고 레시피 찾기를 눌러주세요.</p>
               </div>
             )}
 
-            {searched && recipes.length === 0 && (
+            {!isSearching && searched && recipes.length === 0 && (
               <div className={styles.emptyState}>
                 <strong>조건에 맞는 레시피가 없습니다.</strong>
                 <p>조리 시간이나 칼로리 조건을 조금 넓혀보세요.</p>
               </div>
             )}
 
-            {visibleRecipes.length > 0 && (
+            {!isSearching && visibleRecipes.length > 0 && (
               <div className={styles.recipeList}>
                 {visibleRecipes.map((recipe, index) => (
                   <button
