@@ -336,7 +336,7 @@
         u.NICKNAME, 
         u.USER_EMAIL, 
         u.PROFILE_IMAGE_URL,
-        (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO) as recipeCount,
+        (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO AND b.BOARD_DELETE = 'N') as recipeCount,
         (SELECT COUNT(*) FROM FOLLOWING f2 WHERE f2.FOLLOWING_ID = u.USER_EMAIL) as followerCount,
         1 as following
     FROM FOLLOWING f
@@ -355,7 +355,7 @@
 	        u.NICKNAME, 
 	        u.USER_EMAIL, 
 	        u.PROFILE_IMAGE_URL,
-	        (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO) as recipeCount,
+	        (SELECT COUNT(*) FROM BOARD b WHERE b.USER_NO = u.USER_NO AND b.BOARD_DELETE = 'N') as recipeCount,
 	        (SELECT COUNT(*) FROM FOLLOWING f2 WHERE f2.FOLLOWING_ID = u.USER_EMAIL) as followerCount,
 	        (SELECT COUNT(*) FROM FOLLOWING f3 WHERE f3.USER_NO = #{loginUserNo} AND f3.FOLLOWING_ID = u.USER_EMAIL) as following
 	    FROM FOLLOWING f
