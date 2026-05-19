@@ -3,6 +3,7 @@
 import { useEffect, useState, use } from 'react';
 import axios from 'axios';
 import styles from './page.module.css';
+import UserAvatar from '@/app/components/UserAvatar';
 
 // ── 타입 ──────────────────────────────────────────────
 interface UserDetail {
@@ -338,11 +339,14 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
         {/* 왼쪽: 프로필 카드 */}
         <aside className={styles.profileCard}>
           <div className={styles.avatarWrap}>
-            {user.profileImageUrl
-              ? <img src={user.profileImageUrl} alt="avatar" className={styles.avatarImg} />
-              : <div className={styles.avatarInitial}>{user.nickname[0].toUpperCase()}</div>
-            }
-          </div>
+           <UserAvatar 
+              imageUrl={user.profileImageUrl} 
+              name={user.nickname} 
+              email={user.email} 
+              size={72} 
+          />
+              </div>
+          
           <p className={styles.profileName}>{user.nickname}</p>
           <p className={styles.profileEmail}>{user.email}</p>
           <div className={styles.badges}>
