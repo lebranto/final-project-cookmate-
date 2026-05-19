@@ -31,7 +31,8 @@ api.interceptors.response.use(
         const nextToken = refreshResponse.data?.accessToken;
 
         if (nextToken) {
-        localStorage.setItem("accessToken", nextToken);
+        localStorage.setItem("accessToken", nextToken)
+        window.dispatchEvent(new Event("auth-state-changed"));
         }
 
       return api(originalRequest);

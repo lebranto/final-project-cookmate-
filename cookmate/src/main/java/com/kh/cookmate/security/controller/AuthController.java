@@ -180,7 +180,7 @@ public class AuthController {
 		return ResponseEntity.ok()
 				.header(HttpHeaders.SET_COOKIE,accessCookie.toString())
 				.header(HttpHeaders.SET_COOKIE,roleCookie.toString())
-				.build();
+				.body(result);
 		
 	}
 	
