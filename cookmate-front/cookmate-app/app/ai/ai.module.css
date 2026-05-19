@@ -343,6 +343,46 @@
   font-size: large;
 }
 
+.allergyBox {
+  margin-top: 14px;
+  border: 1px solid #f0d7d4;
+  border-radius: 8px;
+  background: #fff8f7;
+  padding: 12px;
+}
+
+.allergyBox strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #b13b30;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.allergyBox p {
+  margin: 0;
+  color: #9c6b66;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.allergyList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.allergyList span {
+  border: 1px solid #efc9c4;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #b13b30;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .loadingState {
   border: 1px dashed #ccccca;
   border-radius: 8px;
