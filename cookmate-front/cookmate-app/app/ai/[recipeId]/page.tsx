@@ -18,11 +18,26 @@ import styles from "./recommendDetail.module.css";
 
 const fallbackDraft = createAiRecipeDraft({
   id: "sample",
-  title: "사과 · 상추 샐러드",
+  title: "사과 상추 샐러드",
+  introduce: "간단한 재료로 만드는 가벼운 샐러드입니다.",
+  typeName: "샐러드",
+  difficult: "쉬움",
+  cookTime: "15분 이내",
+  calory: "저칼로리",
   ingredients: ["사과", "상추"],
-  time: 18,
-  calories: 360,
-  method: "손질한 재료에 산뜻한 드레싱을 더해 가볍게 버무립니다.",
+  ingredientSets: [
+    {
+      setName: "기본 재료",
+      ingredients: [
+        { ingredientName: "사과", quantity: "1/2", unit: "개" },
+        { ingredientName: "상추", quantity: "5", unit: "장" },
+      ],
+    },
+  ],
+  cookSteps: [
+    { step: 1, cookContent: "사과와 상추를 깨끗하게 씻고 먹기 좋은 크기로 썰어 준비합니다." },
+    { step: 2, cookContent: "준비한 재료를 볼에 담고 취향에 맞는 드레싱을 곁들여 마무리합니다." },
+  ],
 });
 
 type ProfileResponse = {
@@ -63,10 +78,7 @@ function normalizeForMatch(value?: string | null) {
 
 function findIngredientAllergy(ingredientName: string, allergies: string[]) {
   const normalizedIngredientName = normalizeForMatch(ingredientName);
-
-  if (!normalizedIngredientName) {
-    return "";
-  }
+  if (!normalizedIngredientName) return "";
 
   return (
     allergies.find((allergy) => {
@@ -98,9 +110,7 @@ export default function AiRecipeDetailPage() {
   const [saveMessage, setSaveMessage] = useState("");
 
   useEffect(() => {
-    if (!isLoggedIn || !userInfo) {
-      return;
-    }
+    if (!isLoggedIn || !userInfo) return;
 
     const fetchUserAllergies = async () => {
       try {
@@ -124,9 +134,9 @@ export default function AiRecipeDetailPage() {
   const allergyIngredients = ingredientsWithAllergy.filter((ingredient) => ingredient.allergy);
   const ownedMainCount = mainIngredients.filter((ingredient) => ingredient.owned).length;
   const matchRate = Math.round((ownedMainCount / Math.max(mainIngredients.length, 1)) * 100);
-  const introduce = `입력하신 재료(${draft.inputIngredients.join(", ")})를 기반으로 찾은 레시피예요.`;
+  const introduce = draft.introduce || `입력하신 재료(${draft.inputIngredients.join(", ")})를 기반으로 찾은 레시피예요.`;
   const aiTips = draft.cookSteps.map((step) => step.tip).filter(Boolean).join("\n");
-  
+
   const moveWriteForm = () => {
     window.sessionStorage.setItem(AI_RECIPE_DRAFT_KEY, JSON.stringify(draft));
     router.push("/boards/write?from=ai");
@@ -146,15 +156,15 @@ export default function AiRecipeDetailPage() {
         userNo: userInfo.userNo,
         nickname: userInfo.nickname,
         boardTitle: draft.title,
-        introduce: [introduce, aiTips && `팁: ${aiTips}`].filter(Boolean).join("\n\n"),
+        introduce: [introduce, aiTips].filter(Boolean).join("\n\n"),
         imageUrl: draft.imageUrl,
         url: "",
         open: "N",
         isApiData: "N",
         typeName: draft.typeName,
         difficult: draft.difficult,
-        cookTime: toCookTimeTag(draft.cookTimeMinutes),
-        calory: toCaloryTag(draft.calories),
+        cookTime: toCookTimeTag(draft.cookTime),
+        calory: toCaloryTag(draft.calory),
         ai: "Y",
         ingredientSets: ["주재료", "양념"].map((setName) => ({
           setName,
@@ -188,7 +198,7 @@ export default function AiRecipeDetailPage() {
     <main className={styles.page}>
       <div className={styles.breadcrumb}>
         <Link href="/ai">재료로 찾는 레시피</Link>
-        <span>›</span>
+        <span>/</span>
         <strong>{draft.title}</strong>
       </div>
 
@@ -197,9 +207,9 @@ export default function AiRecipeDetailPage() {
         <div className={styles.heroOverlay} />
         <div className={styles.heroTop}>
           <button type="button" onClick={() => router.back()}>
-            ← 추천 결과로
+            추천 결과로
           </button>
-          <span>저장 후 수정 · 공유 · 장보기 가능</span>
+          <span>저장 전 수정 가능</span>
         </div>
         <div className={styles.heroBottom}>
           <span>AI 추천 레시피</span>
@@ -214,19 +224,19 @@ export default function AiRecipeDetailPage() {
 
             <div className={styles.infoBanner}>
               <strong>{introduce}</strong>
-              <span>아직 저장되지 않은 추천 결과입니다. 마음에 들면 내 레시피로 저장해보세요.</span>
+              <span>아직 저장되지 않은 추천 결과입니다. 마음에 들면 내 레시피로 저장하거나 작성 폼에서 수정해보세요.</span>
             </div>
 
             {allergyIngredients.length > 0 && (
               <div className={styles.allergyAlert}>
                 이 레시피에 <strong>{allergyIngredients.map((item) => item.name).join(", ")}</strong>가 포함되어 있어요.
-                프로필에 등록된 알레르기 재료를 확인해주세요.
+                프로필에 등록한 알레르기 재료를 확인해주세요.
               </div>
             )}
 
             <div className={styles.stats}>
-              <Meta label="조리시간" value={`${draft.cookTimeMinutes}`} unit="분" />
-              <Meta label="칼로리" value={`${draft.calories}`} unit="kcal" />
+              <Meta label="조리시간" value={draft.cookTime} />
+              <Meta label="칼로리" value={draft.calory} />
               <Meta label="난이도" value={draft.difficult} />
               <Meta label="요리 종류" value={draft.typeName} />
             </div>
@@ -266,16 +276,16 @@ export default function AiRecipeDetailPage() {
 
           <aside className={styles.aside}>
             <section className={styles.asideCard}>
-              <h2>이 레시피 저장하기</h2>
+              <h2>내 레시피로 저장하기</h2>
               <div className={styles.saveInfo}>
-                <strong>저장하면 할 수 있어요</strong>
-                스크랩 · 장보기 추가 · 공유하기 · 리뷰 작성
+                <strong>저장하면 이런 작업을 할 수 있어요.</strong>
+                스크랩, 장보기 추가, 공유, 리뷰 작성
               </div>
               <button type="button" className={styles.saveButton} onClick={saveRecipe} disabled={saving}>
                 {saving ? "저장 중" : "내 레시피로 저장"}
               </button>
               <button type="button" className={styles.outlineButton} onClick={moveWriteForm}>
-                레시피 작성 폼으로 수정하기
+                작성 폼에서 수정하기
               </button>
               {saveMessage && <p className={styles.saveMessage}>{saveMessage}</p>}
               <p className={styles.saveNote}>
@@ -307,18 +317,17 @@ export default function AiRecipeDetailPage() {
                 <span>등록 레시피</span>
                 <strong>{draft.relatedRecipe.title}</strong>
                 <em>{draft.relatedRecipe.meta}</em>
-                <b>레시피 상세 보기 →</b>
+                <b>레시피 상세 보기</b>
               </button>
-              <p className={styles.relatedNote}>DB의 BOARD에서 이름 유사도가 높은 레시피를 연결할 예정입니다.</p>
+              <p className={styles.relatedNote}>나중에 DB의 BOARD에서 이름 유사도가 높은 레시피를 연결할 예정입니다.</p>
             </section>
-
           </aside>
         </div>
       </div>
 
       <div className={styles.mobileBar}>
         <button type="button" onClick={() => router.back()}>
-          ← 결과로
+          결과로
         </button>
         <button type="button" onClick={saveRecipe} disabled={saving}>
           {saving ? "저장 중" : "내 레시피로 저장"}
@@ -328,14 +337,11 @@ export default function AiRecipeDetailPage() {
   );
 }
 
-function Meta({ label, value, unit = "" }: { label: string; value: string; unit?: string }) {
+function Meta({ label, value }: { label: string; value: string }) {
   return (
     <div className={styles.meta}>
       <span>{label}</span>
-      <strong>
-        {value}
-        {unit && <em>{unit}</em>}
-      </strong>
+      <strong>{value}</strong>
     </div>
   );
 }

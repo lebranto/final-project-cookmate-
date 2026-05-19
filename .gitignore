@@ -4,6 +4,11 @@
 .env
 .env.*
 !.env.example
+venv/
+.venv/
+AiWork/venv/
+AiWork/__pycache__/
+COOKMATE-AI-RECIPE/__pycache__/
 
 # Created by https://www.toptal.com/developers/gitignore/api/windows,java,maven,eclipse,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,java,maven,eclipse,macos
