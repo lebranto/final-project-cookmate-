@@ -139,7 +139,7 @@ export default function WithdrawPage() {
         <div className={styles.warnList}>
           <div className={styles.warnItem}>
             <span className={styles.warnDot}>·</span>
-            <span>탈퇴 시 작성한 레시피, 스크랩, 댓글 등 <strong>모든 데이터가 삭제</strong>됩니다.</span>
+            <span>탈퇴 시 팔로우, 스크랩, 개인정보 등 <strong>데이터가 삭제</strong>됩니다.</span>
           </div>
           <div className={styles.warnItem}>
             <span className={styles.warnDot}>·</span>
