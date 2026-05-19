@@ -234,16 +234,16 @@
 	        <if test="role != null and role != ''">
 	            <choose>
 	                <!-- 일반 회원 -->
-	                <when test="role == 'USER_ROLE'">
+	                <when test="role == 'ROLE_USER'">
 	                    AND (
 	                        A.AUTHORITY IS NULL
-	                        OR A.AUTHORITY = 'USER_ROLE'
+	                        OR A.AUTHORITY = 'ROLE_USER'
 	                    )
 	                </when>
 	
 	                <!-- 관리자 -->
-	                <when test="role == 'ADMIN_ROLE'">
-	                    AND A.AUTHORITY = 'ADMIN_ROLE'
+	                <when test="role == 'ROLE_ADMIN'">
+	                    AND A.AUTHORITY = 'ROLE_ADMIN'
 	                </when>
 	            </choose>
 	        </if>
@@ -301,15 +301,15 @@
 	            <choose>
 	
 	                <!-- 관리자 -->
-	                <when test="'ADMIN_ROLE'.equals(role)">
-	                    AND A.AUTHORITY = 'ADMIN_ROLE'
+	                <when test="'ROLE_ADMIN'.equals(role)">
+	                    AND A.AUTHORITY = 'ROLE_ADMIN'
 	                </when>
 	
 	                <!-- 일반회원 -->
-	                <when test="'USER_ROLE'.equals(role)">
+	                <when test="'ROLE_USER'.equals(role)">
 	                    AND (
 	                        A.AUTHORITY IS NULL
-	                        OR A.AUTHORITY = 'USER_ROLE'
+	                        OR A.AUTHORITY = 'ROLE_USER'
 	                    )
 	                </when>
 	            </choose>
@@ -949,7 +949,13 @@
 
     <update id="withdrawUser" parameterType="int">
         UPDATE USER
-        SET WITHDRAW = 'Y'
+	        SET WITHDRAW = 'Y',
+	        USER_EMAIL = CONCAT('withdrawn_', #{userNo}, '@cookmate.com'),
+	        NICKNAME = '탈퇴한 사용자',
+	        PROFILE_IMAGE_URL = NULL, 
+	        INTRODUCE = NULL,
+		    ADDRESS = NULL,
+		    LAST_LOGIN = NOW()
         WHERE USER_NO = #{_parameter}
     </update>
 

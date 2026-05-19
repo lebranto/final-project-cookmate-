@@ -94,7 +94,7 @@ export default function UsersPage() {
 
   const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('ko-KR');
 
-  const convertRole = (value: string | null) => (value === 'ADMIN_ROLE' ? '관리자' : '일반');
+  const convertRole = (value: string | null) => (value === 'ROLE_ADMIN' ? '관리자' : '일반');
 
   const convertStatus = (user: User) => {
     if (user.withdraw === 'Y') return '탈퇴';
@@ -222,8 +222,8 @@ export default function UsersPage() {
 
           <select className={styles.select} value={role} onChange={(e) => setRole(e.target.value)}>
             <option value="">전체 등급</option>
-            <option value="ADMIN_ROLE">관리자</option>
-            <option value="USER_ROLE">일반</option>
+            <option value="ROLE_ADMIN">관리자</option>
+            <option value="ROLE_USER">일반</option>
           </select>
 
           <select className={styles.select} value={sort} onChange={(e) => setSort(e.target.value)}>
@@ -236,7 +236,7 @@ export default function UsersPage() {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th><input type="checkbox" /></th>
+              {/* <th><input type="checkbox" /></th> */}
               <th>번호</th>
               <th>닉네임</th>
               <th>이메일</th>
@@ -259,7 +259,7 @@ export default function UsersPage() {
 
               return (
                 <tr key={user.userId}>
-                  <td><input type="checkbox" /></td>
+                  {/* <td><input type="checkbox" /></td> */}
                   <td className={styles.number}>#{user.userId}</td>
                   <td className={styles.nickname}>{user.nickname}</td>
                   <td>{user.email}</td>
@@ -361,7 +361,7 @@ export default function UsersPage() {
           <div className={styles.modalBox} onClick={(event) => event.stopPropagation()}>
             <div className={styles.modalIcon}>!</div>
             <h2 className={styles.modalTitle}>회원을 정지할까요?</h2>
-            <p className={styles.modalDesc}>정지 내용은 BANNED_USER에 처리 이력으로 기록됩니다.</p>
+            <p className={styles.modalDesc}>정지 내용은 처리 이력으로 기록됩니다.</p>
 
             <div className={styles.modalUserInfo}>
               <p><span>번호</span>#{suspendTarget.userId}</p>
@@ -402,7 +402,7 @@ export default function UsersPage() {
           <div className={styles.modalBox} onClick={(event) => event.stopPropagation()}>
             <div className={styles.modalIconWithdraw}>⊘</div>
             <h2 className={styles.modalTitle}>회원을 강제 탈퇴할까요?</h2>
-            <p className={styles.modalDesc}>탈퇴된 회원의 작성 레시피, 댓글이 모두 삭제됩니다.</p>
+            {/* <p className={styles.modalDesc}>탈퇴된 회원의 작성 레시피, 댓글이 모두 삭제됩니다.</p> */}
 
             <div className={styles.modalUserInfo}>
               <p><span>번호</span>#{withdrawTarget.userId}</p>
@@ -424,7 +424,7 @@ export default function UsersPage() {
                 checked={withdrawConfirmed}
                 onChange={(e) => setWithdrawConfirmed(e.target.checked)}
               />
-              위 회원의 모든 데이터가 삭제됨을 확인했습니다
+              위 회원을 탈퇴시킴을 확인했습니다
             </label>
 
             <p className={styles.irreversible}>이 작업은 되돌릴 수 없습니다</p>
