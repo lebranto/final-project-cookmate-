@@ -14,6 +14,7 @@ import styles from "./ai.module.css";
 
 const AI_RECIPE_RESULTS_KEY = "cookmate-ai-recipe-results";
 const AI_RECIPE_SEARCH_STATE_KEY = "cookmate-ai-recipe-search-state";
+const AI_RECIPE_SEARCH_EXPIRE_MS = 1000 * 60 * 60 * 12;
 
 const TIME_OPTIONS = [
   { label: "상관없음", value: "상관없음" },
@@ -30,6 +31,7 @@ const CALORIE_OPTIONS = [
 ] as const;
 
 type RecipeSearchState = {
+  savedAt?: number;
   ingredients: string[];
   timeFilter: (typeof TIME_OPTIONS)[number]["value"];
   calorieFilter: (typeof CALORIE_OPTIONS)[number]["value"];
@@ -41,18 +43,36 @@ type ProfileResponse = {
 };
 
 const EMPTY_SEARCH_STATE: RecipeSearchState = {
+  savedAt: 0,
   ingredients: [],
   timeFilter: "상관없음",
   calorieFilter: "상관없음",
   recipes: [],
 };
 
+function clearStoredAiSearchState() {
+  window.localStorage.removeItem(AI_RECIPE_SEARCH_STATE_KEY);
+  window.localStorage.removeItem(AI_RECIPE_RESULTS_KEY);
+  window.localStorage.removeItem(AI_RECIPE_DRAFTS_KEY);
+  window.sessionStorage.removeItem(AI_RECIPE_DRAFT_KEY);
+}
+
+function isExpiredSearchState(savedAt?: number) {
+  return !savedAt || new Date().getTime() - savedAt > AI_RECIPE_SEARCH_EXPIRE_MS;
+}
+
 function readInitialSearchState(): RecipeSearchState {
   try {
     const rawState = window.localStorage.getItem(AI_RECIPE_SEARCH_STATE_KEY);
     if (rawState) {
       const savedState = JSON.parse(rawState) as RecipeSearchState;
+      if (isExpiredSearchState(savedState.savedAt)) {
+        clearStoredAiSearchState();
+        return EMPTY_SEARCH_STATE;
+      }
+
       return {
+        savedAt: savedState.savedAt,
         ingredients: savedState.ingredients ?? [],
         timeFilter: savedState.timeFilter ?? "상관없음",
         calorieFilter: savedState.calorieFilter ?? "상관없음",
@@ -62,14 +82,13 @@ function readInitialSearchState(): RecipeSearchState {
 
     const rawRecipes = window.localStorage.getItem(AI_RECIPE_RESULTS_KEY);
     if (rawRecipes) {
+      clearStoredAiSearchState();
       return {
         ...EMPTY_SEARCH_STATE,
-        recipes: JSON.parse(rawRecipes) as LambdaRecipe[],
       };
     }
   } catch {
-    window.localStorage.removeItem(AI_RECIPE_SEARCH_STATE_KEY);
-    window.localStorage.removeItem(AI_RECIPE_RESULTS_KEY);
+    clearStoredAiSearchState();
   }
 
   return EMPTY_SEARCH_STATE;
@@ -222,6 +241,7 @@ export default function AiRecipePage() {
       const nextRecipes = response.recipes ?? [];
       const nextDrafts = nextRecipes.map((recipe) => createAiRecipeDraft(recipe, ingredients));
       const nextSearchState: RecipeSearchState = {
+        savedAt: new Date().getTime(),
         ingredients,
         timeFilter,
         calorieFilter,
@@ -272,12 +292,16 @@ export default function AiRecipePage() {
 
       const nextRecipes = recipes.map((item) => (item.id === recipe.id ? detailRecipe : item));
       const nextDrafts = nextRecipes.map((item) => createAiRecipeDraft(item, ingredients));
+      const nextSearchState: RecipeSearchState = {
+        savedAt: new Date().getTime(),
+        ingredients,
+        timeFilter,
+        calorieFilter,
+        recipes: nextRecipes,
+      };
 
       window.localStorage.setItem(AI_RECIPE_RESULTS_KEY, JSON.stringify(nextRecipes));
-      window.localStorage.setItem(
-        AI_RECIPE_SEARCH_STATE_KEY,
-        JSON.stringify({ ingredients, timeFilter, calorieFilter, recipes: nextRecipes })
-      );
+      window.localStorage.setItem(AI_RECIPE_SEARCH_STATE_KEY, JSON.stringify(nextSearchState));
       window.localStorage.setItem(AI_RECIPE_DRAFTS_KEY, JSON.stringify(nextDrafts));
       window.sessionStorage.setItem(AI_RECIPE_DRAFT_KEY, JSON.stringify(draft));
       setRecipes(nextRecipes);

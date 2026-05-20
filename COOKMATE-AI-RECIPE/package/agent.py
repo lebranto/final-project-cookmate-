@@ -15,7 +15,17 @@ from tools import (
 
 def recommend_recipe_list(body: dict[str, Any]) -> dict[str, Any]:
     request = normalize_request(body)
-    data = call_openai(build_list_prompt(request), max_tokens=1200)
+    if not request["ingredients"]:
+        return {
+            "recipes": [],
+            "ignoredIngredients": request["ignoredIngredients"],
+            "message": "식재료로 볼 수 있는 입력이 없습니다.",
+            "minRecipeCount": MIN_RECIPE_COUNT,
+            "maxRecipeCount": MAX_RECIPE_COUNT,
+            "detailMode": "onClick",
+        }
+
+    data = call_openai(build_list_prompt(request), max_tokens=700)
     recipes = unique_recipes(
         [
             recipe
@@ -26,6 +36,7 @@ def recommend_recipe_list(body: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "recipes": recipes[:MAX_RECIPE_COUNT],
+        "ignoredIngredients": request["ignoredIngredients"],
         "minRecipeCount": MIN_RECIPE_COUNT,
         "maxRecipeCount": MAX_RECIPE_COUNT,
         "detailMode": "onClick",
@@ -34,6 +45,9 @@ def recommend_recipe_list(body: dict[str, Any]) -> dict[str, Any]:
 
 def recommend_recipe_detail(body: dict[str, Any]) -> dict[str, Any]:
     request = normalize_request(body)
+    if not request["ingredients"]:
+        raise AiRecipeError(400, "식재료로 볼 수 있는 입력이 없습니다.")
+
     summary = body.get("recipe") if isinstance(body.get("recipe"), dict) else {}
     if not summary:
         raise AiRecipeError(400, "상세 생성할 레시피 정보가 없습니다.")
