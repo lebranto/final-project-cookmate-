@@ -72,7 +72,9 @@
     <select id="countTodayJoinedUsers" resultType="_int">
 	    SELECT COUNT(*)
 	    FROM USER
-	    WHERE DATE(USER_ENROLL_DATE) = CURDATE()
+	    WHERE WITHDRAW = 'N'
+	      AND USER_ENROLL_DATE >= CURDATE()
+	      AND USER_ENROLL_DATE <![CDATA[ < ]]> CURDATE() + INTERVAL 1 DAY
 	</select>
 	
 	<select id="countTodayRecipes" resultType="_int">
@@ -81,20 +83,13 @@
 	    WHERE DATE(BOARD_POSTDATE) = CURDATE()
 	</select>
 	
-	<!-- 오늘 회원 증감 -->
+	<!-- 오늘 가입 회원 수 -->
 	<select id="countTodayUsersDiff" resultType="_int">
-	    SELECT
-	        (
-	            SELECT COUNT(*)
-	            FROM USER
-	            WHERE DATE(USER_ENROLL_DATE) = CURDATE()
-	        )
-	        -
-	        (
-	            SELECT COUNT(*)
-	            FROM USER
-	            WHERE WITHDRAW = 'Y'
-	        )
+	    SELECT COUNT(*)
+	    FROM USER
+	    WHERE WITHDRAW = 'N'
+	      AND USER_ENROLL_DATE >= CURDATE()
+	      AND USER_ENROLL_DATE <![CDATA[ < ]]> CURDATE() + INTERVAL 1 DAY
 	</select>
 	
 	<!-- 오늘 레시피 증감 -->
