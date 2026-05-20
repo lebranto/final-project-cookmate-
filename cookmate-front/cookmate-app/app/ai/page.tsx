@@ -30,11 +30,23 @@ const CALORIE_OPTIONS = [
   { label: "고칼로리", value: "고칼로리" },
 ] as const;
 
+const STYLE_OPTIONS = [
+  { label: "상관없음", value: "상관없음" },
+  { label: "한식", value: "한식" },
+  { label: "중식", value: "중식" },
+  { label: "일식", value: "일식" },
+  { label: "양식", value: "양식" },
+  { label: "샐러드", value: "샐러드" },
+  { label: "수프", value: "수프" },
+  { label: "디저트", value: "디저트" },
+] as const;
+
 type RecipeSearchState = {
   savedAt?: number;
   ingredients: string[];
   timeFilter: (typeof TIME_OPTIONS)[number]["value"];
   calorieFilter: (typeof CALORIE_OPTIONS)[number]["value"];
+  recipeStyle: (typeof STYLE_OPTIONS)[number]["value"];
   recipes: LambdaRecipe[];
 };
 
@@ -47,6 +59,7 @@ const EMPTY_SEARCH_STATE: RecipeSearchState = {
   ingredients: [],
   timeFilter: "상관없음",
   calorieFilter: "상관없음",
+  recipeStyle: "상관없음",
   recipes: [],
 };
 
@@ -76,6 +89,7 @@ function readInitialSearchState(): RecipeSearchState {
         ingredients: savedState.ingredients ?? [],
         timeFilter: savedState.timeFilter ?? "상관없음",
         calorieFilter: savedState.calorieFilter ?? "상관없음",
+        recipeStyle: savedState.recipeStyle ?? "상관없음",
         recipes: savedState.recipes ?? [],
       };
     }
@@ -112,6 +126,7 @@ async function requestAiRecipes(payload: {
   allergies: string[];
   timeFilter: string;
   calorieFilter: string;
+  recipeStyle: string;
 }) {
   const response = await fetch("/api/ai/recipes", {
     method: "POST",
@@ -134,6 +149,7 @@ async function requestAiRecipeDetail(payload: {
   allergies: string[];
   timeFilter: string;
   calorieFilter: string;
+  recipeStyle: string;
   recipe: LambdaRecipe;
 }) {
   const response = await fetch("/api/ai/recipes", {
@@ -152,6 +168,28 @@ async function requestAiRecipeDetail(payload: {
   return data as { recipe: LambdaRecipe };
 }
 
+function getAiErrorMessage(error: unknown, fallbackMessage: string) {
+  if (!(error instanceof Error)) {
+    return fallbackMessage;
+  }
+
+  const message = error.message;
+
+  if (message.includes("Invalid format specifier")) {
+    return "AI 레시피 응답 형식을 만드는 중 문제가 생겼습니다. Lambda 코드를 다시 배포한 뒤 시도해 주세요.";
+  }
+
+  if (message.includes("Service Unavailable") || message.includes("timeout") || message.includes("timed out")) {
+    return "AI 응답 시간이 길어 요청이 중단되었습니다. 재료를 조금 줄이거나 다시 시도해 주세요.";
+  }
+
+  if (message.includes("Failed to fetch")) {
+    return "AI 추천 서버에 연결하지 못했습니다. API Gateway 주소와 네트워크 상태를 확인해 주세요.";
+  }
+
+  return message || fallbackMessage;
+}
+
 export default function AiRecipePage() {
   const router = useRouter();
   const { userInfo, isLoggedIn } = useUserInfoActions();
@@ -159,6 +197,7 @@ export default function AiRecipePage() {
   const [inputValue, setInputValue] = useState("");
   const [timeFilter, setTimeFilter] = useState<(typeof TIME_OPTIONS)[number]["value"]>("상관없음");
   const [calorieFilter, setCalorieFilter] = useState<(typeof CALORIE_OPTIONS)[number]["value"]>("상관없음");
+  const [recipeStyle, setRecipeStyle] = useState<(typeof STYLE_OPTIONS)[number]["value"]>("상관없음");
   const [recipes, setRecipes] = useState<LambdaRecipe[]>([]);
   const [userAllergies, setUserAllergies] = useState<string[]>([]);
   const [searched, setSearched] = useState(false);
@@ -178,6 +217,7 @@ export default function AiRecipePage() {
       setIngredients(savedState.ingredients);
       setTimeFilter(savedState.timeFilter);
       setCalorieFilter(savedState.calorieFilter);
+      setRecipeStyle(savedState.recipeStyle);
       setRecipes(savedState.recipes);
       setSearched(savedState.recipes.length > 0);
     }, 0);
@@ -236,6 +276,7 @@ export default function AiRecipePage() {
         allergies: userAllergies,
         timeFilter,
         calorieFilter,
+        recipeStyle,
       });
 
       const nextRecipes = response.recipes ?? [];
@@ -245,6 +286,7 @@ export default function AiRecipePage() {
         ingredients,
         timeFilter,
         calorieFilter,
+        recipeStyle,
         recipes: nextRecipes,
       };
 
@@ -258,7 +300,7 @@ export default function AiRecipePage() {
       console.error("AI 레시피 추천 실패:", error);
       setRecipes([]);
       setSearched(true);
-      setErrorMessage(error instanceof Error ? error.message : "AI 추천 요청에 실패했습니다.");
+      setErrorMessage(getAiErrorMessage(error, "AI 추천 요청에 실패했습니다."));
     } finally {
       setIsSearching(false);
     }
@@ -286,6 +328,7 @@ export default function AiRecipePage() {
             allergies: userAllergies,
             timeFilter,
             calorieFilter,
+            recipeStyle,
             recipe,
           })).recipe;
       const draft = storedDraft && recipe.detailReady ? storedDraft : createAiRecipeDraft(detailRecipe, ingredients);
@@ -297,6 +340,7 @@ export default function AiRecipePage() {
         ingredients,
         timeFilter,
         calorieFilter,
+        recipeStyle,
         recipes: nextRecipes,
       };
 
@@ -308,7 +352,7 @@ export default function AiRecipePage() {
       router.push(`/ai/${encodeURIComponent(recipe.id)}`);
     } catch (error) {
       console.error("AI 상세 레시피 생성 실패:", error);
-      setErrorMessage(error instanceof Error ? error.message : "AI 상세 레시피 생성에 실패했습니다.");
+      setErrorMessage(getAiErrorMessage(error, "AI 상세 레시피 생성에 실패했습니다."));
     } finally {
       setLoadingDetailId("");
     }
@@ -419,10 +463,25 @@ export default function AiRecipePage() {
               </div>
             </div>
 
+            <div className={styles.optionGroup}>
+              <span className={styles.optionLabel}>요리 스타일</span>
+              <div className={styles.chips}>
+                {STYLE_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    className={`${styles.chip}${recipeStyle === option.value ? ` ${styles.selected}` : ""}`}
+                    onClick={() => setRecipeStyle(option.value)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button type="submit" className={styles.submitButton} disabled={isSearching}>
               {isSearching ? "레시피 찾는 중" : "레시피 찾기"}
             </button>
-            {errorMessage && <p className={styles.warning}>{errorMessage}</p>}
           </form>
 
           <section className={styles.resultsPanel} aria-live="polite">
@@ -430,6 +489,13 @@ export default function AiRecipePage() {
               <h2>추천 레시피</h2>
               {searched && <span>{recipes.length}개 발견</span>}
             </div>
+
+            {!isSearching && errorMessage && (
+              <div className={styles.errorState}>
+                <strong>추천을 불러오지 못했습니다.</strong>
+                <p>{errorMessage}</p>
+              </div>
+            )}
 
             {isSearching && (
               <div className={styles.loadingState}>
@@ -439,14 +505,14 @@ export default function AiRecipePage() {
               </div>
             )}
 
-            {!isSearching && !searched && (
+            {!isSearching && !errorMessage && !searched && (
               <div className={styles.emptyState}>
                 <strong>아직 검색 전입니다.</strong>
                 <p>재료를 추가하고 레시피 찾기를 눌러주세요.</p>
               </div>
             )}
 
-            {!isSearching && searched && recipes.length === 0 && (
+            {!isSearching && !errorMessage && searched && recipes.length === 0 && (
               <div className={styles.emptyState}>
                 <strong>조건에 맞는 레시피가 없습니다.</strong>
                 <p>재료를 더 추가하거나 조건을 조금 넓혀보세요.</p>
