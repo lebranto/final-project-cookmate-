@@ -25,6 +25,17 @@ from schema import (
 MODEL = os.environ.get("OPENAI_MODEL", "gpt-4.1-nano")
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+NON_FOOD_HINTS = {
+    "휴지", "볼펜", "펜", "연필", "지우개", "노트", "책", "가방", "핸드폰", "휴대폰", "컴퓨터",
+    "마우스", "키보드", "모니터", "충전기", "이어폰", "옷", "바지", "양말", "신발", "비누",
+    "샴푸", "린스", "세제", "치약", "칫솔", "수건", "컵라면용기", "플라스틱", "종이", "돌",
+    "나무", "철", "유리", "약", "알약", "화장품", "로션", "향수",
+    "흙", "먼지", "모래", "시멘트", "콘크리트", "벽돌", "자갈", "쇠", "쇠붙이", "금속", "알루미늄",
+    "고무", "비닐", "스티로폼", "테이프", "접착제", "본드", "페인트", "잉크", "기름때",
+    "락스", "표백제", "살충제", "농약", "방부제", "방향제", "소독약", "세정제", "배터리",
+    "건전지", "담배", "재", "담뱃재", "쓰레기", "곰팡이", "머리카락", "털", "손톱",
+}
+
 
 class AiRecipeError(Exception):
     def __init__(self, status_code: int, message: str):
@@ -49,23 +60,37 @@ def split_input_items(items: list[str] | None) -> list[str]:
     return result
 
 
+def normalize_for_match(value: str | None) -> str:
+    return re.sub(r"\s+", "", value or "").lower()
+
+
+def looks_like_food(value: str) -> bool:
+    normalized = normalize_for_match(value)
+    if not normalized or len(normalized) > 20:
+        return False
+
+    if any(hint in normalized for hint in NON_FOOD_HINTS):
+        return False
+
+    return True
+
+
 def normalize_request(body: dict[str, Any]) -> dict[str, Any]:
-    ingredients = split_input_items(body.get("ingredients"))
+    raw_ingredients = split_input_items(body.get("ingredients"))
+    ingredients = [item for item in raw_ingredients if looks_like_food(item)]
     allergies = split_input_items(body.get("allergies"))
 
-    if not ingredients:
+    if not raw_ingredients:
         raise AiRecipeError(400, "재료를 하나 이상 입력해 주세요.")
 
     return {
         "ingredients": ingredients,
+        "ignoredIngredients": [item for item in raw_ingredients if item not in ingredients],
         "allergies": allergies,
         "timeFilter": str(body.get("timeFilter") or "상관없음"),
         "calorieFilter": str(body.get("calorieFilter") or "상관없음"),
+        "recipeStyle": str(body.get("recipeStyle") or "상관없음"),
     }
-
-
-def normalize_for_match(value: str | None) -> str:
-    return re.sub(r"\s+", "", value or "").lower()
 
 
 def contains_blocked_ingredient(value: str | None, blocked: list[str]) -> bool:
@@ -96,31 +121,38 @@ def build_list_prompt(request: dict[str, Any]) -> str:
     allergy_text = ", ".join(request["allergies"]) if request["allergies"] else "없음"
 
     return f"""
-사용자 재료로 만들 수 있는 한국어 레시피 후보를 정확히 {TARGET_RECIPE_COUNT}개 추천하세요.
+한국어 레시피 카드 후보를 정확히 {TARGET_RECIPE_COUNT}개만 빠르게 추천하세요.
 
-사용자 입력 재료: {", ".join(request["ingredients"])}
+입력 재료: {", ".join(request["ingredients"])}
 제외 알레르기: {allergy_text}
-조리 시간 조건: {request["timeFilter"]}
-칼로리 조건: {request["calorieFilter"]}
+조리 시간: {request["timeFilter"]}
+칼로리: {request["calorieFilter"]}
+요리 스타일: {request["recipeStyle"]}
 
 규칙:
-1. 음식, 식재료, 조미료가 아닌 입력은 사용하지 마세요.
-2. 알레르기 재료와 같은 계열 재료는 사용하지 마세요.
-3. 입력 재료가 1개뿐이어도 일반적인 재료를 추가해서 서로 다른 레시피 {TARGET_RECIPE_COUNT}개를 만드세요.
-4. 레시피명과 조리 방식은 서로 달라야 합니다.
-5. typeName은 한식, 중식, 일식, 양식, 샐러드, 수프, 디저트 중 하나만 사용하세요.
-6. difficult는 쉬움, 보통, 어려움 중 하나만 사용하세요.
-7. cookTime은 15분 이내, 30분 이내, 1시간 이내 중 하나만 사용하세요.
-8. calory는 저칼로리, 보통, 고칼로리 중 하나만 사용하세요.
-9. 목록 응답이므로 ingredientSets와 cookSteps는 만들지 마세요.
-10. 반드시 JSON만 반환하세요.
+1. ingredientSets와 cookSteps는 절대 만들지 마세요.
+2. 알레르기 재료와 같은 계열 재료는 제외하세요.
+3. 흙, 돌, 플라스틱, 세제, 약품, 종이, 금속처럼 먹을 수 없는 입력은 절대 재료로 쓰지 마세요.
+4. 먹을 수 있는 식재료가 하나도 없다면 {{"recipes": []}}만 반환하세요.
+5. 입력 재료가 1개여도 일반 재료를 추가해서 서로 다른 레시피 3개를 만드세요.
+6. title은 서로 달라야 합니다.
+7. introduce는 28자 이하로 짧게 작성하세요.
+8. ingredients는 대표 재료명만 3~5개 작성하세요.
+9. typeName은 한식, 중식, 일식, 양식, 샐러드, 수프, 디저트 중 하나만 사용하세요.
+10. 요리 스타일이 상관없음이 아니면 typeName은 반드시 그 스타일과 같아야 합니다.
+11. 한국 식재료가 입력되어도 선택한 스타일의 조리법으로 자연스럽게 응용하세요. 예: 김치+양식=김치 크림 파스타.
+12. 단, 현실적으로 먹기 어려운 조합은 만들지 마세요.
+13. difficult는 쉬움, 보통, 어려움 중 하나만 사용하세요.
+14. cookTime은 15분 이내, 30분 이내, 1시간 이내 중 하나만 사용하세요.
+15. calory는 저칼로리, 보통, 고칼로리 중 하나만 사용하세요.
+16. JSON만 반환하세요.
 
 JSON 형식:
 {{
   "recipes": [
     {{
       "title": "레시피명",
-      "introduce": "40자 이하의 짧은 소개",
+      "introduce": "짧은 소개",
       "typeName": "한식",
       "difficult": "쉬움",
       "cookTime": "30분 이내",
@@ -140,18 +172,22 @@ def build_detail_prompt(request: dict[str, Any], summary: dict[str, Any]) -> str
 
 사용자 입력 재료: {", ".join(request["ingredients"])}
 제외 알레르기: {allergy_text}
+요리 스타일: {request["recipeStyle"]}
 
 레시피 후보:
 {json.dumps(summary, ensure_ascii=False)}
 
 규칙:
 1. 알레르기 재료와 같은 계열 재료는 사용하지 마세요.
-2. ingredientSets는 1개만 만들고, ingredients는 8개 이하로 작성하세요.
-3. quantity는 1/2, 150, 약간처럼 문자열로 작성할 수 있습니다.
-4. unit은 개, 컵, T, t, g, ml, 장, 통, 뿌리 등을 사용하고 어색하면 빈 문자열로 두세요.
-5. cookSteps는 정확히 {MAX_STEP_COUNT}단계만 작성하세요.
-6. 각 cookContent는 18자 이상 45자 이하로 짧고 명확하게 작성하세요.
-7. 반드시 JSON만 반환하세요.
+2. 흙, 돌, 플라스틱, 세제, 약품, 종이, 금속처럼 먹을 수 없는 입력은 절대 재료로 쓰지 마세요.
+3. 요리 스타일이 상관없음이 아니면 typeName은 반드시 그 스타일과 같아야 합니다.
+4. 한국 식재료가 입력되어도 선택한 스타일의 조리법으로 자연스럽게 응용하세요.
+5. ingredientSets는 1개만 만들고, ingredients는 8개 이하로 작성하세요.
+6. quantity는 1/2, 150, 약간처럼 문자열로 작성할 수 있습니다.
+7. unit은 개, 컵, T, t, g, ml, 장, 통, 뿌리 등을 사용하고 어색하면 빈 문자열로 두세요.
+8. cookSteps는 정확히 {MAX_STEP_COUNT}단계만 작성하세요.
+9. 각 cookContent는 18자 이상 45자 이하로 짧고 명확하게 작성하세요.
+10. JSON만 반환하세요.
 
 JSON 형식:
 {{
@@ -186,10 +222,7 @@ def call_openai(prompt: str, max_tokens: int) -> dict[str, Any]:
         response = client.chat.completions.create(
             model=MODEL,
             messages=[
-                {
-                    "role": "system",
-                    "content": "당신은 CookMate의 한국어 레시피 생성 AI입니다. JSON만 반환하세요.",
-                },
+                {"role": "system", "content": "당신은 CookMate의 한국어 레시피 생성 AI입니다. JSON만 반환하세요."},
                 {"role": "user", "content": prompt},
             ],
             temperature=0.55,

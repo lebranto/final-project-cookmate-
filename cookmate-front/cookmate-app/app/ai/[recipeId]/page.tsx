@@ -44,6 +44,23 @@ type ProfileResponse = {
   allergies?: string[];
 };
 
+type SimilarRecipe = {
+  boardNo: number;
+  boardTitle: string;
+  introduce: string;
+  imageUrl: string;
+  likesCount: number;
+  nickname: string;
+  typeName: string;
+  cookTime: string;
+  calory: string;
+  isApiData: string;
+};
+
+type SimilarRecipeResponse = {
+  list: SimilarRecipe[];
+};
+
 function normalizeDraftImage(draft: AiRecipeDraft) {
   return {
     ...draft,
@@ -99,6 +116,21 @@ function withAllergyFlags(ingredients: AiIngredient[], allergies: string[]) {
   }));
 }
 
+function getSimilarSearchKeywords(draft: AiRecipeDraft) {
+  const names = [...draft.inputIngredients, ...draft.ingredients.map((ingredient) => ingredient.name)];
+  const normalized = new Set<string>();
+
+  return names
+    .map((name) => name.trim())
+    .filter((name) => {
+      const key = normalizeForMatch(name);
+      if (!key || normalized.has(key)) return false;
+      normalized.add(key);
+      return true;
+    })
+    .slice(0, 3);
+}
+
 export default function AiRecipeDetailPage() {
   const router = useRouter();
   const params = useParams<{ recipeId?: string }>();
@@ -106,6 +138,9 @@ export default function AiRecipeDetailPage() {
   const recipeId = params.recipeId ? decodeURIComponent(params.recipeId) : undefined;
   const draft = useMemo(() => readDraft(recipeId), [recipeId]);
   const [userAllergies, setUserAllergies] = useState<string[]>([]);
+  const [similarRecipes, setSimilarRecipes] = useState<SimilarRecipe[]>([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
+  const [similarError, setSimilarError] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -124,6 +159,55 @@ export default function AiRecipeDetailPage() {
 
     void fetchUserAllergies();
   }, [isLoggedIn, userInfo]);
+
+  useEffect(() => {
+    const keywords = getSimilarSearchKeywords(draft);
+
+    if (keywords.length === 0) {
+      window.setTimeout(() => setSimilarRecipes([]), 0);
+      return;
+    }
+
+    const fetchSimilarRecipes = async () => {
+      try {
+        setSimilarLoading(true);
+        setSimilarError("");
+
+        const responses = await Promise.all(
+          keywords.map((keyword) =>
+            api.get<SimilarRecipeResponse>("/boards/search", {
+              params: {
+                source: "all",
+                keyword,
+                sort: "likes",
+                page: 1,
+                size: 4,
+              },
+            })
+          )
+        );
+
+        const uniqueRecipes = new Map<number, SimilarRecipe>();
+        responses
+          .flatMap((response) => response.data.list ?? [])
+          .forEach((recipe) => {
+            if (!uniqueRecipes.has(recipe.boardNo)) {
+              uniqueRecipes.set(recipe.boardNo, recipe);
+            }
+          });
+
+        setSimilarRecipes(Array.from(uniqueRecipes.values()).slice(0, 4));
+      } catch (error) {
+        console.error("비슷한 실제 레시피 조회 실패:", error);
+        setSimilarRecipes([]);
+        setSimilarError("비슷한 실제 레시피를 불러오지 못했습니다.");
+      } finally {
+        setSimilarLoading(false);
+      }
+    };
+
+    void fetchSimilarRecipes();
+  }, [draft]);
 
   const ingredientsWithAllergy = useMemo(
     () => withAllergyFlags(draft.ingredients, isLoggedIn ? userAllergies : []),
@@ -313,13 +397,24 @@ export default function AiRecipeDetailPage() {
 
             <section className={styles.asideCard}>
               <h2>비슷한 실제 레시피</h2>
-              <button type="button" className={styles.relatedCard}>
-                <span>등록 레시피</span>
-                <strong>{draft.relatedRecipe.title}</strong>
-                <em>{draft.relatedRecipe.meta}</em>
-                <b>레시피 상세 보기</b>
-              </button>
-              <p className={styles.relatedNote}>나중에 DB의 BOARD에서 이름 유사도가 높은 레시피를 연결할 예정입니다.</p>
+              {similarLoading && <p className={styles.relatedNote}>비슷한 레시피를 찾고 있습니다.</p>}
+              {!similarLoading && similarError && <p className={styles.relatedNote}>{similarError}</p>}
+              {!similarLoading && !similarError && similarRecipes.length === 0 && (
+                <p className={styles.relatedNote}>아직 비슷한 실제 레시피가 없습니다.</p>
+              )}
+              {!similarLoading &&
+                similarRecipes.map((recipe) => (
+                  <Link href={`/boards/${recipe.boardNo}`} className={styles.relatedCard} key={recipe.boardNo}>
+                    <img src={recipe.imageUrl || "/ai-recipe-placeholder.svg"} alt={recipe.boardTitle} />
+                    <div>
+                      <span>{recipe.isApiData === "Y" ? "공식 레시피" : "사용자 레시피"}</span>
+                      <strong>{recipe.boardTitle}</strong>
+                      <em>
+                        {[recipe.typeName, recipe.cookTime, `좋아요 ${recipe.likesCount}`].filter(Boolean).join(" · ")}
+                      </em>
+                    </div>
+                  </Link>
+                ))}
             </section>
           </aside>
         </div>
