@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "@/app/lib/config";
 import styles from "./page.module.css";
 
 interface Inquiry {
@@ -30,7 +31,7 @@ type InquiryType = "계정" | "레시피" | "기타";
 
 const ITEMS_PER_PAGE = 10;
 const PAGE_GROUP_SIZE = 5;
-const API_BASE = "http://localhost:8081/api/admin/inquiries";
+const API_BASE = `${API_BASE_URL}/admin/inquiries`;
 const INQUIRY_TYPES: InquiryType[] = ["계정", "레시피", "기타"];
 
 export default function InquiryManagePage() {

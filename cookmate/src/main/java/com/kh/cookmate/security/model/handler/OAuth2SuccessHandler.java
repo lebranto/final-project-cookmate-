@@ -3,6 +3,7 @@ package com.kh.cookmate.security.model.handler;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -28,6 +29,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler{
 	
 	
 	private final JWTProvider jwt;
+
+	@Value("${app.frontend-url:http://localhost:3000}")
+	private String frontendUrl;
 	
 	
 	
@@ -59,7 +63,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler{
 	response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 	response.addHeader(HttpHeaders.SET_COOKIE, roleCookie.toString());
 	
-	String redirect = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/success")
+	String redirect = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth2/success")
 			.build().toUriString();
 	
 	response.sendRedirect(redirect);

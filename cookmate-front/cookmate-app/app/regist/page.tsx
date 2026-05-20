@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/app/lib/config";
 import styles from "./RegisterPage.module.css";
 import { RegisterForm, RegisterStep } from "../type/register";
 
@@ -214,7 +215,7 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
     }
 
     try {
-    const response = await fetch("http://localhost:8081/api/auth/signup/email/send", {
+    const response = await fetch(`${API_BASE_URL}/auth/signup/email/send`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -256,7 +257,7 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
   }
 
   try {
-    const response = await fetch("http://localhost:8081/api/auth/email/verify", {
+    const response = await fetch(`${API_BASE_URL}/auth/email/verify`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -510,7 +511,7 @@ function AllergyStep({ onNext, form }: StepProps) {
   console.log("회원가입 요청 데이터:", signupData);
 
   try {
-    const response = await fetch("http://localhost:8081/api/auth/signup", {
+    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

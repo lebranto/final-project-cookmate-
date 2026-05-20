@@ -1,8 +1,10 @@
 // lib/axios.ts
 import axios from 'axios';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8081/api';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8081/api', // 백엔드 주소
+  baseURL: API_BASE_URL,
   withCredentials: true,
 });
 

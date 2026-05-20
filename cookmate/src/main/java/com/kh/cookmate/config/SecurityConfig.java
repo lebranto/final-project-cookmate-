@@ -2,6 +2,7 @@ package com.kh.cookmate.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -28,6 +29,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
+
+	@Value("${app.cors.allowed-origins:http://localhost:3000}")
+	private String allowedOrigins;
 
 		// 시큐리티 형태를 xml이 아닌 java 형태로 만든다.
 		
@@ -80,7 +84,12 @@ public class SecurityConfig {
 		CorsConfiguration config = new CorsConfiguration();
 		
 		// 허용 Origin 설정 
-		config.setAllowedOrigins(List.of("http://localhost:3000"));
+		config.setAllowedOrigins(
+				List.of(allowedOrigins.split(",")).stream()
+						.map(String::trim)
+						.filter(origin -> !origin.isBlank())
+						.toList()
+		);
 		
 		// 허용 메서드 설정, OPTIONS 추가 된것
 		config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));

@@ -1,12 +1,13 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/axios';
 import styles from './write.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions'; 
 
-export default function InquiryWritePage() {
+function InquiryWriteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get('edit'); 
@@ -183,5 +184,13 @@ export default function InquiryWritePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function InquiryWritePage() {
+  return (
+    <Suspense fallback={null}>
+      <InquiryWriteContent />
+    </Suspense>
   );
 }

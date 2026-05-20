@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { API_BASE_URL } from '@/app/lib/config';
 
 import styles from './page.module.css';
 import Loading from '../loading';
@@ -59,7 +60,7 @@ export default function UsersPage() {
       if (isInitialLoading) setLoading(true);
 
       const response = await axios.get<UserResponse>(
-        'http://localhost:8081/api/admin/users',
+        `${API_BASE_URL}/admin/users`,
         { params: { page, keyword, status, role, sort } },
       );
 
@@ -125,7 +126,7 @@ export default function UsersPage() {
 
     setSubmitting(true);
     try {
-      await axios.post(`http://localhost:8081/api/admin/users/${suspendTarget.userId}/suspend`, {
+      await axios.post(`${API_BASE_URL}/admin/users/${suspendTarget.userId}/suspend`, {
         days: Number(suspendDays),
         reason: suspendReason,
         banType: Number(suspendDays) === 0 ? 'PERMANENT' : 'TEMPORARY',
@@ -146,7 +147,7 @@ export default function UsersPage() {
 
     setSubmitting(true);
     try {
-      await axios.patch(`http://localhost:8081/api/admin/users/${user.userId}/suspend/release`);
+      await axios.patch(`${API_BASE_URL}/admin/users/${user.userId}/suspend/release`);
       alert('정지 해제가 완료되었습니다.');
       fetchUsers(currentPage);
     } catch (error) {
@@ -170,7 +171,7 @@ export default function UsersPage() {
 
     setSubmitting(true);
     try {
-      await axios.post(`http://localhost:8081/api/admin/users/${withdrawTarget.userId}/withdraw`, {
+      await axios.post(`${API_BASE_URL}/admin/users/${withdrawTarget.userId}/withdraw`, {
         reason: withdrawReason,
       });
       alert('강제 탈퇴 처리가 완료되었습니다.');

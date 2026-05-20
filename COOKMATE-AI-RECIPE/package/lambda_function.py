@@ -1,11 +1,12 @@
 import base64
 import json
+import os
 import traceback
 
 from agent import recommend_recipes
 from tools import AiRecipeError
 
-ALLOWED_ORIGIN = "http://localhost:3000"
+ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:3000")
 
 
 def response(status_code, body):

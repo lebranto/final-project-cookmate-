@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import styles from "./CommonLayout.module.css";
 import UserAvatar from '@/app/components/UserAvatar';
 import api from "@/app/lib/api";
+import { API_BASE_URL } from "@/app/lib/config";
 
 
 type UserRole = "ROLE_USER" | "ROLE_ADMIN";
@@ -35,7 +36,6 @@ const HEADER_MENU_ITEMS = [
   { label: "공지사항", path: "/notice" },
 ];
 
-const API_BASE_URL = "http://localhost:8081/api";
 const ACCESS_TOKEN_KEY = "accessToken";
 const ROLE_COOKIE_KEY = "userRoles";
 const STORAGE_USER_KEYS = ["user", "loginUser", "member", "authUser"];

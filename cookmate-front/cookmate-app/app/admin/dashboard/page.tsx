@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "@/app/lib/config";
 import styles from "./page.module.css";
 
 interface TopRecipe {
@@ -91,7 +92,7 @@ export default function DashboardPage() {
 
       try {
 
-        const response = await fetch("http://localhost:8081/api/admin/dashboard");
+        const response = await fetch(`${API_BASE_URL}/admin/dashboard`);
 
         if (!response.ok) {
           throw new Error("대시보드 데이터를 불러오지 못했습니다.");

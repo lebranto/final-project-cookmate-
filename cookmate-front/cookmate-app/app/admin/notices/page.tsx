@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "@/app/lib/config";
 import styles from "./page.module.css";
 
 interface Notice {
@@ -29,7 +30,7 @@ type ViewMode = "list" | "create" | "edit";
 
 const ITEMS_PER_PAGE = 10;
 const PAGE_GROUP_SIZE = 5;
-const API_BASE = "http://localhost:8081/api/admin/notices";
+const API_BASE = `${API_BASE_URL}/admin/notices`;
 
 const NOTICE_TYPES: NoticeType[] = ["중요", "안내", "점검", "업데이트", "이벤트"];
 

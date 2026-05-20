@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '@/app/lib/config';
 
 import styles from './page.module.css';
 
@@ -91,7 +92,7 @@ export default function ReportsPage() {
 
     try {
       const { data } = await axios.get<ReportResponse>(
-        'http://localhost:8081/api/admin/reports',
+        `${API_BASE_URL}/admin/reports`,
         {
           params: {
             page,
@@ -160,7 +161,7 @@ export default function ReportsPage() {
     setProcessReason('');
 
     try {
-      const { data } = await axios.get<ReportDetail>(`http://localhost:8081/api/admin/reports/${reportId}`);
+      const { data } = await axios.get<ReportDetail>(`${API_BASE_URL}/admin/reports/${reportId}`);
       setSelectedReport(data);
       if (convertStatus(data.status) === '완료' || convertStatus(data.status) === '반려') {
         setSelectedAction('REJECT');
@@ -195,7 +196,7 @@ export default function ReportsPage() {
 
     setSubmitting(true);
     try {
-      await axios.patch(`http://localhost:8081/api/admin/reports/${selectedReport.reportId}/process`, {
+      await axios.patch(`${API_BASE_URL}/admin/reports/${selectedReport.reportId}/process`, {
         action: selectedAction,
         reason: processReason,
         targetKind: selectedReport.targetKind,
