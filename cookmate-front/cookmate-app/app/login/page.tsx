@@ -3,6 +3,7 @@
 import { JSX, useState } from "react";
 import type { SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/app/lib/config";
 import styles from "./login.module.css";
 
 
@@ -34,7 +35,7 @@ function LoginForm(): JSX.Element {
   e.preventDefault();
 
   try {
-    const response = await fetch("http://localhost:8081/api/auth/login", {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -76,7 +77,7 @@ function LoginForm(): JSX.Element {
 };
   
   const handleKakao = (): void => {
-    window.location.href = "http://localhost:8081/api/oauth2/authorization/kakao";
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/kakao`;
   };
 
   const handleSignup = (): void => {

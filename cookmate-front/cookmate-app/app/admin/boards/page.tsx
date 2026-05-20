@@ -9,6 +9,7 @@ import {
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/app/lib/config";
 
 import styles from "./page.module.css";
 
@@ -145,7 +146,7 @@ export default function RecipeManagePage() {
     try {
       const { data } =
         await axios.get<RecipeResponse>(
-          "http://localhost:8081/api/admin/boards",
+          `${API_BASE_URL}/admin/boards`,
           {
             params: {
               page,
@@ -235,7 +236,7 @@ export default function RecipeManagePage() {
 
       try {
         await axios.patch(
-          `http://localhost:8081/api/admin/boards/${recipe.boardNo}/${isHidden ? "restore" : "hide"}`,
+          `${API_BASE_URL}/admin/boards/${recipe.boardNo}/${isHidden ? "restore" : "hide"}`,
           undefined,
           {
             timeout: 8000,

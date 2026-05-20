@@ -2,6 +2,7 @@
 
 import { JSX, useState } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/app/lib/config";
 import styles from "./find.module.css";
 
 const PASSWORD_RULE_MESSAGE = "비밀번호는 8자 이상이며 영문자와 숫자를 모두 포함해야 합니다.";
@@ -33,7 +34,7 @@ export default function FindPage(): JSX.Element {
     }
 
     try {
-      const response = await fetch("http://localhost:8081/api/auth/email/send", {
+      const response = await fetch(`${API_BASE_URL}/auth/email/send`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,7 +67,7 @@ export default function FindPage(): JSX.Element {
     }
 
     try {
-      const response = await fetch("http://localhost:8081/api/auth/email/verify", {
+      const response = await fetch(`${API_BASE_URL}/auth/email/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,7 +100,7 @@ export default function FindPage(): JSX.Element {
     }
 
     try {
-      const response = await fetch("http://localhost:8081/api/auth/password/reset", {
+      const response = await fetch(`${API_BASE_URL}/auth/password/reset`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
