@@ -228,11 +228,27 @@ export default function GlobalHeader() {
       const nextHasToken = hasAccessToken();
       const nextUser = getStoredUser();
       const nextRoles = getStoredRoles();
+      const restoreAuthFromRefresh = async () => {
+        try {
+          const refreshResponse = await api.post("/auth/refresh");
+          const nextToken = refreshResponse.data?.accessToken;
+
+          if (nextToken) {
+            window.localStorage.setItem("accessToken", nextToken);
+        }
+
+          await fetchAuthUser();
+        } catch {
+            clearStoredAuth();
+            setRoles([]);
+            setCurrentUser(null);
+            setIsLoggedIn(false);
+          }
+        };
+
 
     if (!nextHasToken && !nextUser) {
-      setRoles([]);
-      setCurrentUser(null);
-      setIsLoggedIn(false);
+      void restoreAuthFromRefresh();
     return;
     }
 

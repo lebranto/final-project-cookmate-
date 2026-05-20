@@ -43,42 +43,58 @@
     </update>
 
     <insert id="insertLikeNotification" parameterType="map">
-        INSERT INTO NOTIFICATION (
-            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
-        )
-        SELECT
-            b.USER_NO,
-            #{actorUserNo},
-            'LIKE',
-            CONCAT(a.NICKNAME, '님이 회원님의 레시피에 좋아요를 눌렀습니다'),
-            b.BOARD_NO,
-            NULL,
-            'N',
-            NOW()
-        FROM BOARD b
-        JOIN USER a ON a.USER_NO = #{actorUserNo}
-        WHERE b.BOARD_NO = #{boardNo}
-          AND b.USER_NO != #{actorUserNo}
-    </insert>
+    INSERT INTO NOTIFICATION (
+        USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+    )
+    SELECT
+        b.USER_NO,
+        #{actorUserNo},
+        'LIKE',
+        CONCAT(a.NICKNAME, '님이 회원님의 레시피에 좋아요를 눌렀습니다'),
+        b.BOARD_NO,
+        NULL,
+        'N',
+        NOW()
+    FROM BOARD b
+    JOIN USER a ON a.USER_NO = #{actorUserNo}
+    WHERE b.BOARD_NO = #{boardNo}
+      AND b.USER_NO != #{actorUserNo}
+      AND NOT EXISTS (
+          SELECT 1
+          FROM NOTIFICATION n
+          WHERE n.USER_NO = b.USER_NO
+            AND n.ACTOR_USER_NO = #{actorUserNo}
+            AND n.NOTIFICATION_TYPE = 'LIKE'
+            AND n.BOARD_NO = b.BOARD_NO
+      )
+	</insert>
 
     <insert id="insertScrapNotification" parameterType="map">
-        INSERT INTO NOTIFICATION (
-            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
-        )
-        SELECT
-            b.USER_NO,
-            #{actorUserNo},
-            'SCRAP',
-            CONCAT(a.NICKNAME, '님이 회원님의 레시피를 스크랩했습니다'),
-            b.BOARD_NO,
-            NULL,
-            'N',
-            NOW()
-        FROM BOARD b
-        JOIN USER a ON a.USER_NO = #{actorUserNo}
-        WHERE b.BOARD_NO = #{boardNo}
-          AND b.USER_NO != #{actorUserNo}
-    </insert>
+    INSERT INTO NOTIFICATION (
+        USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+    )
+    SELECT
+        b.USER_NO,
+        #{actorUserNo},
+        'SCRAP',
+        CONCAT(a.NICKNAME, '님이 회원님의 레시피를 스크랩했습니다'),
+        b.BOARD_NO,
+        NULL,
+        'N',
+        NOW()
+    FROM BOARD b
+    JOIN USER a ON a.USER_NO = #{actorUserNo}
+    WHERE b.BOARD_NO = #{boardNo}
+      AND b.USER_NO != #{actorUserNo}
+      AND NOT EXISTS (
+          SELECT 1
+          FROM NOTIFICATION n
+          WHERE n.USER_NO = b.USER_NO
+            AND n.ACTOR_USER_NO = #{actorUserNo}
+            AND n.NOTIFICATION_TYPE = 'SCRAP'
+            AND n.BOARD_NO = b.BOARD_NO
+      )
+	</insert>
 
     <insert id="insertCommentNotification" parameterType="map">
         INSERT INTO NOTIFICATION (
@@ -119,23 +135,30 @@
     </insert>
 
     <insert id="insertFollowNotification" parameterType="map">
-        INSERT INTO NOTIFICATION (
-            USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
-        )
-        SELECT
-            target.USER_NO,
-            #{actorUserNo},
-            'FOLLOW',
-            CONCAT(a.NICKNAME, '님이 회원님을 팔로우하기 시작했습니다'),
-            NULL,
-            NULL,
-            'N',
-            NOW()
-        FROM USER target
-        JOIN USER a ON a.USER_NO = #{actorUserNo}
-        WHERE target.USER_EMAIL = #{targetEmail}
-          AND target.USER_NO != #{actorUserNo}
-    </insert>
+    INSERT INTO NOTIFICATION (
+        USER_NO, ACTOR_USER_NO, NOTIFICATION_TYPE, MESSAGE, BOARD_NO, COMMENT_NO, READ_YN, CREATED_AT
+    )
+    SELECT
+        target.USER_NO,
+        #{actorUserNo},
+        'FOLLOW',
+        CONCAT(a.NICKNAME, '님이 회원님을 팔로우하기 시작했습니다'),
+        NULL,
+        NULL,
+        'N',
+        NOW()
+    FROM USER target
+    JOIN USER a ON a.USER_NO = #{actorUserNo}
+    WHERE target.USER_EMAIL = #{targetEmail}
+      AND target.USER_NO != #{actorUserNo}
+      AND NOT EXISTS (
+          SELECT 1
+          FROM NOTIFICATION n
+          WHERE n.USER_NO = target.USER_NO
+            AND n.ACTOR_USER_NO = #{actorUserNo}
+            AND n.NOTIFICATION_TYPE = 'FOLLOW'
+      )
+	</insert>
 
     <insert id="insertRecipeNotifications" parameterType="map">
         INSERT INTO NOTIFICATION (
