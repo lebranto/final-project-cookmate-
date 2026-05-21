@@ -64,10 +64,6 @@ public class SecurityConfig {
 			 .authorizeHttpRequests(auth ->
 			 		auth
 			 		.anyRequest().permitAll()
-		            
-//			 		.requestMatchers("/auth/login","/auth/signup","/auth/logout","/auth/refresh").permitAll()
-//					.requestMatchers("/oauth2/**","/login**","/error").permitAll()
-//					.requestMatchers("/**").authenticated()
 					);
 			
 			// 어떤 필터 전에 추가할지 결정하는 메서드
