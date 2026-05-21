@@ -8,7 +8,7 @@ import type { NextRequest } from "next/server";
 const AUTH_ONLY_PAGES = ["/login", "/regist"];
 
 /** 비로그인 유저가 접근하면 → "/login" 으로 리다이렉트 */
-const PROTECTED_PAGES = ["/mypage", "/profile", "/settings","/admin"];
+const PROTECTED_PAGES = ["/mypage", "/profile", "/settings","/admin","/ai"];
 
 // ── proxy 함수 (middleware → proxy 로 이름 변경) ──────────
 export function proxy(request: NextRequest) {

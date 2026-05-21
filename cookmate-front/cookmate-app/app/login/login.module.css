@@ -17,6 +17,8 @@
 .authWrap {
   min-height: calc(100vh - 64px);
   display: flex;
+  background: #f4f0e8;
+  color: #111111;
 }
 
 /* ── 왼쪽 브랜드 영역 ── */
@@ -67,6 +69,7 @@
   align-items: center;
   justify-content: center;
   padding: 40px 24px;
+  background: #f4f0e8;
 }
 .authCard {
   width: 100%;

@@ -346,6 +346,7 @@ export default function GlobalHeader() {
   };
 
   const handleBellClick = () => {
+    setMenuOpen(false);
     setNotificationOpen((prev) => !prev);
   };
 
@@ -527,7 +528,10 @@ export default function GlobalHeader() {
           <button
             type="button"
             className={styles.ghMobileMenu}
-            onClick={() => setMenuOpen((prev) => !prev)}
+            onClick={() => {
+              setNotificationOpen(false);
+              setMenuOpen((prev) => !prev);
+              }}
             aria-label="메뉴"
           >
             <span />

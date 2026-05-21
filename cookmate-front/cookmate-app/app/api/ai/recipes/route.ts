@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 const AI_RECIPE_API_URL = process.env.AI_RECIPE_API_URL || process.env.NEXT_PUBLIC_AI_RECIPE_API_URL;
 
 export async function POST(request: NextRequest) {
+  const accessToken = request.cookies.get("accessToken")?.value;
+  const refreshToken = request.cookies.get("refreshToken")?.value;
+
+  if (!accessToken && !refreshToken) {
+    return NextResponse.json(
+      { message: "로그인이 필요합니다." },
+      { status: 401 }
+    );
+  }
   if (!AI_RECIPE_API_URL) {
     return NextResponse.json({ message: "AI 추천 API 주소가 설정되지 않았습니다." }, { status: 500 });
   }

@@ -1,4 +1,9 @@
-.main { padding-bottom: 60px; } 
+.main { 
+    min-height: calc(100vh - 72px);
+    padding-bottom: 60px;
+    background: #f4f0e8;
+    color: #1a1a1a;
+} 
 .inner { 
     max-width: 860px; 
     margin: 0 auto; 
@@ -197,10 +202,7 @@
     color: #1a1a1a; 
     transition: all .15s; 
 }
-.pageBtn:hover:not(:disabled) { 
-    border-color: #3a6e22; 
-    color: #3a6e22; 
-}
+
 .active { 
     background: #3a6e22; 
     color: white; 
