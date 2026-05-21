@@ -5,6 +5,7 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import styles from './scraps.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
+import '@/app/responsive.css';
 
 interface Scrap {
   boardNo: number;
@@ -98,9 +99,13 @@ export default function MyScrapsPage() {
 
     return (
       <div className={styles.pagination}>
-        <button className={`${styles.pageBtn} ${styles.arrow}`} disabled={currentPage === 1} onClick={() => setCurrentPage(c => Math.max(1, c - 1))}>&lsaquo;</button>
+        <button className={`${styles.pageBtn} ${styles.arrow}`} 
+          disabled={currentPage === 1} 
+          onClick={() => setCurrentPage(c => Math.max(1, c - 1))}>&lsaquo;</button>
         {pages}
-        <button className={`${styles.pageBtn} ${styles.arrow}`} disabled={currentPage === totalPages} onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}>&rsaquo;</button>
+        <button className={`${styles.pageBtn} ${styles.arrow}`} 
+          disabled={currentPage === totalPages} 
+          onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}>&rsaquo;</button>
       </div>
     );
   };
@@ -119,6 +124,7 @@ export default function MyScrapsPage() {
       </div>
 
       <div className={styles.filterBar}>
+        <div className={`${styles.categoryWrapper} mobile-swipe-menu`}>
         {CATEGORIES.map(cat => (
           <button 
             key={cat}
@@ -129,7 +135,7 @@ export default function MyScrapsPage() {
           </button>
         ))}
       </div>
-
+    </div>
       {loading ? (
         <div style={{ padding: '60px', textAlign: 'center' }}>스크랩 목록을 불러오는 중...</div>
       ) : (

@@ -18,43 +18,32 @@
 }
 
 .tabs {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
 }
 
 .tab {
-    padding: 9px 20px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 20px;
-    background-color: #ffffff;
-    font-size: 13px;
-    font-weight: 500;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: inherit;
-}
-
-.tab:hover {
-    border-color: #3a6e22;
-    background-color: #f9fbf8;
+  padding: 8px 18px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .tab.active {
-    color: #3a6e22;
-    background-color: #e8f5e1;
-    border-color: #3a6e22;
-    font-weight: 700;
+  border-color: #3a6e22;
+  background: #e8f5e1;
+  color: #3a6e22;
+  font-weight: 700;
 }
 
 .tabCount {
-    font-size: 12px;
-    opacity: 0.7;
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 .resultCount { 
@@ -216,3 +205,40 @@
 }
 
 .filterSelect:focus { border-color: #3a6e22; }
+
+@media (max-width: 1024px) {
+  .chefCard {
+    padding: 14px 12px !important;
+    gap: 12px !important;
+  }
+
+  .chefNameRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center !important;
+  }
+
+  .chefStats {
+    display: flex !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+  }
+
+  .chefStat {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .statLabel {
+    font-size: 10px !important;
+    color: #888888 !important;
+    margin-bottom: 2px !important; 
+  }
+
+  .chefStatNum {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+  }
+}

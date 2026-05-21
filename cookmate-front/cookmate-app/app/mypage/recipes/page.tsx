@@ -5,6 +5,7 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import styles from './recipes.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
+import '@/app/responsive.css';
 
 interface Recipe {
   boardNo: number;
@@ -96,9 +97,13 @@ export default function MyRecipesPage() {
 
     return (
       <div className={styles.pagination}>
-        <button className={`${styles.pageBtn} ${styles.arrow}`} disabled={currentPage === 1} onClick={() => setCurrentPage(c => Math.max(1, c - 1))}>&lsaquo;</button>
+        <button className={`${styles.pageBtn} ${styles.arrow}`} 
+          disabled={currentPage === 1} 
+          onClick={() => setCurrentPage(c => Math.max(1, c - 1))}>&lsaquo;</button>
         {pages}
-        <button className={`${styles.pageBtn} ${styles.arrow}`} disabled={currentPage === totalPages} onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}>&rsaquo;</button>
+        <button className={`${styles.pageBtn} ${styles.arrow}`} 
+          disabled={currentPage === totalPages} 
+          onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}>&rsaquo;</button>
       </div>
     );
   };
@@ -120,6 +125,7 @@ export default function MyRecipesPage() {
       </div>
 
       <div className={styles.filterBar}>
+      <div className={`${styles.categoryWrapper} mobile-swipe-menu`}>
         {CATEGORIES.map(cat => (
           <button 
             key={cat}
@@ -130,7 +136,7 @@ export default function MyRecipesPage() {
           </button>
         ))}
       </div>
-
+    </div>
       {loading ? (
         <div className={styles.loadingBox}>레시피를 불러오는 중입니다...</div>
       ) : (

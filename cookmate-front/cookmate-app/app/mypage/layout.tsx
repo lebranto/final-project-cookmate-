@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import api from '@/lib/axios';
 import styles from './mypage.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 import UserAvatar from '@/app/components/UserAvatar';
+import '@/app/responsive.css';
 
 interface UserData {
   nickname: string;
@@ -19,6 +20,7 @@ interface UserData {
 
 export default function MyPageLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   
   const [isMounted, setIsMounted] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -26,6 +28,8 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
 
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
+
+  const isMainMypage = pathname === '/mypage';
 
   useEffect(() => {
     setIsMounted(true);
@@ -144,6 +148,15 @@ export default function MyPageLayout({ children }: { children: React.ReactNode }
         </aside>
 
         <main className={styles.mainContent}>
+
+          {!isMainMypage && (
+            <div className={styles.mobileSubHeader}>
+              <button onClick={() => router.push('/mypage')} className={styles.btnBack}>
+                ← 마이페이지 홈으로
+              </button>
+            </div>
+          )}
+
           {children}
         </main>
       </div>

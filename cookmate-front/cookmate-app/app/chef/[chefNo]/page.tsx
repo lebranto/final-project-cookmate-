@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams , useRouter} from 'next/navigation';
 import Link from 'next/link'; 
 import api from '@/lib/axios';
 import styles from './detail.module.css';
@@ -49,6 +49,7 @@ function resolveRecipeImageUrl(imageUrl?: string | null) {
 export default function ChefDetailPage() {
   const params = useParams();
   const chefNo = params.chefNo;
+  const router = useRouter();
   
   const [isMounted, setIsMounted] = useState(false);
   const [chef, setChef] = useState<ChefDetail | null>(null);
@@ -150,12 +151,26 @@ export default function ChefDetailPage() {
     }
   };
 
-  if (!isMounted) return null;
-  if (loading) return <div style={{padding: '100px', textAlign: 'center'}}>셰프 정보를 불러오는 중...</div>;
-  if (!chef) return <div style={{padding: '100px', textAlign: 'center'}}>존재하지 않는 셰프입니다.</div>;
+  if (!isMounted) 
+    return null;
+  if (loading) 
+    return 
+      <div style={{padding: '100px', textAlign: 'center'}}>
+        셰프 정보를 불러오는 중...
+      </div>;
+  if (!chef) 
+    return 
+      <div style={{padding: '100px', textAlign: 'center'}}>
+        존재하지 않는 셰프입니다.
+      </div>;
 
   return (
     <main className={styles.mainInner}>
+      <div className={styles.mobileSubHeader}>
+        <button onClick={() => router.push('/chef')} className={styles.btnBack}>
+          ← 목록으로
+        </button>
+      </div>
       <div className={styles.profileCard}>
         <div className={styles.avatar}>
           <UserAvatar 
@@ -205,10 +220,12 @@ export default function ChefDetailPage() {
       </div>
 
       <div className={styles.tabs}>
-        <button className={`${styles.tab} ${activeTab === 'recipe' ? styles.active : ''}`} onClick={() => setActiveTab('recipe')}>
+        <button className={`${styles.tab} ${activeTab === 'recipe' ? styles.active : ''}`} 
+          onClick={() => setActiveTab('recipe')}>
           공개 레시피 <span className={styles.tabCount}>{chef.recipeCount}</span>
         </button>
-        <button className={`${styles.tab} ${activeTab === 'comment' ? styles.active : ''}`} onClick={() => setActiveTab('comment')}>
+        <button className={`${styles.tab} ${activeTab === 'comment' ? styles.active : ''}`} 
+          onClick={() => setActiveTab('comment')}>
           댓글 <span className={styles.tabCount}>{comments.length}</span>
         </button>
       </div>
