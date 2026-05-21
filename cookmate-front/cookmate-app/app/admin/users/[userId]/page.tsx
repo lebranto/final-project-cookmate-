@@ -396,7 +396,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ userId: s
               <button
                 key={t}
                 className={`${styles.tab} ${tab === t ? styles.tabActive : ''}`}
-                onClick={() => setTab(t)}
+                onClick={() => handleTabChange(t)}
               >
                 {TAB_LABELS[t]}
               </button>

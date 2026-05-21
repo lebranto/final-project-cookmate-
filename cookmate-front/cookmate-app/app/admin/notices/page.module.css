@@ -162,6 +162,10 @@
 .title {
   font-weight: 600;
   color: #1f1f1f;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activeBadge {
@@ -464,8 +468,12 @@
 }
 
 .deleteSummary strong {
+  display: block;
   font-size: 14px;
   color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .warningText {
@@ -496,6 +504,14 @@
     padding: 24px 16px;
   }
 
+  .pageTitle {
+    font-size: 30px;
+  }
+
+  .formTitle {
+    font-size: 26px;
+  }
+
   .headerRow,
   .formHeaderRow,
   .toolbar,
@@ -506,6 +522,34 @@
 
   .filters {
     flex-direction: column;
+    width: 100%;
+  }
+
+  .filters select,
+  .createButton,
+  .searchBox {
+    width: 100%;
+  }
+
+  .card {
+    overflow-x: auto;
+    padding: 16px;
+  }
+
+  .table {
+    min-width: 780px;
+  }
+
+  .title {
+    max-width: 240px;
+  }
+
+  .actionButtons {
+    white-space: nowrap;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
   }
 
   .formRow {
@@ -515,5 +559,69 @@
 
   .helperText {
     grid-column: 1;
+  }
+
+  .dateGroup {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dateGroup input[type="date"] {
+    width: 100%;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .cancelButton,
+  .submitButton,
+  .topDeleteButton {
+    width: 100%;
+  }
+
+  .previewBox {
+    align-items: flex-start;
+    margin: 14px 16px;
+  }
+
+  .modalOverlay {
+    padding: 16px;
+  }
+
+  .deleteModal {
+    padding: 24px 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 18px 12px;
+  }
+
+  .pageTitle {
+    font-size: 26px;
+  }
+
+  .pageDescription {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .card {
+    border-radius: 10px;
+    padding: 12px;
+  }
+
+  .formRow {
+    padding: 16px;
+  }
+
+  .formActions {
+    padding: 14px 16px;
+  }
+
+  .modalActions {
+    grid-template-columns: 1fr;
   }
 }
