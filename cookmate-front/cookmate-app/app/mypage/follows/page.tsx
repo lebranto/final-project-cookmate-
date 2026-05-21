@@ -6,6 +6,7 @@ import styles from './follow.module.css';
 import Link from 'next/link';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 import UserAvatar from '@/app/components/UserAvatar';
+import '@/app/responsive.css';
 
 interface FollowUser {
   userNo: number;
@@ -113,13 +114,13 @@ export default function FollowManagementPage() {
         <div className={styles.controls}>
           <div className={styles.tabs}>
             <button 
-              className={`${styles.tab} ${activeTab === 'following' ? styles.active : ''}`} 
+              className={`${styles.tab} ${activeTab === 'following' ? styles.active : ''} prevent-nowrap`} 
               onClick={() => { setActiveTab('following'); setCurrentPage(1); }}
             >
               팔로잉 <span className={styles.tabCount}>{followingList.length}</span>
             </button>
             <button 
-              className={`${styles.tab} ${activeTab === 'follower' ? styles.active : ''}`} 
+              className={`${styles.tab} ${activeTab === 'follower' ? styles.active : ''} prevent-nowrap`} 
               onClick={() => { setActiveTab('follower'); setCurrentPage(1); }}
             >
               팔로워 <span className={styles.tabCount}>{followerList.length}</span>
@@ -163,7 +164,7 @@ export default function FollowManagementPage() {
                   <div className={styles.chefNameRow}>
                     <span className={styles.chefName}>{chef.nickname}</span>
                     <button 
-                      className={`${styles.btnFollow} ${chef.following ? styles.following : ''}`} 
+                      className={`${styles.btnFollow} ${chef.following ? styles.following : ''} prevent-nowrap`} 
                       onClick={(e) => handleFollowAction(e, chef)}
                     >
                       {chef.following ? '팔로잉' : '팔로우'}

@@ -1,0 +1,33 @@
+.prevent-nowrap {
+  white-space: nowrap !important;
+}
+
+.mobile-swipe-menu {
+  display: flex !important;
+  gap: 8px !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  padding-bottom: 4px;
+  
+  -ms-overflow-style: none;
+  scrollbar-width: none; 
+}
+
+.mobile-swipe-menu::-webkit-scrollbar {
+  display: none;
+}
+
+.shrink-text {
+  font-size: clamp(11px, 3.2vw, 14px) !important;
+}
+
+.shrink-text-sm {
+  font-size: clamp(9px, 2.5vw, 11px) !important;
+}
+
+.shrink-padding {
+  padding-top: clamp(4px, 1vw, 8px) !important;
+  padding-bottom: clamp(4px, 1vw, 8px) !important;
+  padding-left: clamp(6px, 2vw, 14px) !important;
+  padding-right: clamp(6px, 2vw, 14px) !important;
+}

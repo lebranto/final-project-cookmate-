@@ -6,6 +6,7 @@ import styles from './comments.module.css';
 import Link from 'next/link';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 import UserAvatar from '@/app/components/UserAvatar';
+import '@/app/responsive.css';
 
 interface MyComment {
   commentNo: number;
@@ -83,13 +84,13 @@ export default function MyCommentManagementPage() {
         <div className={styles.controls}>
           <div className={styles.tabs}>
             <button 
-              className={`${styles.tab} ${activeTab === 'written' ? styles.active : ''}`} 
+              className={`${styles.tab} ${activeTab === 'written' ? styles.active : ''} prevent-nowrap`} 
               onClick={() => { setActiveTab('written'); setCurrentPage(1); }}
             >
               내가 쓴 댓글 <span className={styles.tabCount}>{writtenComments.length}</span>
             </button>
             <button 
-              className={`${styles.tab} ${activeTab === 'received' ? styles.active : ''}`} 
+              className={`${styles.tab} ${activeTab === 'received' ? styles.active : ''} prevent-nowrap`} 
               onClick={() => { setActiveTab('received'); setCurrentPage(1); }}
             >
               내 글에 달린 댓글 <span className={styles.tabCount}>{receivedComments.length}</span>
@@ -114,9 +115,10 @@ export default function MyCommentManagementPage() {
             {activeTab === 'written' ? "작성한 댓글이 없습니다." : "내 게시물에 달린 댓글이 없습니다."}
           </div>
         ) : (
-          <div className={styles.commentList}>
+          
+          <div className={`${styles.commentList} prevent-nowrap`} >
             {pageItems.map((comment) => (
-              <div key={comment.commentNo} className={styles.commentCard}>
+              <div key={comment.commentNo} className={`${styles.commentCard} prevent-nowrap`}>
                 <div className={styles.cardHeader}>
                   <div className={styles.avatarWrap}>
                     <UserAvatar 
@@ -133,13 +135,13 @@ export default function MyCommentManagementPage() {
                   </div>
                 </div>
 
-                <div className={styles.commentContent}>
+                <div className={`${styles.commentContent} prevent-nowrap`}>
                   {comment.commentContent}
                 </div>
 
-                <div className={styles.cardDivider} />
+                <div className={styles.cardDivider} />  
 
-                <div className={styles.cardFooter}>
+                <div className={`${styles.cardFooter} prevent-nowrap`}>
                   <span className={styles.sourceLabel}>원문:</span>
                   <Link href={`/boards/${comment.boardNo}`} className={styles.boardLink}>
                     {comment.boardTitle}

@@ -8,6 +8,7 @@
     max-width: 860px; 
     margin: 0 auto; 
     padding: 0 24px; 
+    padding-top: 28px;
 }
 
 .pageTitle { 
@@ -216,4 +217,41 @@
 .pageBtn:disabled { 
     opacity: .35; 
     cursor: not-allowed; 
+}
+
+@media (max-width: 1024px) {
+  .chefCard {
+    padding: 14px 12px !important;
+    gap: 12px !important;
+  }
+
+  .chefNameRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center !important;
+  }
+
+  .chefStats {
+    display: flex !important;
+    gap: 8px !important;
+    margin-top: 8px !important;
+  }
+
+  .chefStat {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .statLabel {
+    font-size: 10px !important;
+    color: #888888 !important;
+    margin-bottom: 2px !important; 
+  }
+
+  .chefStatNum {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+  }
 }

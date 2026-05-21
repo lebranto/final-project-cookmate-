@@ -5,6 +5,7 @@ import Link from 'next/link';
 import api from '@/lib/axios';
 import styles from './mypage.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
+import UserAvatar from '@/app/components/UserAvatar'; 
 
 interface Recipe {
   boardNo: number;
@@ -25,6 +26,15 @@ interface Inquiry {
   status: string; 
 }
 
+interface UserData {
+  nickname: string;
+  userEmail: string;
+  profileImageUrl?: string;
+  recipeCount: number;
+  scrapCount: number;
+  inquiryCount: number;
+}
+
 function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
 }
@@ -35,7 +45,8 @@ export default function MyPage() {
   const [recentRecipes, setRecentRecipes] = useState<Recipe[]>([]);
   const [recentInquiries, setRecentInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
-
+  
+  const [userData, setUserData] = useState<UserData | null>(null);
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
 
@@ -52,13 +63,25 @@ export default function MyPage() {
     const fetchMyPageData = async () => {
       setLoading(true);
       try {
-        const [recipeRes, inquiryRes] = await Promise.all([
+        const [recipeRes, inquiryRes, statsRes, profileRes] = await Promise.all([
           api.get(`/users/recipes`, { params: { userNo: loginUserNo, category: '전체' } }),
-          api.get(`/users/inquiries`, { params: { userNo: loginUserNo } })
+          api.get(`/users/inquiries`, { params: { userNo: loginUserNo } }),
+          api.get(`/users/stats`, { params: { userNo: loginUserNo } }),
+          api.get(`/users/profile/${loginUserNo}`) 
         ]);
 
         if (recipeRes.status === 200) setRecentRecipes(recipeRes.data.slice(0, 3));
         if (inquiryRes.status === 200) setRecentInquiries(inquiryRes.data.slice(0, 2));
+        if (profileRes.status === 200 && statsRes.status === 200) {
+          setUserData({
+            nickname: profileRes.data.nickname,
+            userEmail: profileRes.data.userEmail,
+            profileImageUrl: profileRes.data.profileImageUrl,
+            recipeCount: statsRes.data.recipeCount,
+            scrapCount: statsRes.data.scrapCount,
+            inquiryCount: statsRes.data.inquiryCount
+          });
+        }
 
       } catch (err) {
         console.error("마이페이지 데이터 로딩 실패", err);
@@ -78,9 +101,8 @@ export default function MyPage() {
   if (loading) return <div style={{ padding: '100px', textAlign: 'center' }}>데이터를 불러오는 중입니다...</div>;
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.container}>
-        <main className={styles.mainContent}>
+    <>
+        <main className={styles.desktopView}>
           <div className={styles.mainSectionWrap}>
             
             <section className={styles.section}>
@@ -181,10 +203,75 @@ export default function MyPage() {
                 </Link>
               </div>
             </section>
-            
           </div>
         </main>
-      </div>
-    </div>
+
+        <main className={styles.mobileView}>
+          <section className={styles.mobileProfileCard}>
+            
+            <div className={styles.mobileAvatar}>
+              <UserAvatar 
+                imageUrl={userData?.profileImageUrl} 
+                name={userData?.nickname} 
+                email={userData?.userEmail}
+                size={84} 
+              />
+            </div> 
+            
+            <h3 className={styles.mobileName}>{userData?.nickname || "사용자"}</h3>
+            <p className={styles.mobileEmail}>{userData?.userEmail || "email@cookmate.com"}</p>
+            
+            <div className={styles.mobileStatsGrid}>
+              <div className={styles.statItem}>
+                <strong>{userData?.recipeCount}</strong>
+                <span>레시피</span>
+              </div>
+              <div className={styles.statDivider} />
+              <div className={styles.statItem}>
+                <strong>{userData?.scrapCount}</strong>
+                <span>스크랩</span>
+              </div>
+              <div className={styles.statDivider} />
+              <div className={styles.statItem}>
+                <strong>{userData?.inquiryCount ?? 0}</strong>
+                <span>문의</span>
+              </div>
+            </div>
+          </section>
+
+          <div className={styles.mobileMenuContainer}>
+            <div className={styles.mobileMenuCard}>
+              <Link href="/mypage/recipes" className={styles.menuItem}>
+                <span>내가 만든 레시피</span>
+                <span className={styles.menuRight}>&gt;</span>
+              </Link>
+              <Link href="/mypage/scraps" className={styles.menuItem}>
+                <span>스크랩 목록</span>
+                <span className={styles.menuRight}>&gt;</span>
+              </Link>
+              <Link href="/mypage/follows" className={styles.menuItem}>
+                <span>팔로우 관리</span>
+                <span className={styles.menuRight}>&gt;</span>
+              </Link>
+              <Link href="/mypage/comments" className={styles.menuItem}>
+                <span>댓글 관리</span>
+                <span className={styles.menuRight}>&gt;</span>
+              </Link>
+              <Link href="/mypage/inquiries" className={styles.menuItem}>
+                <span> 문의 내역</span>
+                <span className={styles.menuRight}>&gt;</span>
+              </Link>
+              <Link href="/mypage/profile" className={styles.menuItem}>
+                <span> 회원 정보 수정</span>
+                <span className={styles.menuRight}>&gt;</span>
+              </Link>
+              <Link href="/mypage/withdraw" className={styles.menuItem}>
+                <span style={{ color: '#d9534f' }}>탈퇴</span>
+                <span className={styles.menuRight}>&gt;</span>
+              </Link>
+            </div>
+          </div>
+        </main>
+    </>
   );
 }

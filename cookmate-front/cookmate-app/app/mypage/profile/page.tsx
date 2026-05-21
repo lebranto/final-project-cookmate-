@@ -248,8 +248,10 @@ export default function ProfileEditPage() {
           </div>
           <div className={styles.avatarActions}>
             <input type="file" accept="image/*" hidden ref={fileInputRef} onChange={handleImageChange} />
-            <button className={styles.avatarBtn} onClick={() => fileInputRef.current?.click()}>이미지 변경</button>
-            <button className={styles.avatarBtn} onClick={resetImageToDefault}>기본으로 변경</button>
+            <button className={styles.avatarBtn} 
+              onClick={() => fileInputRef.current?.click()}>이미지 변경</button>
+            <button className={styles.avatarBtn} 
+              onClick={resetImageToDefault}>기본으로 변경</button>
           </div>
         </div>
       </div>
@@ -259,15 +261,21 @@ export default function ProfileEditPage() {
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>닉네임</label>
-            <input className={styles.formInput} type="text" value={member.nickname} onChange={(e) => setMember({...member, nickname: e.target.value})} />
+            <input className={styles.formInput} 
+              type="text" value={member.nickname} 
+                onChange={(e) => setMember({...member, nickname: e.target.value})} />
           </div>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>이메일</label>
-            <input className={styles.formInput} type="email" value={member.userEmail} readOnly style={{backgroundColor: '#f5f5f5'}} />
+            <input className={styles.formInput} 
+              type="email" value={member.userEmail} 
+                readOnly style={{backgroundColor: '#f5f5f5'}} />
           </div>
           <div className={`${styles.formGroup} ${styles.full}`}>
             <label className={styles.formLabel}>한 줄 소개</label>
-            <input className={styles.formInput} type="text" value={member.introduce} onChange={(e) => setMember({...member, introduce: e.target.value})} placeholder="소개글을 입력해 주세요." />
+            <input className={styles.formInput} 
+              type="text" value={member.introduce} 
+                onChange={(e) => setMember({...member, introduce: e.target.value})} placeholder="소개글을 입력해 주세요." />
           </div>
         </div>
       </div>
