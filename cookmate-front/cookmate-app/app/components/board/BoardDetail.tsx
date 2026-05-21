@@ -34,6 +34,7 @@ export default function BoardDetail({ boardNo }: Props) {
   const [isScrapped, setIsScrapped] = useState(false);
   
   const [isFollowing, setIsFollowing] = useState(false);
+  const [commentReloadKey, setCommentReloadKey] = useState(0);
   
   const [shoppingAdding, setShoppingAdding] = useState(false);
   const [selectedServingCount, setSelectedServingCount] = useState(1);
@@ -569,8 +570,10 @@ export default function BoardDetail({ boardNo }: Props) {
 
           <section className={styles.sectionCard} id="comments-section">
             <SectionTitle title="댓글" />
-            <CommentForm boardNo={boardNo} onSuccess={fetchBoard} />
-            <CommentList boardNo={boardNo} currentUserNo={userInfo?.userNo} />
+            <CommentForm boardNo={boardNo} onSuccess={() => { fetchBoard();
+                            setCommentReloadKey((prev) => prev + 1);
+                            }}/>
+            <CommentList key={commentReloadKey} boardNo={boardNo} currentUserNo={userInfo?.userNo} />
           </section>
         </div>
       </main>
