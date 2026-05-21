@@ -120,12 +120,20 @@
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profileEmail {
   font-size: 12px;
   color: #888;
   margin-bottom: 12px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .badges {
@@ -285,6 +293,10 @@
   padding: 12px 16px;
   border-bottom: 1px solid rgba(0,0,0,0.05);
   color: #1a1a1a;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .table tbody tr:last-child td { border-bottom: none; }

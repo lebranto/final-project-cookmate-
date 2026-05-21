@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
-import { API_BASE_URL } from '@/app/lib/config';
-
+import api from '@/app/lib/api';
 import styles from './page.module.css';
 
 interface Report {
@@ -49,12 +48,19 @@ type ProcessAction = 'HIDE' | 'DELETE' | 'WARN' | 'REJECT';
 
 const ITEMS_PER_PAGE = 10;
 const PAGE_GROUP_SIZE = 5;
+const TARGET_ACTIONS: ProcessAction[] = ['HIDE', 'DELETE'];
 
 const ACTION_LABELS: Record<ProcessAction, string> = {
-  HIDE: '게시물 숨김',
-  DELETE: '게시물 삭제',
+  HIDE: '게시글 숨김',
+  DELETE: '게시글 삭제',
   WARN: '작성자 경고',
   REJECT: '반려',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  W: '대기',
+  C: '완료',
+  R: '반려',
 };
 
 export default function ReportsPage() {
@@ -65,94 +71,81 @@ export default function ReportsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-
   const [selectedReport, setSelectedReport] = useState<ReportDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [selectedAction, setSelectedAction] = useState<ProcessAction>('HIDE');
   const [processReason, setProcessReason] = useState('');
-
   const [searchKeyword, setSearchKeyword] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [orderBy, setOrderBy] = useState('latest');
 
-  const requestIdRef   = useRef(0);
+  const requestIdRef = useRef(0);
   const currentPageRef = useRef(1);
 
-  // ── fetchReports: 필터값을 직접 인자로 받아 타이밍 문제 없음 ──
-  const fetchReports = async (
-    page: number,
-    keyword = searchKeyword,
-    status  = statusFilter,
-    type    = typeFilter,
-    order   = orderBy,
-  ) => {
-    const requestId = ++requestIdRef.current;
-    setLoading(true);
+  const fetchReports = useCallback(
+    async (page: number) => {
+      const requestId = ++requestIdRef.current;
+      setLoading(true);
 
-    try {
-      const { data } = await axios.get<ReportResponse>(
-        `${API_BASE_URL}/admin/reports`,
-        {
+      try {
+        const { data } = await api.get<ReportResponse>('/admin/reports', {
           params: {
             page,
-            size:    ITEMS_PER_PAGE,
-            keyword: keyword.trim() || undefined,
-            status:  status || undefined,
-            reportType:    type   || undefined,
-            orderBy: order,
+            size: ITEMS_PER_PAGE,
+            keyword: searchKeyword.trim() || undefined,
+            status: statusFilter || undefined,
+            reportType: typeFilter || undefined,
+            orderBy,
           },
           timeout: 8000,
+        });
+
+        if (requestId !== requestIdRef.current) return;
+
+        setReports(data.reportList ?? []);
+        setTotalPages(data.totalPages || 1);
+        setTotalCount(data.totalReportCount ?? 0);
+        setTotalPendingCount(data.totalUnansweredReportCount ?? 0);
+        setCurrentPage(data.currentPage || page);
+        currentPageRef.current = data.currentPage || page;
+      } catch (error) {
+        if (requestId !== requestIdRef.current) return;
+
+        console.error('신고 목록 조회 실패', error);
+        setReports([]);
+        setTotalPages(1);
+        setTotalCount(0);
+        setTotalPendingCount(0);
+        setCurrentPage(1);
+        currentPageRef.current = 1;
+      } finally {
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
         }
-      );
+      }
+    },
+    [orderBy, searchKeyword, statusFilter, typeFilter]
+  );
 
-      if (requestId !== requestIdRef.current) return;
-
-      setReports(data.reportList || []);
-      setTotalPages(data.totalPages || 1);
-      setTotalCount(data.totalReportCount || 0);
-      setTotalPendingCount(data.totalUnansweredReportCount || 0);
-      setCurrentPage(data.currentPage || page);
-      currentPageRef.current = data.currentPage || page;
-
-    } catch (error) {
-      if (requestId !== requestIdRef.current) return;
-      console.error('신고 목록 조회 실패', error);
-      setReports([]);
-      setTotalPages(1);
-      setTotalCount(0);
-      setCurrentPage(1);
-      currentPageRef.current = 1;
-
-    } finally {
-      if (requestId === requestIdRef.current) setLoading(false);
-    }
-  };
-
-  // ── 최초 마운트 1회 ──
   useEffect(() => {
-    fetchReports(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const timer = window.setTimeout(() => {
+      void fetchReports(1);
+    }, 300);
 
-  // ── 필터 변경 시 현재 state를 명시적으로 넘겨 1페이지 재조회 ──
-  useEffect(() => {
-    fetchReports(1, searchKeyword, statusFilter, typeFilter, orderBy);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchKeyword, statusFilter, typeFilter, orderBy]);
+    return () => window.clearTimeout(timer);
+  }, [fetchReports]);
 
-  // ── bfcache 복원 ──
   useEffect(() => {
-    const handlePageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) {
-        setLoading(false);
-        fetchReports(currentPageRef.current);
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        void fetchReports(currentPageRef.current);
       }
     };
+
     window.addEventListener('pageshow', handlePageShow);
     return () => window.removeEventListener('pageshow', handlePageShow);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchReports]);
 
   const openDetail = async (reportId: number) => {
     setDetailLoading(true);
@@ -161,9 +154,9 @@ export default function ReportsPage() {
     setProcessReason('');
 
     try {
-      const { data } = await axios.get<ReportDetail>(`${API_BASE_URL}/admin/reports/${reportId}`);
+      const { data } = await api.get<ReportDetail>(`/admin/reports/${reportId}`);
       setSelectedReport(data);
-      if (convertStatus(data.status) === '완료' || convertStatus(data.status) === '반려') {
+      if (data.status === 'C' || data.status === 'R') {
         setSelectedAction('REJECT');
       }
     } catch (error) {
@@ -185,7 +178,7 @@ export default function ReportsPage() {
     if (!selectedReport) return;
 
     if ((selectedAction === 'HIDE' || selectedAction === 'DELETE') && !selectedReport.targetContentId) {
-      alert('처리할 게시물 또는 댓글 정보를 찾을 수 없습니다.');
+      alert('처리할 게시글 또는 댓글 정보를 찾을 수 없습니다.');
       return;
     }
 
@@ -196,7 +189,7 @@ export default function ReportsPage() {
 
     setSubmitting(true);
     try {
-      await axios.patch(`${API_BASE_URL}/admin/reports/${selectedReport.reportId}/process`, {
+      await api.patch(`/admin/reports/${selectedReport.reportId}/process`, {
         action: selectedAction,
         reason: processReason,
         targetKind: selectedReport.targetKind,
@@ -204,7 +197,7 @@ export default function ReportsPage() {
       });
 
       alert('신고 처리가 완료되었습니다.');
-      await fetchReports(currentPageRef.current, searchKeyword, statusFilter, typeFilter, orderBy);
+      await fetchReports(currentPageRef.current);
       await openDetail(selectedReport.reportId);
     } catch (error) {
       console.error('신고 처리 실패', error);
@@ -215,47 +208,46 @@ export default function ReportsPage() {
   };
 
   const convertStatus = (status: string | null | undefined) => {
-    switch (status) {
-      case 'W': return '대기';
-      case 'C': return '완료';
-      case 'R': return '반려';
-      default:  return status || '-';
-    }
+    if (!status) return '-';
+    return STATUS_LABELS[status] ?? status;
   };
 
   const statusClass = (status: string) => {
-    const statusText = convertStatus(status);
-    if (statusText === '대기')   return styles.waiting;
-    if (statusText === '반려')   return styles.rejected;
+    if (status === 'W') return styles.waiting;
+    if (status === 'R') return styles.rejected;
     return styles.complete;
   };
 
   const getTypeBadge = (type: string) => {
-    if (type.includes('레시피'))                        return styles.recipeBadge;
-    if (type.includes('스팸'))                         return styles.spamBadge;
-    if (type.includes('저작권'))                       return styles.copyrightBadge;
+    if (type.includes('레시피') || type.includes('게시글')) return styles.recipeBadge;
+    if (type.includes('스팸')) return styles.spamBadge;
+    if (type.includes('저작권')) return styles.copyrightBadge;
     if (type.includes('욕설') || type.includes('혐오')) return styles.abuseBadge;
     return styles.falseBadge;
   };
 
-  // ── 페이지 그룹 계산 ──
-  const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
-  const startPage    = (currentGroup - 1) * PAGE_GROUP_SIZE + 1;
-  const endPage      = Math.min(startPage + PAGE_GROUP_SIZE - 1, totalPages);
-  const visiblePages = Array.from(
-    { length: Math.max(endPage - startPage + 1, 0) },
-    (_, i) => startPage + i
-  );
+  const visiblePages = useMemo(() => {
+    const currentGroup = Math.ceil(currentPage / PAGE_GROUP_SIZE);
+    const startPage = (currentGroup - 1) * PAGE_GROUP_SIZE + 1;
+    const endPage = Math.min(startPage + PAGE_GROUP_SIZE - 1, totalPages);
 
+    return Array.from(
+      { length: Math.max(endPage - startPage + 1, 0) },
+      (_, index) => startPage + index
+    );
+  }, [currentPage, totalPages]);
+
+  const startPage = visiblePages[0] ?? 1;
+  const endPage = visiblePages[visiblePages.length - 1] ?? 1;
   const selectedStatus = selectedReport ? convertStatus(selectedReport.status) : '-';
-  const canProcess     = selectedReport && selectedStatus !== '완료' && selectedStatus !== '반려';
+  const canProcess = selectedReport && selectedReport.status !== 'C' && selectedReport.status !== 'R';
 
   return (
     <div className={styles.container}>
       <div className={styles.topSection}>
         <div>
           <h1 className={styles.title}>신고 관리</h1>
-          <p className={styles.subtitle}>사용자 신고 내역을 검토하고 처리하세요</p>
+          <p className={styles.subtitle}>사용자 신고 내역을 검토하고 처리하세요.</p>
         </div>
         <div className={styles.pendingBox}>미처리 {totalPendingCount}건</div>
       </div>
@@ -268,28 +260,40 @@ export default function ReportsPage() {
             <span className={styles.searchIcon}>⌕</span>
             <input
               type="text"
-              placeholder="신고 내용, 신고자, 피신고자 검색..."
+              placeholder="신고 내용, 신고자, 피신고자 검색"
               className={styles.searchInput}
               value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
+              onChange={(event) => setSearchKeyword(event.target.value)}
             />
           </div>
 
-          <select className={styles.select} value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+          <select
+            className={styles.select}
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value)}
+          >
             <option value="">전체 유형</option>
             <option value="욕설/혐오">욕설/혐오</option>
             <option value="스팸">스팸</option>
             <option value="저작권">저작권</option>
           </select>
 
-          <select className={styles.select} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <select
+            className={styles.select}
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+          >
             <option value="">전체 상태</option>
             <option value="W">대기</option>
             <option value="C">완료</option>
             <option value="R">반려</option>
           </select>
 
-          <select className={styles.select} value={orderBy} onChange={(e) => setOrderBy(e.target.value)}>
+          <select
+            className={styles.select}
+            value={orderBy}
+            onChange={(event) => setOrderBy(event.target.value)}
+          >
             <option value="latest">최신순</option>
             <option value="oldest">오래된순</option>
           </select>
@@ -311,34 +315,44 @@ export default function ReportsPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className={styles.emptyCell}>로딩중...</td>
+                <td colSpan={8} className={styles.emptyCell}>
+                  로딩중입니다.
+                </td>
               </tr>
             ) : reports.length === 0 ? (
               <tr>
-                <td colSpan={8} className={styles.emptyCell}>신고 내역이 없습니다.</td>
+                <td colSpan={8} className={styles.emptyCell}>
+                  신고 내역이 없습니다.
+                </td>
               </tr>
             ) : (
-              reports.map((report) => {
-                const statusText = convertStatus(report.status);
-                return (
-                  <tr key={report.reportId}>
-                    <td className={styles.number}>#{report.reportId}</td>
-                    <td><span className={getTypeBadge(report.reportType)}>{report.reportType}</span></td>
-                    <td>{report.reason}</td>
-                    <td>{report.reporterNickname}</td>
-                    <td className={styles.target}>{report.targetNickname || report.targetId}</td>
-                    <td>{report.createdAt}</td>
-                    <td><span className={statusClass(report.status)}>{statusText}</span></td>
-                    <td>
-                      <div className={styles.actionGroup}>
-                        <button className={styles.detailBtn} onClick={() => openDetail(report.reportId)}>
-                          상세
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
+              reports.map((report) => (
+                <tr key={report.reportId}>
+                  <td className={styles.number}>#{report.reportId}</td>
+                  <td>
+                    <span className={getTypeBadge(report.reportType)}>{report.reportType}</span>
+                  </td>
+                  <td>{report.reason}</td>
+                  <td>{report.reporterNickname || '-'}</td>
+                  <td className={styles.target}>{report.targetNickname || report.targetId}</td>
+                  <td>{report.createdAt}</td>
+                  <td>
+                    <span className={statusClass(report.status)}>
+                      {convertStatus(report.status)}
+                    </span>
+                  </td>
+                  <td>
+                    <div className={styles.actionGroup}>
+                      <button
+                        className={styles.detailBtn}
+                        onClick={() => openDetail(report.reportId)}
+                      >
+                        상세
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -356,7 +370,7 @@ export default function ReportsPage() {
           <div className={styles.pagination}>
             <button
               disabled={startPage === 1}
-              onClick={() => fetchReports(Math.max(startPage - PAGE_GROUP_SIZE, 1), searchKeyword, statusFilter, typeFilter, orderBy)}
+              onClick={() => fetchReports(Math.max(startPage - PAGE_GROUP_SIZE, 1))}
             >
               &lsaquo;
             </button>
@@ -364,14 +378,14 @@ export default function ReportsPage() {
               <button
                 key={page}
                 className={currentPage === page ? styles.activePage : ''}
-                onClick={() => fetchReports(page, searchKeyword, statusFilter, typeFilter, orderBy)}
+                onClick={() => fetchReports(page)}
               >
                 {page}
               </button>
             ))}
             <button
               disabled={endPage >= totalPages}
-              onClick={() => fetchReports(startPage + PAGE_GROUP_SIZE, searchKeyword, statusFilter, typeFilter, orderBy)}
+              onClick={() => fetchReports(startPage + PAGE_GROUP_SIZE)}
             >
               &rsaquo;
             </button>
@@ -381,27 +395,35 @@ export default function ReportsPage() {
 
       {(detailLoading || selectedReport) && (
         <div className={styles.overlay} onClick={closeDetail}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
             {detailLoading || !selectedReport ? (
-              <div className={styles.modalLoading}>신고 상세를 불러오는 중...</div>
+              <div className={styles.modalLoading}>신고 상세를 불러오는 중입니다.</div>
             ) : (
               <>
                 <div className={styles.modalHeader}>
                   <div>
                     <div className={styles.modalMeta}>
                       <span>#{selectedReport.reportId}</span>
-                      <span className={getTypeBadge(selectedReport.reportType)}>{selectedReport.reportType}</span>
+                      <span className={getTypeBadge(selectedReport.reportType)}>
+                        {selectedReport.reportType}
+                      </span>
                     </div>
-                    <h2 className={styles.modalTitle}>{selectedReport.targetTitle || selectedReport.reason}</h2>
+                    <h2 className={styles.modalTitle}>
+                      {selectedReport.targetTitle || selectedReport.reason}
+                    </h2>
                   </div>
-                  <button className={styles.closeBtn} onClick={closeDetail}>×</button>
+                  <button className={styles.closeBtn} onClick={closeDetail}>
+                    x
+                  </button>
                 </div>
 
                 <div className={styles.modalBody}>
                   <div className={styles.infoGrid}>
                     <div>
                       <span>신고자</span>
-                      <strong>{selectedReport.reporterNickname || `#${selectedReport.reporterNo}`}</strong>
+                      <strong>
+                        {selectedReport.reporterNickname || `#${selectedReport.reporterNo}`}
+                      </strong>
                     </div>
                     <div>
                       <span>피신고자</span>
@@ -415,18 +437,22 @@ export default function ReportsPage() {
                     </div>
                     <div>
                       <span>누적 신고</span>
-                      <strong>{selectedReport.reporteeWarning}회</strong>
+                      <strong>{selectedReport.reporteeWarning}건</strong>
                     </div>
                   </div>
 
                   <section className={styles.detailSection}>
-                    <h3>신고된 게시물</h3>
+                    <h3>신고 대상</h3>
                     <div className={styles.contentBox}>
                       <p className={styles.contentTitle}>
-                        {selectedReport.targetKind === 'COMMENT' ? '댓글' : '게시글'} #{selectedReport.targetContentId || '-'}
+                        {selectedReport.targetKind === 'COMMENT' ? '댓글' : '게시글'} #
+                        {selectedReport.targetContentId || '-'}
                         {selectedReport.targetTitle ? ` · ${selectedReport.targetTitle}` : ''}
                       </p>
-                      <pre>{selectedReport.targetContent || '신고 대상 내용을 찾을 수 없습니다.'}</pre>
+                      <pre>
+                        {selectedReport.targetContent ||
+                          '신고 대상 내용을 찾을 수 없습니다.'}
+                      </pre>
                     </div>
                   </section>
 
@@ -442,7 +468,9 @@ export default function ReportsPage() {
                         {(Object.keys(ACTION_LABELS) as ProcessAction[]).map((action) => (
                           <button
                             key={action}
-                            className={`${styles.actionCard} ${selectedAction === action ? styles.actionCardActive : ''}`}
+                            className={`${styles.actionCard} ${
+                              selectedAction === action ? styles.actionCardActive : ''
+                            }`}
                             onClick={() => setSelectedAction(action)}
                           >
                             {ACTION_LABELS[action]}
@@ -451,9 +479,9 @@ export default function ReportsPage() {
                       </div>
                       <textarea
                         className={styles.processTextarea}
-                        placeholder="처리 사유 또는 메모를 입력하세요"
+                        placeholder="처리 사유 또는 메모를 입력하세요."
                         value={processReason}
-                        onChange={(e) => setProcessReason(e.target.value)}
+                        onChange={(event) => setProcessReason(event.target.value)}
                       />
                     </section>
                   ) : (
@@ -470,9 +498,15 @@ export default function ReportsPage() {
                 <div className={styles.modalFooter}>
                   <span>{canProcess ? '처리 대기 중' : '처리 완료'}</span>
                   <div className={styles.modalActions}>
-                    <button className={styles.closeFooterBtn} onClick={closeDetail}>닫기</button>
+                    <button className={styles.closeFooterBtn} onClick={closeDetail}>
+                      닫기
+                    </button>
                     {canProcess && (
-                      <button className={styles.submitBtn} onClick={handleProcess} disabled={submitting}>
+                      <button
+                        className={styles.submitBtn}
+                        onClick={handleProcess}
+                        disabled={submitting}
+                      >
                         {submitting ? '처리 중...' : '처리 완료'}
                       </button>
                     )}

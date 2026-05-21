@@ -118,6 +118,10 @@
 .recipeTitle {
   font-weight: 600;
   color: #1f1f1f;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .categoryBadge {
@@ -261,4 +265,91 @@
   background: #244b2e !important;
   color: white !important;
   border-color: #244b2e !important;
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .pageTitle {
+    font-size: 30px;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .searchBox {
+    width: 100%;
+    flex: none;
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .filters select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .card {
+    overflow-x: auto;
+    padding: 16px;
+  }
+
+  .table {
+    min-width: 820px;
+  }
+
+  .recipeTitle {
+    max-width: 220px;
+  }
+
+  .actionButtons {
+    white-space: nowrap;
+  }
+
+  .footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 560px) {
+  .container {
+    padding: 18px 12px;
+  }
+
+  .pageTitle {
+    font-size: 26px;
+  }
+
+  .pageDescription {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .card {
+    border-radius: 10px;
+    padding: 12px;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination {
+    justify-content: flex-start;
+  }
 }
