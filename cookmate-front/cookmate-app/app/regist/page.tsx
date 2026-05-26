@@ -270,7 +270,7 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
     // 바꿔야할 부분!!
     setCodeSent(true);
     setEmailVerified(false);
-    alert("인증 코드가 발송되었습니다.(인증번호 123456)");
+    alert("인증 코드가 발송되었습니다.");
   } catch (error) {
     console.error(error);
     alert("서버 연결 실패");

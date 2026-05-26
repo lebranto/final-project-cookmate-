@@ -35,12 +35,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AuthService {
 
+	
+	private final JavaMailSender mailSender;
 	private final AuthDao authDao;
 	private final PasswordEncoder encoder;
 	private final Map<String, EmailCode> emailCodeStore = new ConcurrentHashMap<>();
 	private final KakaoService service;
 	private final JWTProvider jwt;
 	private final SecureRandom secureRandom = new SecureRandom();
+	
+	// 메일 api를 보내기 위한 필드
+	@Value("${spring.mail.username}")
+	private String mailFrom;
 
 	public boolean existsByEmail(String email) {
 		User user = authDao.findByEmail(email);
@@ -166,19 +172,35 @@ public class AuthService {
 			throw new IllegalArgumentException("이메일을 입력해주세요.");
 		}
 
-		String code = "123456";
-		emailCodeStore.put(email, new EmailCode(code, LocalDateTime.now().plusMinutes(5)));
+//		String code = "123456";
+//		emailCodeStore.put(email, new EmailCode(code, LocalDateTime.now().plusMinutes(5)));
 
-		// 실제 메일 발송을 다시 사용할 때는 아래 코드를 켜고, 위의 code를 랜덤 생성으로 바꾸면 됩니다.
-		// String code = String.valueOf(secureRandom.nextInt(900000) + 100000);
-		// emailCodeStore.put(email, new EmailCode(code, LocalDateTime.now().plusMinutes(5)));
-		// try {
-		// 	emailSender.sendVerificationCode(email, code);
-		// } catch (MailException e) {
-		// 	emailCodeStore.remove(email);
-		// 	log.error("Failed to send verification email to {}", email, e);
-		// 	throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "인증 메일 발송에 실패했습니다.");
-		// }
+		// 실제 메일 발송을 다시 사용할 때는 아래 코드를 주석 풀기
+		String code = String.valueOf(secureRandom.nextInt(900000) + 100000);
+	    emailCodeStore.put(email, new EmailCode(code, LocalDateTime.now().plusMinutes(5)));
+
+	    try {
+	        SimpleMailMessage message = new SimpleMailMessage();
+	        message.setFrom(mailFrom);
+	        message.setTo(email);
+	        message.setSubject("[CookMate] 이메일 인증번호");
+	        message.setText("""
+	                CookMate 이메일 인증번호입니다.
+
+	                인증번호: %s
+
+	                인증번호는 5분 동안만 유효합니다.
+	                """.formatted(code));
+
+	        mailSender.send(message);
+	    } catch (MailException e) {
+	        emailCodeStore.remove(email);
+	        log.error("Failed to send verification email to {}", email, e);
+	        throw new ResponseStatusException(
+	                HttpStatus.BAD_GATEWAY,
+	                "인증 메일 발송에 실패했습니다."
+	        );
+	    }
 	}
 
 	public void sendSignupEmailCode(String email) {
@@ -240,28 +262,4 @@ public class AuthService {
 		}
 	}
 
-	@RequiredArgsConstructor
-	static class GmailEmailSender {
-
-		private final JavaMailSender mailSender;
-
-		@Value("${spring.mail.username}")
-		private String from;
-
-		void sendVerificationCode(String to, String code) {
-			SimpleMailMessage message = new SimpleMailMessage();
-			message.setFrom("CookMate <" + from + ">");
-			message.setTo(to);
-			message.setSubject("[CookMate] 이메일 인증번호");
-			message.setText("""
-					CookMate 이메일 인증번호입니다.
-
-					인증번호: %s
-
-					인증번호는 5분 동안만 유효합니다.
-					""".formatted(code));
-
-			mailSender.send(message);
-		}
-	}
 }
