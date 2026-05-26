@@ -73,6 +73,19 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getChefRecipeComments(chefNo));
     }
 
+    @GetMapping("/chef/{chefNo}/recipes")
+    public ResponseEntity<List<RecipeDto>> getChefRecipes(
+            @PathVariable long chefNo,
+            @RequestParam(required = false, defaultValue = "전체") String category) {
+        log.info("셰프 레시피 목록 조회 - 셰프번호: {}, 카테고리: {}", chefNo, category);
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put("chefNo", chefNo);
+        params.put("category", category);
+        
+        return ResponseEntity.ok(memberService.selectChefRecipes(params));
+    }
+    
     //팔로우
     @PostMapping("/follow")
     public ResponseEntity<?> toggleFollow(

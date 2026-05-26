@@ -190,4 +190,9 @@ public class MemberDaoImpl implements MemberDao {
 	public int deleteAllFollowing(Map<String, Object> followParams) {
 		return session.delete("member.deleteAllFollowing",followParams);
 	}
+
+	@Override
+	public List<RecipeDto> selectChefRecipes(Map<String, Object> params) {
+		return session.selectList("member.selectChefRecipes", params);
+	}
 }

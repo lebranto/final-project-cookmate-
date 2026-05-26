@@ -51,4 +51,6 @@ public interface MemberService {
 	Map<String, List<FollowDto>> getFollowList(long userNo, String filter);
 
 	Map<String, List<MyCommentDto>> getCommentList(long userNo, String filter);
+
+	List<RecipeDto> selectChefRecipes(Map<String, Object> params);
 }

@@ -76,4 +76,6 @@ public interface MemberDao {
 	int deleteAllScraps(long userNo);
 
 	int deleteAllFollowing(Map<String, Object> followParams);
+
+	List<RecipeDto> selectChefRecipes(Map<String, Object> params);
 }
