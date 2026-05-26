@@ -269,6 +269,7 @@ export default function ProfileEditPage() {
       }
 
       const fullAddress = [postcode, address, detailAddress]
+      .map((value) => value.trim())
       .filter(Boolean)
       .join("/");
 
@@ -290,7 +291,7 @@ export default function ProfileEditPage() {
         setCurrentPwStatus('idle');
         setPreviewUrl(""); 
         setSelectedFile(null);
-        setMember(prev => ({ ...prev, profileImageUrl: finalImageUrl }));
+        setMember(prev => ({ ...prev, profileImageUrl: finalImageUrl, address: fullAddress }));
         
         alert("회원 정보가 성공적으로 수정되었습니다.");
         setTimeout(() => setSaveStatus(false), 2000);

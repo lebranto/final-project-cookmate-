@@ -45,6 +45,21 @@ interface KakaoPlace {
   y: string;
 }
 
+function normalizeProfileAddress(address?: string | null) {
+  if (!address) return "";
+
+  const parts = address
+    .split("/")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length >= 2 && /^\d{5}$/.test(parts[0])) {
+    return parts.slice(1).join(" ");
+  }
+
+  return parts.join(" ") || address.trim();
+}
+
 interface KakaoLatLng {
   getLat(): number;
   getLng(): number;
@@ -527,7 +542,8 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
   const infoWindowByPlaceIdRef = useRef(new Map<string, KakaoInfoWindow>());
   const positionByPlaceIdRef = useRef(new Map<string, KakaoLatLng>());
   const currentInfoWindowRef = useRef<KakaoInfoWindow | null>(null);
-  const initializedRef = useRef(false);
+  const initializedUserNoRef = useRef<number | null>(null);
+  const [mapRetryCount, setMapRetryCount] = useState(0);
   const [places, setPlaces] = useState<KakaoPlace[]>([]);
   const [mapMessage, setMapMessage] = useState(
     KAKAO_MAP_APP_KEY ? "주변 마트를 불러오는 중입니다." : "카카오맵 JavaScript 키를 설정해 주세요."
@@ -613,7 +629,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
 
   const renderMarkets = useCallback(
     (lat: number, lng: number, label: string) => {
-      if (!mapRef.current || !window.kakao?.maps) return;
+      if (!mapRef.current || !window.kakao?.maps) return false;
 
       const center = new window.kakao.maps.LatLng(lat, lng);
       const map =
@@ -681,6 +697,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
           size: 4,
         }
       );
+      return true;
     },
     [clearPlaceMarkers]
   );
@@ -696,15 +713,13 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
       return new Promise<boolean>((resolve) => {
         geocoder.addressSearch(keyword, (addressData, addressStatus) => {
           if (addressStatus === window.kakao?.maps.services.Status.OK && addressData[0]) {
-            renderMarkets(Number(addressData[0].y), Number(addressData[0].x), label);
-            resolve(true);
+            resolve(renderMarkets(Number(addressData[0].y), Number(addressData[0].x), label));
             return;
           }
 
           placesService.keywordSearch(keyword, (placeData, placeStatus) => {
             if (placeStatus === window.kakao?.maps.services.Status.OK && placeData[0]) {
-              renderMarkets(Number(placeData[0].y), Number(placeData[0].x), label);
-              resolve(true);
+              resolve(renderMarkets(Number(placeData[0].y), Number(placeData[0].x), label));
               return;
             }
 
@@ -719,7 +734,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
   const showDefaultLocation = useCallback(
     async (location = DEFAULT_MARKET_LOCATIONS[0]) => {
       await loadKakaoMap();
-      renderMarkets(location.lat, location.lng, location.label);
+      return renderMarkets(location.lat, location.lng, location.label);
     },
     [loadKakaoMap, renderMarkets]
   );
@@ -778,8 +793,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
     let ignore = false;
 
     const initializeMap = async () => {
-      if (initializedRef.current || !KAKAO_MAP_APP_KEY) return;
-      initializedRef.current = true;
+      if (!KAKAO_MAP_APP_KEY || !userNo || initializedUserNoRef.current === userNo) return;
 
       try {
         await loadKakaoMap();
@@ -789,7 +803,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
         if (userNo) {
           try {
             const res = await api.get<ProfileResponse>(`/users/profile/${userNo}`);
-            nextAddress = res.data.address?.trim() ?? "";
+            nextAddress = normalizeProfileAddress(res.data.address);
             setProfileAddress(nextAddress);
           } catch (error) {
             console.error("프로필 주소 조회 실패:", error);
@@ -798,11 +812,19 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
 
         if (nextAddress) {
           const found = await moveToAddress(nextAddress, "내 주소");
-          if (found || ignore) return;
+          if (found || ignore) {
+            if (found) initializedUserNoRef.current = userNo;
+            return;
+          }
         }
 
         setMapMessage("등록된 주소가 없어 기본 위치로 주변 마트를 보여드립니다.");
-        await showDefaultLocation(DEFAULT_MARKET_LOCATIONS[0]);
+        const rendered = await showDefaultLocation(DEFAULT_MARKET_LOCATIONS[0]);
+        if (rendered) {
+          initializedUserNoRef.current = userNo;
+        } else if (!ignore && mapRetryCount < 3) {
+          window.setTimeout(() => setMapRetryCount((count) => count + 1), 300);
+        }
       } catch (error) {
         console.error("카카오맵 로드 실패:", error);
         if (!ignore) setMapMessage("카카오맵을 불러오지 못했습니다.");
@@ -814,7 +836,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
     return () => {
       ignore = true;
     };
-  }, [loadKakaoMap, moveToAddress, showDefaultLocation, userNo]);
+  }, [loadKakaoMap, mapRetryCount, moveToAddress, showDefaultLocation, userNo]);
 
   return (
     <section className={styles.mapCard}>
