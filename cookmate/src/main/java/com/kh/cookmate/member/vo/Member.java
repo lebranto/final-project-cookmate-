@@ -19,6 +19,8 @@ public class Member {
     private String nickname;
     private String profileImageUrl;
     private String introduce;
+    private String address;
+    
     private LocalDateTime userEnrollDate;
     private int warning;
     private String userStatus;
