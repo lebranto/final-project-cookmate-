@@ -647,6 +647,10 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
         map.relayout();
         map.setCenter(center);
       }, 100);
+      window.setTimeout(() => {
+        map.relayout();
+        map.setCenter(center);
+      }, 450);
 
       new window.kakao.maps.Marker({ map, position: center });
 
