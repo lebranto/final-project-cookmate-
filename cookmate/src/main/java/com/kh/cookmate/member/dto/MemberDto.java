@@ -21,6 +21,8 @@ public class MemberDto {
     private String profileImageUrl;
     private String introduce;
     
+    private String address;
+    
     private String enrollDate; 
     private int recipeCount;
     private int scrapCount;
@@ -52,6 +54,7 @@ public class MemberDto {
                 .nickname(member.getNickname())
                 .profileImageUrl(member.getProfileImageUrl())
                 .introduce(member.getIntroduce())
+                .address(member.getAddress())
                 .recipeCount(member.getRecipeCount())
                 .scrapCount(member.getScrapCount())
                 .inquiryCount(member.getInquiryCount())

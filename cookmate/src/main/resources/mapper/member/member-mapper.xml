@@ -43,7 +43,8 @@
         <set>
             <if test="nickname != null">NICKNAME = #{nickname},</if>
             <if test="introduce != null">INTRODUCE = #{introduce},</if>
-            <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl}</if>
+            <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl},</if>
+            <if test="address != null">ADDRESS = #{address},</if>
         </set>
         WHERE USER_NO = #{userNo}
     </update>
@@ -53,8 +54,6 @@
         SET USER_PW = #{encodedPw}
         WHERE USER_NO = #{userNo}
     </update>
-
-    
 
     <insert id="insertMemberAllergy" parameterType="map">
         INSERT INTO ALLERGY (ALLERGY_NAME, USER_NO)
@@ -203,7 +202,9 @@
 	        , (SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = u.USER_EMAIL) > 0 as isFollowing
 	        </if>
 	    FROM USER u
-	    WHERE u.WITHDRAW = 'N' AND u.USER_STATUS = 'N'
+	    WHERE u.WITHDRAW = 'N' 
+	    AND u.USER_STATUS = 'N'
+	    AND u.USER_NO != 1
 	    ORDER BY 
 	        <choose>
 	            <when test="filter == 'scrap'">scrapCount DESC</when>
