@@ -77,7 +77,7 @@ export default function ChefDetailPage() {
         const [chefRes, commentRes, recipeRes] = await Promise.all([
           api.get(`/users/chef/${chefNo}`, { params: { loginUserNo: loginUserNo || "" } }),
           api.get(`/users/chef/${chefNo}/recipe-comments`),
-          api.get('/users/recipes', { params: { userNo: chefNo, category: '전체' } }) 
+          api.get(`/users/chef/${chefNo}/recipes`, { params: { category: '전체' } })
         ]);
         
         if (chefRes.status === 200) setChef(chefRes.data);

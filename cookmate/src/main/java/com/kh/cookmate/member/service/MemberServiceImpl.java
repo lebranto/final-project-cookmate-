@@ -290,4 +290,9 @@ public class MemberServiceImpl implements MemberService {
         
         return "FAIL";
     }
+
+	@Override
+	public List<RecipeDto> selectChefRecipes(Map<String, Object> params) {
+		return memberDao.selectChefRecipes(params);
+	}
 }
