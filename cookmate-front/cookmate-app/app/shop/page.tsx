@@ -574,6 +574,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
   const positionByPlaceIdRef = useRef(new Map<string, KakaoLatLng>());
   const currentInfoWindowRef = useRef<KakaoInfoWindow | null>(null);
   const initializedUserNoRef = useRef<number | null>(null);
+  const currentCenterRef = useRef<KakaoLatLng | null>(null);
   const [mapRetryCount, setMapRetryCount] = useState(0);
   const [places, setPlaces] = useState<KakaoPlace[]>([]);
   const [mapMessage, setMapMessage] = useState(
@@ -667,6 +668,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
       if (!isContainerReady) return false;
 
       const center = new window.kakao.maps.LatLng(lat, lng);
+      currentCenterRef.current = center;
       const map =
         mapInstanceRef.current ??
         new window.kakao.maps.Map(container, {
@@ -888,6 +890,35 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
       ignore = true;
     };
   }, [loadKakaoMap, mapRetryCount, moveToAddress, showDefaultLocation, userNo]);
+
+  useEffect(() => {
+    const container = mapRef.current;
+    if (!container) return;
+
+    const relayoutMap = () => {
+      const map = mapInstanceRef.current;
+      const center = currentCenterRef.current;
+
+      if (!map || !center) return;
+
+      window.requestAnimationFrame(() => {
+        map.relayout();
+        map.setCenter(center);
+      });
+    };
+
+    const observer = new ResizeObserver(relayoutMap);
+    observer.observe(container);
+
+    window.addEventListener("resize", relayoutMap);
+    window.addEventListener("orientationchange", relayoutMap);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", relayoutMap);
+      window.removeEventListener("orientationchange", relayoutMap);
+    };
+  }, []);
 
   return (
     <section className={styles.mapCard}>
