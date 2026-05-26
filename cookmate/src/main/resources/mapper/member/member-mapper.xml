@@ -203,7 +203,9 @@
 	        , (SELECT COUNT(*) FROM FOLLOWING WHERE USER_NO = #{loginUserNo} AND FOLLOWING_ID = u.USER_EMAIL) > 0 as isFollowing
 	        </if>
 	    FROM USER u
-	    WHERE u.WITHDRAW = 'N' AND u.USER_STATUS = 'N'
+	    WHERE u.WITHDRAW = 'N' 
+	    AND u.USER_STATUS = 'N'
+	    AND u.USER_NO != 1
 	    ORDER BY 
 	        <choose>
 	            <when test="filter == 'scrap'">scrapCount DESC</when>

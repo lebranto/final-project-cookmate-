@@ -22,7 +22,7 @@ function resolveRecipeImageUrl(imageUrl?: string | null) {
   return imageUrl || "";
 }
 
-const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '샐러드', '수프', '디저트'];
+const CATEGORIES = ['전체', '한식', '중식', '일식', '양식', '샐러드', '수프', '디저트','국&찌개', '반찬', '밥', '일품', '후식', '기타'];
 const PER_PAGE = 12;
 const PAGE_GROUP_SIZE = 10;
 
