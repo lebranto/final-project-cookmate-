@@ -44,7 +44,7 @@
             <if test="nickname != null">NICKNAME = #{nickname},</if>
             <if test="introduce != null">INTRODUCE = #{introduce},</if>
             <if test="profileImageUrl != null">PROFILE_IMAGE_URL = #{profileImageUrl},</if>
-            <if test="address != null">ADDRESS = #{address},</if>
+            ADDRESS = #{address},
         </set>
         WHERE USER_NO = #{userNo}
     </update>

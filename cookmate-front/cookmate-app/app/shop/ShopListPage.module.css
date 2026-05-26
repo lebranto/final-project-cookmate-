@@ -324,6 +324,65 @@
   font-weight: 500;
 }
 
+.locationControls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 18px 12px;
+}
+
+.locationButton {
+  border: 1px solid #d8cbbd;
+  border-radius: 999px;
+  background: #fff;
+  color: #3d6b35;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 10px;
+}
+
+.locationButton:hover {
+  border-color: #7bae6e;
+  background: #f2f8ee;
+}
+
+.locationSearch {
+  display: flex;
+  gap: 6px;
+  padding: 0 18px 14px;
+}
+
+.locationSearch input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid #e8ddd0;
+  border-radius: 8px;
+  color: #1a1208;
+  font: inherit;
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.locationSearch input:focus {
+  border-color: #7bae6e;
+  outline: none;
+}
+
+.locationSearch button {
+  border: 0;
+  border-radius: 8px;
+  background: #1e3a1e;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
 .mapPlaceholder {
   position: relative;
   width: 100%;

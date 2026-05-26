@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="admin">
 
@@ -6,7 +6,7 @@
 	<!-- ======= |recipe == board| ======= -->
 	<!-- ================================= -->
 	
-	<!-- ///////////////////대시보드 영역/////////////////////////-->
+	<!-- ///////////////////??쒕낫???곸뿭/////////////////////////-->
 	<select id="countAllUsers" resultType="_int">
         SELECT COUNT(*) 
         FROM USER 
@@ -31,9 +31,9 @@
         WHERE INQUIRY_STATUS = 'N'
     </select>
 
-	<!-- 오늘의 로그인 한 유저수 -->
+	<!-- ?ㅻ뒛??濡쒓렇?????좎???-->
     <select id="countTodayVisitors" resultType="_int">
-        <!-- CURDATE()는 오늘 날짜만 가져오는 MySQL 함수입니다 -->
+        <!-- CURDATE()???ㅻ뒛 ?좎쭨留?媛?몄삤??MySQL ?⑥닔?낅땲??-->
         SELECT COUNT(*) 
         FROM USER
         WHERE USER_STATUS = 'N'
@@ -83,7 +83,7 @@
 	    WHERE DATE(BOARD_POSTDATE) = CURDATE()
 	</select>
 	
-	<!-- 오늘 가입 회원 수 -->
+	<!-- ?ㅻ뒛 媛???뚯썝 ??-->
 	<select id="countTodayUsersDiff" resultType="_int">
 	    SELECT COUNT(*)
 	    FROM USER
@@ -92,7 +92,7 @@
 	      AND USER_ENROLL_DATE <![CDATA[ < ]]> CURDATE() + INTERVAL 1 DAY
 	</select>
 	
-	<!-- 오늘 레시피 증감 -->
+	<!-- ?ㅻ뒛 ?덉떆??利앷컧 -->
 	<select id="countTodayRecipesDiff" resultType="_int">
 	    SELECT
 	        (
@@ -109,7 +109,7 @@
 	        )
 	</select>
 
-    <!-- =================== 대시 보드 리스트 영역 =================== -->
+    <!-- =================== ???蹂대뱶 由ъ뒪???곸뿭 =================== -->
 
     <select id="selectRecentReports" resultType="com.kh.cookmate.admin.dto.AdminDto$ReportDto">
 	    SELECT
@@ -181,7 +181,7 @@
         LIMIT 1
     </select>
     
-    <!-- =========== 회원 목록 조회 (검색 + 필터 + 정렬 + 페이징)======================== -->
+    <!-- =========== ?뚯썝 紐⑸줉 議고쉶 (寃??+ ?꾪꽣 + ?뺣젹 + ?섏씠吏?======================== -->
 	<select id="selectUserList"
 	        parameterType="com.kh.cookmate.admin.dto.AdminDto$UserSearchDto"
 	        resultType="com.kh.cookmate.admin.dto.AdminDto$UserPageDto">
@@ -212,7 +212,7 @@
 	
 	        U.WITHDRAW = 'N'
 	
-	        <!-- 검색 -->
+	        <!-- 寃??-->
 	        <if test="keyword != null and keyword != ''">
 	            AND (
 	                U.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
@@ -220,15 +220,15 @@
 	            )
 	        </if>
 	
-	        <!-- 상태 필터 -->
+	        <!-- ?곹깭 ?꾪꽣 -->
 	        <if test="status != null and status != ''">
 	            AND U.USER_STATUS = #{status}
 	        </if>
 	
-	        <!-- 권한 -->
+	        <!-- 沅뚰븳 -->
 	        <if test="role != null and role != ''">
 	            <choose>
-	                <!-- 일반 회원 -->
+	                <!-- ?쇰컲 ?뚯썝 -->
 	                <when test="role == 'ROLE_USER'">
 	                    AND (
 	                        A.AUTHORITY IS NULL
@@ -236,7 +236,7 @@
 	                    )
 	                </when>
 	
-	                <!-- 관리자 -->
+	                <!-- 愿由ъ옄 -->
 	                <when test="role == 'ROLE_ADMIN'">
 	                    AND A.AUTHORITY = 'ROLE_ADMIN'
 	                </when>
@@ -244,7 +244,7 @@
 	        </if>
 	    </where>
 	
-	    <!-- 정렬 -->
+	    <!-- ?뺣젹 -->
 	    <choose>
 
 		    <when test="sort == 'latest'">
@@ -259,7 +259,7 @@
 		        ORDER BY recipeCount DESC
 		    </when>
 		
-		    <!-- 기본값 -->
+		    <!-- 湲곕낯媛?-->
 		    <otherwise>
 		        ORDER BY U.USER_ENROLL_DATE DESC
 		    </otherwise>
@@ -278,29 +278,29 @@
 	        ON U.USER_NO = A.USER_NO
 	    <where>
 	        U.WITHDRAW = 'N'
-	        <!-- 검색 -->
+	        <!-- 寃??-->
 	        <if test="keyword != null and keyword != ''">
 	            AND (
 	                U.NICKNAME LIKE CONCAT('%', #{keyword}, '%')
 	                OR U.USER_EMAIL LIKE CONCAT('%', #{keyword}, '%')
 	            )
 	        </if>
-	        <!-- 상태 -->
+	        <!-- ?곹깭 -->
 	        <if test="status != null and status != ''">
 	            AND U.USER_STATUS = #{status}
 	        </if>
 	
-	        <!-- 권한 -->
+	        <!-- 沅뚰븳 -->
 	        <if test="role != null and role != ''">
 	
 	            <choose>
 	
-	                <!-- 관리자 -->
+	                <!-- 愿由ъ옄 -->
 	                <when test="'ROLE_ADMIN'.equals(role)">
 	                    AND A.AUTHORITY = 'ROLE_ADMIN'
 	                </when>
 	
-	                <!-- 일반회원 -->
+	                <!-- ?쇰컲?뚯썝 -->
 	                <when test="'ROLE_USER'.equals(role)">
 	                    AND (
 	                        A.AUTHORITY IS NULL
@@ -312,7 +312,7 @@
 	    </where>
 	</select>
     
-    <!-- =================== 신고 관리 영역 =================== -->
+    <!-- =================== ?좉퀬 愿由??곸뿭 =================== -->
 
     <select id="selectReportList"
 	        parameterType="com.kh.cookmate.admin.dto.AdminDto$ReportSearchDto"
@@ -335,11 +335,11 @@
 	
 	    FROM REPORT R
 	
-	    -- 피신고자
+	    -- ?쇱떊怨좎옄
 	    LEFT JOIN USER U
 	        ON R.REPORTEE_NO = U.USER_NO
 	
-	    -- 신고자
+	    -- ?좉퀬??
 	    LEFT JOIN USER RU
 	        ON R.USER_NO = RU.USER_NO
 	
@@ -348,17 +348,17 @@
 	
 	    <where>
 	
-	        <!-- 신고 유형 -->
+	        <!-- ?좉퀬 ?좏삎 -->
 	        <if test="reportType != null and reportType != ''">
 	            AND R.REPORT_TYPE = #{reportType}
 	        </if>
 	
-	        <!-- 상태 -->
+	        <!-- ?곹깭 -->
 	        <if test="status != null and status != ''">
 	            AND RD.STATE = #{status}
 	        </if>
 	
-	        <!-- 검색 -->
+	        <!-- 寃??-->
 	        <if test="keyword != null and keyword != ''">
 	            AND (
 	                CAST(R.USER_NO AS CHAR) LIKE CONCAT('%', #{keyword}, '%')
@@ -371,7 +371,7 @@
 	
 	    </where>
 	
-	    <!-- 정렬 -->
+	    <!-- ?뺣젹 -->
 	    <choose>
 	        <when test="orderBy == 'oldest'">
 	            ORDER BY R.REPORT_DATE ASC
@@ -401,67 +401,41 @@
             RD.STATE AS status,
             DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d %H:%i') AS createdAt,
             CASE
-                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN 'COMMENT'
+                WHEN R.COMMENT_NO IS NOT NULL THEN 'COMMENT'
                 ELSE 'BOARD'
             END AS targetKind,
             CASE
-                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (
-                    SELECT C.COMMENT_NO
-                    FROM COMMENT C
-                    WHERE C.USER_NO = R.REPORTEE_NO
-                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE
-                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC
-                    LIMIT 1
-                )
-                ELSE (
-                    SELECT B.BOARD_NO
-                    FROM BOARD B
-                    WHERE B.USER_NO = R.REPORTEE_NO
-                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE
-                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC
-                    LIMIT 1
-                )
+                WHEN R.COMMENT_NO IS NOT NULL THEN R.COMMENT_NO
+                ELSE R.BOARD_NO
             END AS targetContentId,
             CASE
-                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (
+                WHEN R.COMMENT_NO IS NOT NULL THEN (
                     SELECT B.BOARD_TITLE
                     FROM COMMENT C
                     JOIN BOARD B ON C.BOARD_NO = B.BOARD_NO
-                    WHERE C.USER_NO = R.REPORTEE_NO
-                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE
-                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC
-                    LIMIT 1
+                    WHERE C.COMMENT_NO = R.COMMENT_NO
                 )
                 ELSE (
                     SELECT B.BOARD_TITLE
                     FROM BOARD B
-                    WHERE B.USER_NO = R.REPORTEE_NO
-                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE
-                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC
-                    LIMIT 1
+                    WHERE B.BOARD_NO = R.BOARD_NO
                 )
             END AS targetTitle,
             CASE
-                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (
+                WHEN R.COMMENT_NO IS NOT NULL THEN (
                     SELECT C.COMMENT_CONTENT
                     FROM COMMENT C
-                    WHERE C.USER_NO = R.REPORTEE_NO
-                      AND C.COMMENT_POSTDATE &lt;= R.REPORT_DATE
-                    ORDER BY C.COMMENT_POSTDATE DESC, C.COMMENT_NO DESC
-                    LIMIT 1
+                    WHERE C.COMMENT_NO = R.COMMENT_NO
                 )
                 ELSE (
                     SELECT B.BOARD_TITLE
                     FROM BOARD B
-                    WHERE B.USER_NO = R.REPORTEE_NO
-                      AND B.BOARD_POSTDATE &lt;= R.REPORT_DATE
-                    ORDER BY B.BOARD_POSTDATE DESC, B.BOARD_NO DESC
-                    LIMIT 1
+                    WHERE B.BOARD_NO = R.BOARD_NO
                 )
             END AS targetContent,
             CASE
-                WHEN RD.STATE = 'C' THEN '처리 완료'
-                WHEN RD.STATE = 'R' THEN '반려'
+                WHEN RD.STATE = 'C' THEN '泥섎━ ?꾨즺'
+                WHEN RD.STATE = 'R' THEN '諛섎젮'
                 ELSE NULL
             END AS processAction
         FROM REPORT R
@@ -536,7 +510,7 @@
         FROM INQUIRY
     </select>
 
-    <!-- =================== 레시피 관리 영역 =================== -->
+    <!-- =================== ?덉떆??愿由??곸뿭 =================== -->
 
     <select id="selectRecipeList" parameterType="com.kh.cookmate.admin.dto.AdminDto$RecipeSearchDto"
             resultType="com.kh.cookmate.admin.dto.AdminDto$RecipeDto">
@@ -600,7 +574,7 @@
         WHERE BOARD_NO = #{boardNo}
     </update>
 
-    <!-- =================== 공지사항 관리 영역 =================== -->
+    <!-- =================== 怨듭??ы빆 愿由??곸뿭 =================== -->
 
     <select id="selectNoticeList" parameterType="com.kh.cookmate.admin.dto.AdminDto$NoticeSearchDto"
             resultType="com.kh.cookmate.admin.dto.AdminDto$NoticeDto">
@@ -703,7 +677,7 @@
         WHERE NOTICE_NO = #{noticeId}
     </update>
 
-    <!-- =================== 문의 관리 영역 =================== -->
+    <!-- =================== 臾몄쓽 愿由??곸뿭 =================== -->
 
     <resultMap id="inquiryResultMap" type="com.kh.cookmate.admin.dto.AdminDto$InquiryDto">
         <id property="inquiryId" column="INQUIRY_NO" />
@@ -784,14 +758,14 @@
 	        (SELECT COUNT(*) FROM BOARD WHERE user_no = u.user_no) AS boardCount,
 	        (SELECT COUNT(*) FROM COMMENT WHERE user_no = u.user_no) AS commentCount,
 	        (SELECT COUNT(*) FROM SCRAP WHERE user_no = u.user_no) AS scrapCount,
-	        <!-- 수정 필요 -->
+	        <!-- ?섏젙 ?꾩슂 -->
 	        (SELECT COUNT(*) FROM REPORT WHERE user_no = u.user_no) AS reportCount
 	    FROM USER u
 	    LEFT JOIN AUTHORITY a ON u.USER_NO = a.USER_NO
 	    WHERE u.user_no = #{userId}
 	</select>
 
-	<!-- ====================== 회원 상세 - 작성 레시피 ====================== -->
+	<!-- ====================== ?뚯썝 ?곸꽭 - ?묒꽦 ?덉떆??====================== -->
 
 	<select id="selectUserRecipe" parameterType="map" resultType="com.kh.cookmate.admin.dto.AdminDto$UserRecipeDto">
 	    SELECT
@@ -801,8 +775,8 @@
 	        DATE_FORMAT(B.BOARD_POSTDATE, '%Y-%m-%d') AS createdAt,
 	
 	        CASE
-	            WHEN B.BOARD_DELETE = 'Y' THEN '삭제'
-	            ELSE '정상'
+	            WHEN B.BOARD_DELETE = 'Y' THEN '??젣'
+	            ELSE '?뺤긽'
 	        END                    AS status
 	
 	    FROM BOARD B
@@ -819,7 +793,7 @@
         AND BOARD_DELETE = 'N'
     </select>
 	
-	<!-- ====================== 회원 상세 - 작성 댓글 ====================== -->
+	<!-- ====================== ?뚯썝 ?곸꽭 - ?묒꽦 ?볤? ====================== -->
 	
 	<select id="selectUserComment" parameterType="map" resultType="com.kh.cookmate.admin.dto.AdminDto$UserCommentDto">
 	
@@ -830,8 +804,8 @@
 	        C.COMMENT_CONTENT      AS content,
 	        DATE_FORMAT(C.COMMENT_POSTDATE, '%Y-%m-%d') AS createdAt,
 	        CASE
-	            WHEN C.COMMENT_DELETE = 'Y' THEN '삭제'
-	            ELSE '정상'
+	            WHEN C.COMMENT_DELETE = 'Y' THEN '??젣'
+	            ELSE '?뺤긽'
 	        END                     AS status
 	
 	    FROM COMMENT C
@@ -848,7 +822,7 @@
         WHERE USER_NO = #{userId}
     </select>
 	
-	<!-- ====================== 회원 상세 - 신고 내역 ====================== -->
+	<!-- ====================== ?뚯썝 ?곸꽭 - ?좉퀬 ?댁뿭 ====================== -->
 	
 	<select id="selectUserReport" parameterType="map" resultType="com.kh.cookmate.admin.dto.AdminDto$UserReportDto">
 	    SELECT
@@ -875,7 +849,7 @@
     
 
 	
-	<!-- ====================== 회원 상세 - 정지 처리 이력 ====================== -->
+	<!-- ====================== ?뚯썝 ?곸꽭 - ?뺤? 泥섎━ ?대젰 ====================== -->
 	
 	<select id="selectUserLog"
         parameterType="map"
@@ -905,7 +879,7 @@
 
 
 <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
-<!-- ///////////////////////////스케줄링 영역//////////////////////////////////////////////////////////// -->
+<!-- ///////////////////////////?ㅼ?以꾨쭅 ?곸뿭//////////////////////////////////////////////////////////// -->
 <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
     <insert id="insertUserBan" parameterType="com.kh.cookmate.admin.dto.AdminDto$UserSuspendRequestDto">
         INSERT INTO BANNED_USER (
@@ -946,7 +920,7 @@
         UPDATE USER
 	        SET WITHDRAW = 'Y',
 	        USER_EMAIL = CONCAT('withdrawn_', #{userNo}, '@cookmate.com'),
-	        NICKNAME = '탈퇴한 사용자',
+	        NICKNAME = '?덊눜???ъ슜??,
 	        PROFILE_IMAGE_URL = NULL, 
 	        INTRODUCE = NULL,
 		    ADDRESS = NULL,
@@ -997,10 +971,10 @@
           AND END_DATE &lt; CURDATE()
     </update>
 <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
-<!-- ///////////////////////////스케줄링 영역 끝////////////////////////////////////////////////////////// -->
+<!-- ///////////////////////////?ㅼ?以꾨쭅 ?곸뿭 ??///////////////////////////////////////////////////////// -->
 <!-- //////////////////////////////////////////////////////////////////////////////////////////////// -->
 
-	<!-- 회원 신고 상세 -->
+	<!-- ?뚯썝 ?좉퀬 ?곸꽭 -->
 <!--	<select id="getUserReportCount" parameterType="int" resultType="int">-->
 <!--	    SELECT COUNT(*)-->
 <!--	    FROM REPORT_DETAIL RD-->
@@ -1034,11 +1008,11 @@
 <!--            RD.STATE AS status,-->
 <!--            DATE_FORMAT(R.REPORT_DATE, '%Y-%m-%d %H:%i') AS createdAt,-->
 <!--            CASE-->
-<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN 'COMMENT'-->
+<!--                WHEN R.REPORT_TYPE LIKE '%?볤?%' THEN 'COMMENT'-->
 <!--                ELSE 'BOARD'-->
 <!--            END AS targetKind,-->
 <!--            CASE-->
-<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (-->
+<!--                WHEN R.REPORT_TYPE LIKE '%?볤?%' THEN (-->
 <!--                    SELECT C.COMMENT_NO-->
 <!--                    FROM COMMENT C-->
 <!--                    WHERE C.USER_NO = R.REPORTEE_NO-->
@@ -1056,7 +1030,7 @@
 <!--                )-->
 <!--            END AS targetContentId,-->
 <!--            CASE-->
-<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (-->
+<!--                WHEN R.REPORT_TYPE LIKE '%?볤?%' THEN (-->
 <!--                    SELECT B.BOARD_TITLE-->
 <!--                    FROM COMMENT C-->
 <!--                    JOIN BOARD B ON C.BOARD_NO = B.BOARD_NO-->
@@ -1075,7 +1049,7 @@
 <!--                )-->
 <!--            END AS targetTitle,-->
 <!--            CASE-->
-<!--                WHEN R.REPORT_TYPE LIKE '%댓글%' THEN (-->
+<!--                WHEN R.REPORT_TYPE LIKE '%?볤?%' THEN (-->
 <!--                    SELECT C.COMMENT_CONTENT-->
 <!--                    FROM COMMENT C-->
 <!--                    WHERE C.USER_NO = R.REPORTEE_NO-->
@@ -1093,8 +1067,8 @@
 <!--                )-->
 <!--            END AS targetContent,-->
 <!--            CASE-->
-<!--                WHEN RD.STATE = 'Y' THEN '처리 완료'-->
-<!--                WHEN RD.STATE = 'R' THEN '반려'-->
+<!--                WHEN RD.STATE = 'Y' THEN '泥섎━ ?꾨즺'-->
+<!--                WHEN RD.STATE = 'R' THEN '諛섎젮'-->
 <!--                ELSE NULL-->
 <!--            END AS processAction-->
 <!--        FROM REPORT R-->
