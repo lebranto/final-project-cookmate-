@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./CommonLayout.module.css";
 import UserAvatar from '@/app/components/UserAvatar';
@@ -181,6 +181,7 @@ export default function GlobalHeader() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -317,6 +318,35 @@ export default function GlobalHeader() {
     return () => mobileQuery.removeEventListener("change", closeOverlaysOnMobile);
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen && !notificationOpen) return;
+
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (!(target instanceof Node)) return;
+      if (headerRef.current?.contains(target)) return;
+
+      setMenuOpen(false);
+      setNotificationOpen(false);
+    };
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+
+      setMenuOpen(false);
+      setNotificationOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen, notificationOpen]);
+
   const handleLogout = async () => {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -401,7 +431,7 @@ export default function GlobalHeader() {
   };
 
   return (
-    <header className={styles.globalHeader}>
+    <header className={styles.globalHeader} ref={headerRef}>
       <div className={styles.ghInner}>
         <button type="button" className={styles.ghLogo} onClick={() => router.push("/")}>
           Cook<span>Mate</span>
