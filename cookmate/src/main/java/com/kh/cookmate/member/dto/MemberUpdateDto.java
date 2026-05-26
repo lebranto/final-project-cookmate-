@@ -16,6 +16,7 @@ public class MemberUpdateDto {
     private String nickname;
     private String introduce;
     private String profileImageUrl;
+    private String address;
     
     private List<String> allergies;
     private String newPassword;     
