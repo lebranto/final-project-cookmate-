@@ -6,11 +6,37 @@ import styles from './profile.module.css';
 import { useUserInfoActions } from '@/app/hooks/useUserInfoActions';
 import { uploadImageWithPresignedUrl } from "@/app/lib/imageUpload";
 import UserAvatar from '@/app/components/UserAvatar';
+import Script from "next/script";
 
 const ALLERGY_OPTIONS = [
   "새우", "땅콩", "우유", "달걀", "밀(글루텐)", 
   "대두(콩)", "복숭아", "토마토", "호두"
 ];
+
+
+//주소 api 부분
+type DaumPostcodeData = {
+  zonecode: string;
+  address: string;
+};
+
+type DaumPostcodeInstance = {
+  open: () => void;
+  embed: (element: HTMLElement) => void;
+};
+
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: {
+        oncomplete: (data: DaumPostcodeData) => void;
+        width?: string;
+        height?: string;
+      }) => DaumPostcodeInstance;
+    };
+  }
+}
+
 
 interface MemberProfile {
   userNo: number;
@@ -20,13 +46,23 @@ interface MemberProfile {
   profileImageUrl: string;
   allergies: string[];
   provider?: string;
+  address?: string;
 }
+
+
 
 export default function ProfileEditPage() {
   const [isMounted, setIsMounted] = useState(false);
 
   const { userInfo, isLoggedIn } = useUserInfoActions();
   const loginUserNo = userInfo?.userNo;
+  
+  // api 주소관련
+  const [postcode, setPostcode] = useState("");
+  const [address, setAddress] = useState("");
+  const [detailAddress, setDetailAddress] = useState("");
+  const postcodeWrapRef = useRef<HTMLDivElement | null>(null); 
+
 
   const [member, setMember] = useState<MemberProfile>({
     userNo: 0,
@@ -35,7 +71,7 @@ export default function ProfileEditPage() {
     introduce: "",
     profileImageUrl: "",
     allergies: [],
-    provider: ""
+    provider: "",
   });
 
   const isKakaoUser = member.provider?.toLowerCase() === 'kakao';
@@ -74,6 +110,15 @@ export default function ProfileEditPage() {
         const response = await api.get(`/users/profile/${loginUserNo}`);
         if (response.status === 200) {
           const data = response.data;
+
+          // 주소 api 관련
+          const savedAddress = data.address || "";
+          const [savedPostcode = "", savedRoadAddress = "", savedDetailAddress = ""] =
+          savedAddress.split("/");
+
+          setPostcode(savedPostcode);
+          setAddress(savedRoadAddress);
+          setDetailAddress(savedDetailAddress);
           setMember({
             userNo: data.userNo,
             userEmail: data.userEmail || "",
@@ -81,7 +126,8 @@ export default function ProfileEditPage() {
             introduce: data.introduce || "",
             profileImageUrl: data.profileImageUrl || "",
             allergies: data.allergies || [],
-            provider: data.provider || ""
+            provider: data.provider || "",
+            address: savedAddress,
           });
           setImgError(false);
         }
@@ -93,6 +139,34 @@ export default function ProfileEditPage() {
     };
     fetchProfile();
   }, [loginUserNo, isMounted]);
+
+
+  // 주소 api
+  const openPostcode = () => {
+  if (!window.daum?.Postcode) {
+    alert("주소 검색 API를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
+  const postcodeSearch = new window.daum.Postcode({
+    oncomplete: (data) => {
+      setPostcode(data.zonecode);
+      setAddress(data.address);
+    },
+    width: "100%",
+    height: "100%",
+  });
+
+  const isMobile = window.matchMedia("(max-width: 640px)").matches;
+
+  if (isMobile) {
+    if (!postcodeWrapRef.current) return;
+    postcodeSearch.embed(postcodeWrapRef.current);
+    return;
+  }
+
+  postcodeSearch.open();
+};
 
   const verifyCurrentPassword = async () => {
     if (!passwords.current || !loginUserNo) {
@@ -194,13 +268,18 @@ export default function ProfileEditPage() {
         }
       }
 
+      const fullAddress = [postcode, address, detailAddress]
+      .filter(Boolean)
+      .join("/");
+
       const payload = {
         userNo: loginUserNo,
         nickname: member.nickname,
         introduce: member.introduce,
         profileImageUrl: finalImageUrl, 
         allergies: member.allergies,
-        ...(!isKakaoUser && passwords.new && { newPassword: passwords.new })
+        address: fullAddress,
+        ...(!isKakaoUser && passwords.new && { newPassword: passwords.new }),
       };
 
       const response = await api.post('/users/profile/update', payload);
@@ -233,6 +312,10 @@ export default function ProfileEditPage() {
 
   return (
     <div className={styles.container}>
+      <Script
+      src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+      strategy="afterInteractive"
+      />
       <h2 className={styles.sectionTitle}>회원 정보 수정</h2>
 
       <div className={styles.formCard}>
@@ -276,6 +359,45 @@ export default function ProfileEditPage() {
             <input className={styles.formInput} 
               type="text" value={member.introduce} 
                 onChange={(e) => setMember({...member, introduce: e.target.value})} placeholder="소개글을 입력해 주세요." />
+          </div>
+
+          
+          <div className={`${styles.formGroup} ${styles.full}`}>
+            <label className={styles.formLabel}>주소</label>
+
+            <div className={styles.addressSearchRow}>
+              <input
+                className={styles.formInput}
+                type="text"
+                placeholder="우편번호"
+                value={postcode}
+                readOnly
+                />
+              <button
+                type="button"
+                className={styles.addressButton}
+                onClick={openPostcode}
+                >
+                우편번호 찾기
+              </button>
+            </div>
+
+            <input
+              className={`${styles.formInput} ${styles.addressInput}`}
+              type="text"
+              placeholder="주소"
+              value={address}
+              readOnly
+            />
+
+            <input
+              className={`${styles.formInput} ${styles.detailAddressInput}`}
+              type="text"
+              placeholder="상세주소"
+              value={detailAddress}
+              onChange={(e) => setDetailAddress(e.target.value)}
+            />
+            <div ref={postcodeWrapRef} className={styles.postcodeFrame} />
           </div>
         </div>
       </div>

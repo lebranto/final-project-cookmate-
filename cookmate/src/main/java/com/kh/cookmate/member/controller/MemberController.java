@@ -225,8 +225,9 @@ public class MemberController {
         response.put("userEmail", member.getUserEmail());
         response.put("nickname", member.getNickname());
         response.put("introduce", member.getIntroduce());
+        response.put("address", member.getAddress());
         response.put("profileImageUrl", member.getProfileImageUrl());
-        response.put("allergies", allergies); 
+        response.put("allergies", allergies);
         response.put("provider", member.getProvider());
         
         return ResponseEntity.ok(response);
