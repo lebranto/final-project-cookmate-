@@ -21,8 +21,18 @@ interface ShoppingListResponse {
   totalCount: number;
 }
 
+interface ProfileResponse {
+  address?: string | null;
+}
+
 const cardClasses = [styles.c1, styles.c2, styles.c3, styles.c4];
 const KAKAO_MAP_APP_KEY = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY;
+
+const DEFAULT_MARKET_LOCATIONS = [
+  { label: "서울시청", lat: 37.5665, lng: 126.978, keyword: "서울시청" },
+  { label: "강남역", lat: 37.4979, lng: 127.0276, keyword: "강남역" },
+  { label: "홍대입구", lat: 37.5572, lng: 126.9245, keyword: "홍대입구역" },
+];
 
 interface KakaoPlace {
   id: string;
@@ -67,11 +77,17 @@ declare global {
         Marker: new (options: { map: KakaoMapInstance; position: KakaoLatLng }) => KakaoMarker;
         InfoWindow: new (options: { content: string; removable?: boolean }) => KakaoInfoWindow;
         services: {
+          Geocoder: new () => {
+            addressSearch(
+              address: string,
+              callback: (data: Array<{ x: string; y: string; address_name?: string }>, status: string) => void
+            ): void;
+          };
           Places: new () => {
             keywordSearch(
               keyword: string,
               callback: (data: KakaoPlace[], status: string) => void,
-              options: { x: number; y: number; radius: number; size: number }
+              options?: { x?: number; y?: number; radius?: number; size?: number }
             ): void;
           };
           Status: {
@@ -194,7 +210,7 @@ export default function ShopListPage() {
         </section>
 
         <aside className={styles.colMap}>
-          <NearbyMarketCard />
+          <NearbyMarketCardWithFallback userNo={userInfo?.userNo} />
         </aside>
       </div>
     </main>
@@ -263,6 +279,7 @@ function ShoppingCard({
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function NearbyMarketCard() {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<KakaoMapInstance | null>(null);
@@ -474,6 +491,368 @@ function NearbyMarketCard() {
     <section className={styles.mapCard}>
       <div className={styles.mapCardTitle}>
         주변 마트 <span>카카오맵 API</span>
+      </div>
+      <div className={styles.mapPlaceholder}>
+        <div className={styles.mapCanvas} ref={mapRef} />
+        {mapMessage && (
+          <div className={styles.mapOverlay}>
+            <div className={styles.mapPinIcon}>📍</div>
+            <div className={styles.mapTip}>{mapMessage}</div>
+          </div>
+        )}
+      </div>
+      <div className={styles.storeList}>
+        {places.length > 0 ? (
+          places.map((place) => (
+            <StoreRow
+              key={place.id}
+              name={place.place_name}
+              distance={formatDistance(place.distance)}
+              url={place.place_url}
+              onSelect={() => openPlaceInfo(place.id)}
+            />
+          ))
+        ) : (
+          <div className={styles.storeEmpty}>검색된 마트가 없습니다.</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<KakaoMapInstance | null>(null);
+  const markerByPlaceIdRef = useRef(new Map<string, KakaoMarker>());
+  const infoWindowByPlaceIdRef = useRef(new Map<string, KakaoInfoWindow>());
+  const positionByPlaceIdRef = useRef(new Map<string, KakaoLatLng>());
+  const currentInfoWindowRef = useRef<KakaoInfoWindow | null>(null);
+  const initializedRef = useRef(false);
+  const [places, setPlaces] = useState<KakaoPlace[]>([]);
+  const [mapMessage, setMapMessage] = useState(
+    KAKAO_MAP_APP_KEY ? "주변 마트를 불러오는 중입니다." : "카카오맵 JavaScript 키를 설정해 주세요."
+  );
+  const [activeLocationLabel, setActiveLocationLabel] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
+
+  const loadKakaoMap = useCallback(() => {
+    const appKey = KAKAO_MAP_APP_KEY;
+    const currentOrigin = window.location.origin;
+
+    return new Promise<void>((resolve, reject) => {
+      if (!appKey) {
+        reject(new Error("Kakao map app key is missing"));
+        return;
+      }
+
+      const finishKakaoLoad = () => {
+        if (!window.kakao?.maps) {
+          reject(new Error(`Kakao map SDK is unavailable: ${currentOrigin}`));
+          return;
+        }
+        window.kakao.maps.load(resolve);
+      };
+
+      if (window.kakao?.maps) {
+        window.kakao.maps.load(resolve);
+        return;
+      }
+
+      const existingScript = document.querySelector<HTMLScriptElement>(
+        "script[data-kakao-map-sdk='true']"
+      );
+
+      if (existingScript) {
+        if (existingScript.dataset.loaded === "true") {
+          finishKakaoLoad();
+          return;
+        }
+        existingScript.addEventListener(
+          "load",
+          () => {
+            existingScript.dataset.loaded = "true";
+            finishKakaoLoad();
+          },
+          { once: true }
+        );
+        existingScript.addEventListener("error", reject, { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(
+        appKey
+      )}&libraries=services&autoload=false`;
+      script.async = true;
+      script.dataset.kakaoMapSdk = "true";
+      script.addEventListener(
+        "load",
+        () => {
+          script.dataset.loaded = "true";
+          finishKakaoLoad();
+        },
+        { once: true }
+      );
+      script.addEventListener(
+        "error",
+        () => reject(new Error(`Kakao map SDK load failed: ${currentOrigin}`)),
+        { once: true }
+      );
+      document.head.appendChild(script);
+    });
+  }, []);
+
+  const clearPlaceMarkers = useCallback(() => {
+    markerByPlaceIdRef.current.forEach((marker) => marker.setMap(null));
+    markerByPlaceIdRef.current.clear();
+    infoWindowByPlaceIdRef.current.clear();
+    positionByPlaceIdRef.current.clear();
+    currentInfoWindowRef.current = null;
+  }, []);
+
+  const renderMarkets = useCallback(
+    (lat: number, lng: number, label: string) => {
+      if (!mapRef.current || !window.kakao?.maps) return;
+
+      const center = new window.kakao.maps.LatLng(lat, lng);
+      const map =
+        mapInstanceRef.current ??
+        new window.kakao.maps.Map(mapRef.current, {
+          center,
+          level: 5,
+        });
+
+      mapInstanceRef.current = map;
+      clearPlaceMarkers();
+      map.setCenter(center);
+
+      window.setTimeout(() => {
+        map.relayout();
+        map.setCenter(center);
+      }, 100);
+
+      new window.kakao.maps.Marker({ map, position: center });
+
+      const placesService = new window.kakao.maps.services.Places();
+      placesService.keywordSearch(
+        "마트",
+        (data, status) => {
+          if (!window.kakao?.maps) return;
+
+          if (status === window.kakao.maps.services.Status.OK) {
+            const nextPlaces = data.slice(0, 4);
+            setPlaces(nextPlaces);
+            setMapMessage("");
+            setActiveLocationLabel(label);
+
+            nextPlaces.forEach((place) => {
+              const placePosition = new window.kakao!.maps.LatLng(Number(place.y), Number(place.x));
+              const marker = new window.kakao!.maps.Marker({
+                map,
+                position: placePosition,
+              });
+              const infoWindow = new window.kakao!.maps.InfoWindow({
+                content: `
+                  <div class="${styles.mapInfoWindow}">
+                    <strong>${escapeHtml(place.place_name)}</strong>
+                    <span>${escapeHtml(formatDistance(place.distance))}</span>
+                    <a href="${escapeHtml(place.place_url)}" target="_blank" rel="noopener noreferrer">지도 보기</a>
+                  </div>
+                `,
+                removable: true,
+              });
+
+              markerByPlaceIdRef.current.set(place.id, marker);
+              infoWindowByPlaceIdRef.current.set(place.id, infoWindow);
+              positionByPlaceIdRef.current.set(place.id, placePosition);
+            });
+            return;
+          }
+
+          setPlaces([]);
+          setActiveLocationLabel(label);
+          setMapMessage(`${label} 기준으로 검색된 마트가 없습니다.`);
+        },
+        {
+          x: lng,
+          y: lat,
+          radius: 2500,
+          size: 4,
+        }
+      );
+    },
+    [clearPlaceMarkers]
+  );
+
+  const moveToAddress = useCallback(
+    async (address: string, label: string) => {
+      const keyword = address.trim();
+      if (!keyword || !window.kakao?.maps) return false;
+
+      const geocoder = new window.kakao.maps.services.Geocoder();
+      const placesService = new window.kakao.maps.services.Places();
+
+      return new Promise<boolean>((resolve) => {
+        geocoder.addressSearch(keyword, (addressData, addressStatus) => {
+          if (addressStatus === window.kakao?.maps.services.Status.OK && addressData[0]) {
+            renderMarkets(Number(addressData[0].y), Number(addressData[0].x), label);
+            resolve(true);
+            return;
+          }
+
+          placesService.keywordSearch(keyword, (placeData, placeStatus) => {
+            if (placeStatus === window.kakao?.maps.services.Status.OK && placeData[0]) {
+              renderMarkets(Number(placeData[0].y), Number(placeData[0].x), label);
+              resolve(true);
+              return;
+            }
+
+            resolve(false);
+          });
+        });
+      });
+    },
+    [renderMarkets]
+  );
+
+  const showDefaultLocation = useCallback(
+    async (location = DEFAULT_MARKET_LOCATIONS[0]) => {
+      await loadKakaoMap();
+      renderMarkets(location.lat, location.lng, location.label);
+    },
+    [loadKakaoMap, renderMarkets]
+  );
+
+  const useProfileAddress = useCallback(async () => {
+    if (!profileAddress) {
+      setMapMessage("등록된 주소가 없어 기본 위치나 직접 검색을 사용해 주세요.");
+      return;
+    }
+
+    try {
+      await loadKakaoMap();
+      const found = await moveToAddress(profileAddress, "내 주소");
+      if (!found) {
+        setMapMessage("등록된 주소를 지도에서 찾지 못했습니다. 직접 검색해 주세요.");
+      }
+    } catch (error) {
+      console.error("프로필 주소 지도 조회 실패:", error);
+      setMapMessage("주소 기준 지도를 불러오지 못했습니다.");
+    }
+  }, [loadKakaoMap, moveToAddress, profileAddress]);
+
+  const handleKeywordSearch = useCallback(async () => {
+    if (!searchKeyword.trim()) {
+      setMapMessage("검색할 지역이나 장소를 입력해 주세요.");
+      return;
+    }
+
+    try {
+      await loadKakaoMap();
+      const found = await moveToAddress(searchKeyword, searchKeyword.trim());
+      if (!found) {
+        setMapMessage("입력한 위치를 찾지 못했습니다.");
+      }
+    } catch (error) {
+      console.error("직접 위치 검색 실패:", error);
+      setMapMessage("위치 검색 중 오류가 발생했습니다.");
+    }
+  }, [loadKakaoMap, moveToAddress, searchKeyword]);
+
+  const openPlaceInfo = useCallback((placeId: string) => {
+    const map = mapInstanceRef.current;
+    const marker = markerByPlaceIdRef.current.get(placeId);
+    const infoWindow = infoWindowByPlaceIdRef.current.get(placeId);
+    const position = positionByPlaceIdRef.current.get(placeId);
+
+    if (!map || !marker || !infoWindow || !position) return;
+
+    currentInfoWindowRef.current?.close();
+    map.setCenter(position);
+    infoWindow.open(map, marker);
+    currentInfoWindowRef.current = infoWindow;
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const initializeMap = async () => {
+      if (initializedRef.current || !KAKAO_MAP_APP_KEY) return;
+      initializedRef.current = true;
+
+      try {
+        await loadKakaoMap();
+        if (ignore) return;
+
+        let nextAddress = "";
+        if (userNo) {
+          try {
+            const res = await api.get<ProfileResponse>(`/users/profile/${userNo}`);
+            nextAddress = res.data.address?.trim() ?? "";
+            setProfileAddress(nextAddress);
+          } catch (error) {
+            console.error("프로필 주소 조회 실패:", error);
+          }
+        }
+
+        if (nextAddress) {
+          const found = await moveToAddress(nextAddress, "내 주소");
+          if (found || ignore) return;
+        }
+
+        setMapMessage("등록된 주소가 없어 기본 위치로 주변 마트를 보여드립니다.");
+        await showDefaultLocation(DEFAULT_MARKET_LOCATIONS[0]);
+      } catch (error) {
+        console.error("카카오맵 로드 실패:", error);
+        if (!ignore) setMapMessage("카카오맵을 불러오지 못했습니다.");
+      }
+    };
+
+    void initializeMap();
+
+    return () => {
+      ignore = true;
+    };
+  }, [loadKakaoMap, moveToAddress, showDefaultLocation, userNo]);
+
+  return (
+    <section className={styles.mapCard}>
+      <div className={styles.mapCardTitle}>
+        주변 마트 <span>{activeLocationLabel ? `${activeLocationLabel} 기준` : "카카오맵 API"}</span>
+      </div>
+      <div className={styles.locationControls}>
+        {profileAddress && (
+          <button type="button" className={styles.locationButton} onClick={useProfileAddress}>
+            내 주소
+          </button>
+        )}
+        {DEFAULT_MARKET_LOCATIONS.map((location) => (
+          <button
+            key={location.label}
+            type="button"
+            className={styles.locationButton}
+            onClick={() => void showDefaultLocation(location)}
+          >
+            {location.label}
+          </button>
+        ))}
+      </div>
+      <div className={styles.locationSearch}>
+        <input
+          value={searchKeyword}
+          onChange={(event) => setSearchKeyword(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void handleKeywordSearch();
+            }
+          }}
+          placeholder="지역 또는 장소 검색"
+        />
+        <button type="button" onClick={() => void handleKeywordSearch()}>
+          검색
+        </button>
       </div>
       <div className={styles.mapPlaceholder}>
         <div className={styles.mapCanvas} ref={mapRef} />
