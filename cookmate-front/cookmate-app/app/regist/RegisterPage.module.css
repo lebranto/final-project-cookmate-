@@ -2,7 +2,7 @@
 
 /* ── CSS Variables ── */
 :root {
-  --cream: #FDFAF4;
+  --cream: var(--user-page-bg);
   --green-deep: #1E3A1E;
   --green-mid: #3D6B35;
   --green-light: #7BAE6E;

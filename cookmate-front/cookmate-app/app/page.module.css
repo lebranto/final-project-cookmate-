@@ -1,5 +1,5 @@
 .page {
-  --bg: #fafaf8;
+  --bg: var(--user-page-bg);
   --paper: #ffffff;
   --warm: #f5f0e8;
   --line: #ebe5dc;

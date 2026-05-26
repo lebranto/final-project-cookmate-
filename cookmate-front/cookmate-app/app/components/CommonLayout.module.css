@@ -8,6 +8,16 @@
   backdrop-filter: blur(10px);
 }
 
+.userMain {
+  flex: 1;
+  min-height: calc(100vh - 72px);
+  background: var(--user-page-bg);
+}
+
+.adminMain {
+  flex: 1;
+}
+
 .ghInner {
   max-width: 1180px;
   height: 72px;

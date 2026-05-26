@@ -30,7 +30,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       {isAdminPage ? <AdminHeader /> : <GlobalHeader />}
-      <main className="flex-1">{children}</main>
+      <main className={isAdminPage ? styles.adminMain : styles.userMain}>{children}</main>
       {!isAdminPage && <GlobalFooter />}
       <button
         type="button"

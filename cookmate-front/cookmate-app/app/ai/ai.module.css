@@ -1,6 +1,6 @@
 .page {
   min-height: calc(100vh - 72px);
-  background: #f7f7f5;
+  background: var(--user-page-bg);
   color: #1a1a18;
   font-family: Arial, "Noto Sans KR", sans-serif;
 }
