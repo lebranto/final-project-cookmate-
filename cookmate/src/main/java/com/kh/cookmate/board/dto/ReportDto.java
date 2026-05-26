@@ -9,6 +9,7 @@ public class ReportDto {
     @NoArgsConstructor
     public static class CommentReportRequest {
         private int userNo;
+        private int boardNo;
         private String reportType;
         private String reportReason;
     }

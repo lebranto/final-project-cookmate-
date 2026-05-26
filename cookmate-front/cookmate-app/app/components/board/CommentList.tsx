@@ -14,7 +14,7 @@ interface Props {
   currentUserNo?: number;
 }
 
-const REPORT_TYPES = ["부적절한 레시피", "스팸/광고", "저작권 위반", "욕설/혐오", "허위정보"];
+const REPORT_TYPES = ["스팸/광고", "욕설/혐오", "허위정보"];
 
 export default function CommentList({ boardNo, currentUserNo }: Props) {
   const [comments, setComments] = useState<Comment[]>([]);
@@ -70,6 +70,7 @@ export default function CommentList({ boardNo, currentUserNo }: Props) {
     try {
       const res = await api.post(`/comments/${comment.commentNo}/reports`, {
         userNo: currentUserNo,
+        boardNo,
         reportType,
         reportReason: reportReason.trim().slice(0, 500),
       });
