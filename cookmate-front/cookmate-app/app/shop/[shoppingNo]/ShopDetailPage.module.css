@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   padding: 28px clamp(18px, 6vw, 104px) 80px;
-  background: #fdfaf4;
+  background: var(--user-page-bg);
   color: #1a1208;
 }
 
@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #fdfaf4;
+  background: var(--user-page-bg);
   color: #a89880;
   font-size: 14px;
 }

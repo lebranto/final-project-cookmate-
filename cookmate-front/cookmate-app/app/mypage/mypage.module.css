@@ -1,6 +1,6 @@
 .layout {
   min-height: calc(100vh - 56px); 
-  background-color: #f5f3ee; 
+  background-color: var(--user-page-bg); 
 }
 
 .container {

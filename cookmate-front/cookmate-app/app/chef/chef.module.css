@@ -1,7 +1,7 @@
 .main { 
     min-height: calc(100vh - 72px);
     padding-bottom: 60px;
-    background: #f4f0e8;
+    background: var(--user-page-bg);
     color: #1a1a1a;
 } 
 .inner { 

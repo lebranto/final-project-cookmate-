@@ -60,6 +60,32 @@ function normalizeProfileAddress(address?: string | null) {
   return parts.join(" ") || address.trim();
 }
 
+function waitForVisibleMapContainer(container: HTMLElement) {
+  return new Promise<boolean>((resolve) => {
+    let attempts = 0;
+
+    const checkSize = () => {
+      const rect = container.getBoundingClientRect();
+      const hasUsableSize = rect.width >= 240 && rect.height >= 160;
+
+      if (hasUsableSize) {
+        resolve(true);
+        return;
+      }
+
+      attempts += 1;
+      if (attempts >= 30) {
+        resolve(false);
+        return;
+      }
+
+      window.requestAnimationFrame(checkSize);
+    };
+
+    checkSize();
+  });
+}
+
 interface KakaoLatLng {
   getLat(): number;
   getLng(): number;
@@ -79,11 +105,16 @@ interface KakaoInfoWindow {
   open(map: KakaoMapInstance, marker: KakaoMarker): void;
 }
 
+interface KakaoMapsEvent {
+  addListener(target: unknown, type: string, callback: () => void): void;
+}
+
 declare global {
   interface Window {
     kakao?: {
       maps: {
         load(callback: () => void): void;
+        event: KakaoMapsEvent;
         LatLng: new (lat: number, lng: number) => KakaoLatLng;
         Map: new (
           container: HTMLElement,
@@ -543,6 +574,7 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
   const positionByPlaceIdRef = useRef(new Map<string, KakaoLatLng>());
   const currentInfoWindowRef = useRef<KakaoInfoWindow | null>(null);
   const initializedUserNoRef = useRef<number | null>(null);
+  const currentCenterRef = useRef<KakaoLatLng | null>(null);
   const [mapRetryCount, setMapRetryCount] = useState(0);
   const [places, setPlaces] = useState<KakaoPlace[]>([]);
   const [mapMessage, setMapMessage] = useState(
@@ -628,13 +660,18 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
   }, []);
 
   const renderMarkets = useCallback(
-    (lat: number, lng: number, label: string) => {
-      if (!mapRef.current || !window.kakao?.maps) return false;
+    async (lat: number, lng: number, label: string) => {
+      const container = mapRef.current;
+      if (!container || !window.kakao?.maps) return false;
+
+      const isContainerReady = await waitForVisibleMapContainer(container);
+      if (!isContainerReady) return false;
 
       const center = new window.kakao.maps.LatLng(lat, lng);
+      currentCenterRef.current = center;
       const map =
         mapInstanceRef.current ??
-        new window.kakao.maps.Map(mapRef.current, {
+        new window.kakao.maps.Map(container, {
           center,
           level: 5,
         });
@@ -643,6 +680,10 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
       clearPlaceMarkers();
       map.setCenter(center);
 
+      window.requestAnimationFrame(() => {
+        map.relayout();
+        map.setCenter(center);
+      });
       window.setTimeout(() => {
         map.relayout();
         map.setCenter(center);
@@ -651,6 +692,14 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
         map.relayout();
         map.setCenter(center);
       }, 450);
+      window.setTimeout(() => {
+        map.relayout();
+        map.setCenter(center);
+      }, 900);
+      window.setTimeout(() => {
+        map.relayout();
+        map.setCenter(center);
+      }, 1500);
 
       new window.kakao.maps.Marker({ map, position: center });
 
@@ -715,15 +764,15 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
       const placesService = new window.kakao.maps.services.Places();
 
       return new Promise<boolean>((resolve) => {
-        geocoder.addressSearch(keyword, (addressData, addressStatus) => {
+        geocoder.addressSearch(keyword, async (addressData, addressStatus) => {
           if (addressStatus === window.kakao?.maps.services.Status.OK && addressData[0]) {
-            resolve(renderMarkets(Number(addressData[0].y), Number(addressData[0].x), label));
+            resolve(await renderMarkets(Number(addressData[0].y), Number(addressData[0].x), label));
             return;
           }
 
-          placesService.keywordSearch(keyword, (placeData, placeStatus) => {
+          placesService.keywordSearch(keyword, async (placeData, placeStatus) => {
             if (placeStatus === window.kakao?.maps.services.Status.OK && placeData[0]) {
-              resolve(renderMarkets(Number(placeData[0].y), Number(placeData[0].x), label));
+              resolve(await renderMarkets(Number(placeData[0].y), Number(placeData[0].x), label));
               return;
             }
 
@@ -841,6 +890,35 @@ function NearbyMarketCardWithFallback({ userNo }: { userNo?: number }) {
       ignore = true;
     };
   }, [loadKakaoMap, mapRetryCount, moveToAddress, showDefaultLocation, userNo]);
+
+  useEffect(() => {
+    const container = mapRef.current;
+    if (!container) return;
+
+    const relayoutMap = () => {
+      const map = mapInstanceRef.current;
+      const center = currentCenterRef.current;
+
+      if (!map || !center) return;
+
+      window.requestAnimationFrame(() => {
+        map.relayout();
+        map.setCenter(center);
+      });
+    };
+
+    const observer = new ResizeObserver(relayoutMap);
+    observer.observe(container);
+
+    window.addEventListener("resize", relayoutMap);
+    window.addEventListener("orientationchange", relayoutMap);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", relayoutMap);
+      window.removeEventListener("orientationchange", relayoutMap);
+    };
+  }, []);
 
   return (
     <section className={styles.mapCard}>

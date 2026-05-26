@@ -4,7 +4,7 @@
   --green-mid: #b8d9a0;
   --green-text: #2d5519;
   --red: #c0392b;
-  --bg: #f5f3ee;
+  --bg: var(--user-page-bg);
   --bg-card: #ffffff;
   --bg-secondary: #f0ede8;
   --text-primary: #1a1a1a;
