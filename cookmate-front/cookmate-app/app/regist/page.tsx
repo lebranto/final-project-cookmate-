@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/app/lib/config";
 import styles from "./RegisterPage.module.css";
 import { RegisterForm, RegisterStep } from "../type/register";
+import Script from "next/script";
 
 type Step = {
   num: number;
@@ -30,6 +31,30 @@ type AgreeState = Record<AgreeKey, boolean>;
 type OpenTermsState = Record<RequiredAgreeKey, boolean>;
 
 type AllergyKey = string;
+
+// 카카오 api 관련 타입 지정
+type DaumPostcodeData = {
+  zonecode: string;
+  address: string;
+};
+
+type DaumPostcodeInstance = {
+  open: () => void;
+  embed: (element: HTMLElement) => void;
+};
+
+declare global {
+  interface Window {
+    daum?: {
+      Postcode: new (options: {
+        oncomplete: (data: DaumPostcodeData) => void;
+        width?: string;
+        height?: string;
+      }) => DaumPostcodeInstance;
+    };
+  }
+}
+
 
 const PASSWORD_RULE_MESSAGE = "비밀번호는 8자 이상이며 영문자와 숫자를 모두 포함해야 합니다.";
 
@@ -200,10 +225,15 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
   const [confirm, setConfirm] = useState("");
   const [nickname, setNickname] = useState("");   // 선택사항으로 이동
   const [intro, setIntro] = useState("");
-  const [address, setAddress] = useState("");
   const [codeSent, setCodeSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
   const passwordValid = isValidPassword(password);
+
+  // 주소 구분
+  const [postcode, setPostcode] = useState("");
+  const [address, setAddress] = useState("");
+  const [detailAddress, setDetailAddress] = useState("");
+  const postcodeWrapRef = useRef<HTMLDivElement | null>(null);
 
 
   // 이메일로 인증 코드를 발송 할때
@@ -295,6 +325,9 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
   // 닉네임을 적지 않고 넘어가면 앞의 닉네임을 자신의 닉네임으로 만드는 코드
   const handleNext = () => {
   const defaultNickname = email.split("@")[0];
+  const fullAddress = [postcode, address, detailAddress]
+    .filter(Boolean)
+    .join("/");
 
   setForm((prev) => ({
     ...prev,
@@ -304,10 +337,39 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
     confirmPassword: confirm,
     nickname: nickname.trim() || defaultNickname,
     introduce: intro,
-    address,
+    address : fullAddress,
   }));
 
   onNext();
+};
+
+// 카카오 api 부분
+const openPostcode = () => {
+  if (!postcodeWrapRef.current) return;
+
+  if (!window.daum?.Postcode) {
+    alert("주소 검색 API를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+    return;
+  }
+
+ const postcode = new window.daum.Postcode({
+    oncomplete: (data) => {
+      setPostcode(data.zonecode);
+      setAddress(data.address);
+    },
+    width: "100%",
+    height: "100%",
+  });
+
+  const isMobile = window.matchMedia("(max-width: 640px)").matches;
+
+  if (isMobile) {
+    if (!postcodeWrapRef.current) return;
+    postcode.embed(postcodeWrapRef.current);
+    return;
+  }
+
+  postcode.open();
 };
 
 
@@ -422,15 +484,39 @@ function BasicInfoStep({ onNext, setForm }: StepProps) {
       {/* 주소 (선택) */}
       <div className={styles.formGroup}>
         <label className={styles.formLabel}>
-          주소 <span className={styles.optional}>(선택)</span>
-        </label>
-        <input
-          className={styles.formInput}
-          type="text"
-          placeholder="주소를 입력하세요"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-        />
+    주소 <span className={styles.optional}>(선택)</span>
+  </label>
+
+  <div className={styles.addressSearchRow}>
+    <input
+      className={styles.formInput}
+      type="text"
+      placeholder="우편번호"
+      value={postcode}
+      readOnly
+    />
+    <button type="button" className={styles.btnOutline} onClick={openPostcode}>
+      우편번호 찾기
+    </button>
+  </div>
+
+  <input
+    className={styles.formInput}
+    type="text"
+    placeholder="주소"
+    value={address}
+    readOnly
+  />
+
+  <input
+    className={styles.formInput}
+    type="text"
+    placeholder="상세주소"
+    value={detailAddress}
+    onChange={(e) => setDetailAddress(e.target.value)}
+  />
+
+  <div ref={postcodeWrapRef} className={styles.postcodeFrame} />
       </div>
 
       <button
@@ -664,6 +750,11 @@ export default function RegisterPage() {
   }, []);
 
   return (
+    <>
+    <Script
+        src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"
+        strategy="afterInteractive"
+    />
     <main className={styles.pageWrap}>
       <div className={styles.formBox}>
         <div className={styles.logoArea}>
@@ -704,5 +795,6 @@ export default function RegisterPage() {
         </div>
       </div>
     </main>
+  </>
   );
 }

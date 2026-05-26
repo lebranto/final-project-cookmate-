@@ -461,6 +461,30 @@
 .bnavItem.active { color: #3a6e22; }
 .bnavIcon { font-size: 20px; }
 
+
+/*카카오 api*/
+.addressSearchRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.addressSearchRow .formInput {
+  min-width: 0;
+}
+
+.addressSearchRow .btnOutline {
+  width: 120px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.postcodeFrame {
+  display: none;
+}
+
+
 /* ── 반응형 ── */
 @media (max-width: 640px) {
   .ghInner { padding: 0 16px; height: 52px; gap: 10px; }
@@ -635,5 +659,33 @@
   .customInput {
     font-size: 12px;
     padding: 7px 12px;
+  }
+
+
+  /*카카오 api*/
+  .addressSearchRow {
+    grid-template-columns: minmax(0, 1fr) 112px;
+    gap: 6px;
+  }
+
+  .addressSearchRow .btnOutline {
+    width: 112px;
+    padding-left: 8px;
+    padding-right: 8px;
+    font-size: 12px;
+  }
+
+  .postcodeFrame {
+    width: 100%;
+    height: 420px;
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    overflow: hidden;
+    background: var(--white);
+  }
+
+  .postcodeFrame:has(iframe) {
+    display: block;
   }
 }
