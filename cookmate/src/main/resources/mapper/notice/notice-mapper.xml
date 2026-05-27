@@ -19,10 +19,7 @@
     <sql id="publicNoticeWhere">
         WHERE NOTICE_STATUS = 'Y'
         <if test="keyword != null and keyword != ''">
-          AND (
-            NOTICE_TITLE LIKE CONCAT('%', #{keyword}, '%')
-            OR NOTICE_CONTENT LIKE CONCAT('%', #{keyword}, '%')
-          )
+          AND NOTICE_TITLE LIKE CONCAT('%', #{keyword}, '%')
         </if>
         <if test="typeName != null and typeName != ''">
           AND TYPE_NAME = #{typeName}
