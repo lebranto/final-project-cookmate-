@@ -53,6 +53,10 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
+.sideOptions {
+  display: block;
+}
+
 .sideItem:hover:not(:disabled) {
   background: #f0ece0;
 }
@@ -472,7 +476,7 @@
 
   .sidebar {
     min-height: auto;
-    padding: 14px 16px;
+    padding: 10px 16px;
     border-right: 0;
     border-bottom: 1px solid #ede7d8;
   }
@@ -488,18 +492,56 @@
     color: #2b3a20;
     cursor: pointer;
     font: inherit;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 800;
-    padding: 11px 14px;
+    padding: 9px 12px;
   }
 
   .filterPanel {
     display: none;
-    padding-top: 14px;
+    padding-top: 10px;
   }
 
   .filterOpen .filterPanel {
-    display: block;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sideSection {
+    margin-bottom: 0;
+  }
+
+  .sideTitle {
+    margin-bottom: 6px;
+    padding: 0;
+    font-size: 10px;
+  }
+
+  .sideItem {
+    min-height: 32px;
+    justify-content: center;
+    margin-bottom: 5px;
+    border: 1px solid #e7ddcc;
+    border-radius: 999px;
+    background: #fff;
+    font-size: 12px;
+    padding: 7px 8px;
+    text-align: center;
+  }
+
+  .sideItem:hover:not(:disabled) {
+    background: #f7f1e8;
+  }
+
+  .sideActive {
+    border-color: #bdd9ae;
+    background: #e0eed8;
+  }
+
+  .disabledText {
+    margin: 2px 0 0;
+    font-size: 10px;
   }
 
   .recipeGrid {
@@ -508,6 +550,33 @@
 }
 
 @media (max-width: 640px) {
+  .filterOpen .filterPanel {
+    grid-template-columns: 1fr;
+  }
+
+  .sideSection {
+    display: grid;
+    grid-template-columns: 68px 1fr;
+    align-items: start;
+    column-gap: 8px;
+  }
+
+  .sideTitle {
+    padding-top: 8px;
+  }
+
+  .sideOptions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .sideItem {
+    margin-bottom: 0;
+    font-size: 11px;
+    padding: 7px 6px;
+  }
+
   .main {
     padding: 18px 16px 48px;
   }

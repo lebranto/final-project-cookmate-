@@ -870,6 +870,22 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .categoryGrid {
+    gap: 10px;
+  }
+
+  .categoryCard {
+    min-height: 0;
+    height: 128px;
+    aspect-ratio: auto;
+    border-radius: 8px;
+  }
+
+  .categoryCard span {
+    bottom: 12px;
+    font-size: 15px;
+  }
+
   .recipeCard {
     height: 270px;
   }
@@ -926,6 +942,19 @@
   .recipeGrid,
   .stepGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .categoryGrid {
+    gap: 8px;
+  }
+
+  .categoryCard {
+    height: 102px;
+  }
+
+  .categoryCard span {
+    bottom: 10px;
+    font-size: 14px;
   }
 
   .recipeCard {
