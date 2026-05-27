@@ -411,7 +411,7 @@
     SELECT ACCESS_TOKEN 
     FROM USER_IDENTITIES 
     WHERE USER_NO = #{userNo} 
-      AND PROVIDER = 'Kakao' 
+      AND PROVIDER = 'kakao' 
     </select>
 
 </mapper>
