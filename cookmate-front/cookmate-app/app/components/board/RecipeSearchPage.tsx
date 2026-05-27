@@ -481,7 +481,7 @@ function FilterSection({ title, children }: { title: string; children: ReactNode
   return (
     <section className={styles.sideSection}>
       <h2 className={styles.sideTitle}>{title}</h2>
-      {children}
+      <div className={styles.sideOptions}>{children}</div>
     </section>
   );
 }
