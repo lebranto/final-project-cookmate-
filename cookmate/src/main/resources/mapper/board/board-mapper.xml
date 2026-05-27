@@ -66,8 +66,6 @@
         <if test="keyword != null and keyword != ''">
             AND (
                 b.BOARD_TITLE LIKE CONCAT('%', #{keyword}, '%')
-                OR b.INTRODUCE LIKE CONCAT('%', #{keyword}, '%')
-                OR COALESCE(u.NICKNAME, b.NICKNAME) LIKE CONCAT('%', #{keyword}, '%')
                 OR EXISTS (
                     SELECT 1
                     FROM INGREDIENT_SET iset

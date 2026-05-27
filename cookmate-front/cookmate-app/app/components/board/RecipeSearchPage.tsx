@@ -368,7 +368,7 @@ export default function RecipeSearchPage() {
             </div>
 
             <div className={styles.keywordRow}>
-              <span className={styles.keywordLabel}>인기 검색어</span>
+              <span className={styles.keywordLabel}>추천 검색어</span>
               {KEYWORDS.map((item) => (
                 <button
                   key={item}
