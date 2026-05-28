@@ -935,6 +935,16 @@ export default function BoardWriteForm({ mode = "create", boardNo }: BoardWriteF
           <span>공개하기</span>
         </label>
         {message && <p className={styles.message}>{message}</p>}
+        {isEditMode && boardNo && (
+          <button
+            className={styles.cancelButton}
+            type="button"
+            disabled={saving}
+            onClick={() => router.push(`/boards/${boardNo}`)}
+          >
+            취소
+          </button>
+        )}
         <button className={styles.saveButton} type="submit" disabled={saving}>
           {saving ? "저장 중" : isEditMode ? "수정하기" : "저장하기"}
         </button>
