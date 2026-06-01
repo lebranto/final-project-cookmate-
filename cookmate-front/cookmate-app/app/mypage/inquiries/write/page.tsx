@@ -23,6 +23,10 @@ function InquiryWriteContent() {
   
   const [loading, setLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successDialog, setSuccessDialog] = useState<{
+    message: string;
+    nextPath: string;
+  } | null>(null);
 
   // 훅을 사용하여 로그인 유저 정보 가져오기
   const { userInfo, isLoggedIn } = useUserInfoActions();
@@ -83,14 +87,18 @@ function InquiryWriteContent() {
       if (isEditMode) {
         const response = await api.put(`/users/inquiries/${editId}`, payload);
         if (response.status === 200) {
-          alert('문의가 성공적으로 수정되었습니다.');
-          router.push(`/mypage/inquiries/${editId}`);
+          setSuccessDialog({
+            message: '문의가 성공적으로 수정되었습니다.',
+            nextPath: `/mypage/inquiries/${editId}`,
+          });
         }
       } else {
         const response = await api.post('/users/inquiries', payload);
         if (response.status === 200) {
-          alert('문의가 성공적으로 등록되었습니다.');
-          router.push('/mypage/inquiries');
+          setSuccessDialog({
+            message: '문의가 성공적으로 등록되었습니다.',
+            nextPath: '/mypage/inquiries',
+          });
         }
       }
     } catch (err) {
@@ -183,6 +191,27 @@ function InquiryWriteContent() {
           </button>
         </div>
       </div>
+
+      {successDialog && (
+        <div className={styles.dialogOverlay}>
+          <div
+            className={styles.dialog}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="inquiry-success-title"
+          >
+            <h3 id="inquiry-success-title">알림</h3>
+            <p>{successDialog.message}</p>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.btnSubmit}`}
+              onClick={() => router.push(successDialog.nextPath)}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
