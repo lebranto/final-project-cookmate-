@@ -146,8 +146,32 @@ function clearStoredAuth() {
   removeCookie(ROLE_COOKIE_KEY);
 }
 
+function parseKoreanDateTime(value: string): number {
+  const normalized = value.trim();
+  const match = normalized.match(
+    /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/
+  );
+
+  if (!match) {
+    return new Date(normalized).getTime();
+  }
+
+  const [, year, month, day, hour, minute, second = "0"] = match;
+  return (
+    Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second)
+    ) -
+    9 * 60 * 60 * 1000
+  );
+}
+
 function formatElapsedTime(createdAt: string): string {
-  const createdTime = new Date(createdAt.replace(" ", "T")).getTime();
+  const createdTime = parseKoreanDateTime(createdAt);
 
   if (Number.isNaN(createdTime)) {
     return "";
