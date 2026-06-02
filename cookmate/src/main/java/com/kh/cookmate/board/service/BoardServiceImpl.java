@@ -34,9 +34,11 @@ import com.kh.cookmate.notification.service.NotificationService;
 
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BoardServiceImpl implements BoardService {
 	
 	private final BoardDao boardDao;
@@ -113,7 +115,11 @@ public class BoardServiceImpl implements BoardService {
         
         // 공개로 할 때만 알림이 오게 하는 코드
         if (result > 0 && board.getOpen() == 'Y') {
-            notificationService.notifyRecipeCreated(board.getBoardNo(), dto.getUserNo());
+            try {
+                notificationService.notifyRecipeCreated(board.getBoardNo(), dto.getUserNo());
+            } catch (RuntimeException e) {
+                log.warn("Recipe notification creation failed. boardNo={}, userNo={}", board.getBoardNo(), dto.getUserNo(), e);
+            }
         }
 
         return result;
@@ -298,7 +304,11 @@ public class BoardServiceImpl implements BoardService {
             
             BoardDetail detail = boardDao.getBoardDetail(params);
             if (detail != null) {
-                notificationService.notifyRecipeCreated(boardNo, detail.getUserNo());
+                try {
+                    notificationService.notifyRecipeCreated(boardNo, detail.getUserNo());
+                } catch (RuntimeException e) {
+                    log.warn("Recipe notification creation failed. boardNo={}, userNo={}", boardNo, detail.getUserNo(), e);
+                }
             }
         }
 

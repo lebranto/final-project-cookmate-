@@ -499,7 +499,7 @@
 	        COMMENT_CONTENT, COMMENT_DELETE, COMMENT_POSTDATE
 	    ) VALUES (
 	        #{boardNo}, #{parentCommentNo}, #{userNo},
-	        #{commentContent}, 'N', NOW()
+	        #{commentContent}, 'N', CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+09:00')
 	    )
 	</insert>
 	
