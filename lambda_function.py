@@ -35,12 +35,26 @@ EXTENSIONS = {
     "image/gif": "gif",
 }
 
+ALLOWED_ORIGINS = {
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://52.78.149.95:3000",
+}
 
-def response(status_code, body):
+
+def get_request_origin(event):
+    headers = event.get("headers") or {}
+    return headers.get("origin") or headers.get("Origin") or ""
+
+
+def response(status_code, body, event=None):
+    origin = get_request_origin(event) if event else ""
+    allow_origin = origin if origin in ALLOWED_ORIGINS else "http://localhost:3000"
+
     return {
         "statusCode": status_code,
         "headers": {
-            "Access-Control-Allow-Origin": "http://localhost:3000",
+            "Access-Control-Allow-Origin": allow_origin,
             "Access-Control-Allow-Headers": "Content-Type",
             "Access-Control-Allow-Methods": "OPTIONS,POST",
             "Content-Type": "application/json",
@@ -51,20 +65,19 @@ def response(status_code, body):
 
 def lambda_handler(event, context):
     if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
-        return response(200, {})
+        return response(200, {}, event)
 
     try:
         body = json.loads(event.get("body") or "{}")
 
         directory = body.get("dir")
         content_type = body.get("contentType")
-        original_name = body.get("fileName", "image")
 
         if directory not in ALLOWED_DIRS:
-            return response(400, {"message": "허용되지 않은 업로드 경로입니다."})
+            return response(400, {"message": "허용되지 않은 업로드 경로입니다."}, event)
 
         if content_type not in EXTENSIONS:
-            return response(400, {"message": "이미지 파일만 업로드할 수 있습니다."})
+            return response(400, {"message": "이미지 파일만 업로드할 수 있습니다."}, event)
 
         now = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-3]
         ext = EXTENSIONS[content_type]
@@ -87,8 +100,8 @@ def lambda_handler(event, context):
             "uploadUrl": upload_url,
             "fileKey": file_key,
             "fileUrl": file_url,
-        })
+        }, event)
 
     except Exception as e:
         print(e)
-        return response(500, {"message": "업로드 URL 생성에 실패했습니다."})
+        return response(500, {"message": "업로드 URL 생성에 실패했습니다."}, event)

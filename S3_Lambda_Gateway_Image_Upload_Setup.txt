@@ -97,7 +97,7 @@ API Gateway CORS는 presigned URL을 발급받는 요청에 필요하다.
 
 Access-Control-Allow-Origin:
 http://localhost:3000
-
+서버 배포 주소도 추가
 Access-Control-Allow-Methods:
 POST
 OPTIONS
@@ -119,15 +119,28 @@ S3 CORS는 프론트가 presigned URL로 S3에 직접 PUT 업로드할 때 필�
 S3 버킷의 Permissions > CORS에 아래 설정을 추가한다.
 
 [
-  {
-    "AllowedHeaders": ["*"],
-    "AllowedMethods": ["PUT", "GET"],
-    "AllowedOrigins": ["http://localhost:3000"],
-    "ExposeHeaders": ["ETag"],
-    "MaxAgeSeconds": 3000
-  }
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE"
+        ],
+        "AllowedOrigins": [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://52.78.149.95:3000",
+            "https://cookmate.vercel.app"
+        ],
+        "ExposeHeaders": [
+            "ETag"
+        ],
+        "MaxAgeSeconds": 3000
+    }
 ]
-
 배포 환경에서는 실제 프론트 도메인을 AllowedOrigins에 추가해야 한다.
 
 
